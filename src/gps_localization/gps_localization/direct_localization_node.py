@@ -69,6 +69,12 @@ class DirectLocalizationNode(Node):
     # 위치는 고정된 채 로컬 경로가 계속 생성됐다(하류 타임아웃도 안 걸림).
     # 발행을 멈추면 local_sliding_window/pure_pursuit가 타임아웃으로 안전 정지한다.
     self.declare_parameter('fix_timeout', 1.0)
+    # ★ IMU 끊김 감지. GPS와 같은 이유로 필수다.
+    # 2026-08-15 현장에서 A9가 주행 중 송신을 멈췄는데(노드 프로세스는 살아있음)
+    # yaw가 마지막 값(+34.1°)에 얼어붙은 채로 계속 발행됐다. 차량은 175° 넘게
+    # 회전했는데 헤딩은 그대로라 course와의 오차가 180°까지 벌어졌다.
+    # 이 상태로 자율주행하면 경로를 완전히 이탈한다 → 끊기면 발행을 멈춘다.
+    self.declare_parameter('imu_timeout', 0.5)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -84,6 +90,9 @@ class DirectLocalizationNode(Node):
     self.fix_timeout = float(self.get_parameter('fix_timeout').value)
     self.last_fix_time = None
     self.fix_lost = False
+    self.imu_timeout = float(self.get_parameter('imu_timeout').value)
+    self.last_imu_time = None
+    self.imu_lost = False
 
     self.tf = Transformer.from_crs('EPSG:4326', f'EPSG:{epsg}',
                                    always_xy=True)
@@ -142,6 +151,10 @@ class DirectLocalizationNode(Node):
       self.fix_lost = False
 
   def imu_cb(self, msg: Imu):
+    self.last_imu_time = self.get_clock().now().nanoseconds * 1e-9
+    if self.imu_lost:
+      self.get_logger().info('IMU 복구 — 위치 발행 재개')
+      self.imu_lost = False
     raw = yaw_from_quat(msg.orientation)
     if self.invert_imu_yaw:
       raw = -raw
@@ -169,6 +182,17 @@ class DirectLocalizationNode(Node):
             f'(하류가 타임아웃으로 정지함)')
         self.fix_lost = True
       return
+    # IMU 끊김: yaw가 얼어붙은 채 발행하면 회전을 전혀 반영하지 못한다.
+    if self.have_imu and self.last_imu_time is not None and \
+            (t_now - self.last_imu_time) > self.imu_timeout:
+      if not self.imu_lost:
+        self.get_logger().error(
+            f'IMU 끊김 ({t_now - self.last_imu_time:.1f}s) → 위치 발행 중단. '
+            f'헤딩이 고정되어 경로를 이탈하므로 정지시킨다. '
+            f'IMU USB 재연결 후 heading_init 재실행 필요.')
+        self.imu_lost = True
+      return
+
     now = self.get_clock().now().to_msg()
     q = tft.quaternion_from_euler(0.0, 0.0, self.yaw)
 
