@@ -27,20 +27,33 @@
 cd /home/han/racing_ws && colcon build && source install/setup.bash
 ```
 
-**터미널 1 — RTK**
+**★ bringup.launch.py 가 RTK(ngii_rtk)를 이미 포함한다.**
+따로 `ngii_rtk.launch.py` 를 켜면 **NTRIP 클라이언트가 2개**가 되어
+NGII 계정당 1접속 제한에 걸려 `401 Unauthorized` 가 나고 RTCM이 0프레임이 된다.
+(ublox_dgnss 도 중복 실행되어 USB 충돌) → **bringup 하나만 켤 것.**
+
+**udev 규칙 확인** (없으면 ublox 가 LIBUSB_ERROR_ACCESS 로 죽는다)
 ```bash
-NGII_PW=ngii ros2 launch ngii_ntrip ngii_rtk.launch.py
+ls /etc/udev/rules.d/99-ublox-dgnss.rules
 ```
-**확인**
+없으면:
+```bash
+echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", MODE="0666", GROUP="plugdev"' | sudo tee /etc/udev/rules.d/99-ublox-dgnss.rules && sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+→ 넣은 뒤 **F9P USB 재연결**
+
+**터미널 1 — 전체 스택 (RTK 포함)**
+```bash
+NGII_PW=ngii ros2 launch gps_localization bringup.launch.py
+```
+**확인 (터미널 2)**
 ```bash
 ros2 topic echo /ubx_nav_status --field carr_soln.status    # 2 = Fixed
 ```
 > ⚠️ **Fixed(2) 아니면 여기서 멈춰라.** 1~3분 대기. 이게 안 되면 이후 전부 무의미하다.
 
-**터미널 2 — 로컬라이제이션 + 경로**
-```bash
-ros2 launch gps_localization bringup.launch.py
-```
+> RTK만 따로 시험하고 싶을 때만 `ros2 launch ngii_ntrip ngii_rtk.launch.py` 를 쓰고,
+> 그때는 bringup 을 동시에 켜지 말 것.
 
 ---
 
