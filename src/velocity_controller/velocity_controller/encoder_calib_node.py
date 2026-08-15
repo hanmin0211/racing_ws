@@ -96,9 +96,21 @@ class EncoderCalib(Node):
     }
 
   def report(self):
+    # '데이터 없음'과 '아직 안 움직임'을 구분해서 알려준다.
+    # (예전엔 둘 다 '수신 필요'로 떠서 현장에서 원인 판단이 어려웠다)
+    missing = []
+    if self.x is None:
+      missing.append('/odometry/filtered')
+    if self.enc is None:
+      missing.append('/encoder_count')
+    if missing:
+      self.get_logger().info(f'대기중 — 수신 없음: {", ".join(missing)}')
+      return
     r = self.result()
     if r is None:
-      self.get_logger().info('대기중 — /odometry/filtered 와 /encoder_count 수신 필요')
+      d = 0 if self.enc0 is None else abs(self.enc - self.enc0)
+      self.get_logger().info(
+          f'토픽 정상 수신 중 — 차량을 직진시키세요 (엔코더 변화 {d}counts)')
       return
     self.get_logger().info(
         f'RTK {r["straight"]:.2f}m | 엔코더 {r["enc_dist"]:.2f}m '
