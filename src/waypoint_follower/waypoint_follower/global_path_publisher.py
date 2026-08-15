@@ -25,9 +25,11 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 
 # 사용하는 웨이포인트 파일 경로 (환경에 맞게 수정 가능)
+# 현재 사용 중인 웨이포인트. (예전 기본값 waypoints_local_resampled_0.3.yaml 은
+# 옛 파이프라인 잔재라, 단독 실행 시 엉뚱한 경로가 로드되는 원인이었다.)
 DEFAULT_PATH_FILE = (
     '/home/han/racing_ws/src/pure_pursuit_pkg/config/'
-    'waypoints_local_resampled_0.3.yaml'
+    'waypoints_recorded_resampled_0.5.yaml'
 )
 
 

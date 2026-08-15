@@ -64,6 +64,11 @@ class DirectLocalizationNode(Node):
     # 현장서 회전 시 화살표가 반대로 돌면 true로(런치/CLI에서) 뒤집는다.
     # heading_init도 같은 값으로 맞춰야 yaw_offset이 일관됨. 기본 false=무변화.
     self.declare_parameter('invert_imu_yaw', False)
+    # ★ GPS 끊김 감지. 이 시간 이상 /fix가 안 오면 odom 발행을 멈춘다.
+    # 예전엔 fix가 끊겨도 마지막 위치를 30Hz로 계속 발행해서, 차는 움직이는데
+    # 위치는 고정된 채 로컬 경로가 계속 생성됐다(하류 타임아웃도 안 걸림).
+    # 발행을 멈추면 local_sliding_window/pure_pursuit가 타임아웃으로 안전 정지한다.
+    self.declare_parameter('fix_timeout', 1.0)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -76,6 +81,9 @@ class DirectLocalizationNode(Node):
     self.frame_id = self.get_parameter('frame_id').value
     self.child_frame_id = self.get_parameter('child_frame_id').value
     self.invert_imu_yaw = bool(self.get_parameter('invert_imu_yaw').value)
+    self.fix_timeout = float(self.get_parameter('fix_timeout').value)
+    self.last_fix_time = None
+    self.fix_lost = False
 
     self.tf = Transformer.from_crs('EPSG:4326', f'EPSG:{epsg}',
                                    always_xy=True)
@@ -128,6 +136,10 @@ class DirectLocalizationNode(Node):
     self.prev_x, self.prev_y, self.prev_t = x, y, t
     self.x, self.y = x, y
     self.have_fix = True
+    self.last_fix_time = t
+    if self.fix_lost:
+      self.get_logger().info('GPS 복구 — 위치 발행 재개')
+      self.fix_lost = False
 
   def imu_cb(self, msg: Imu):
     raw = yaw_from_quat(msg.orientation)
@@ -145,6 +157,17 @@ class DirectLocalizationNode(Node):
 
   def publish_odom(self):
     if not self.have_fix:
+      return
+    # ★ GPS 끊김: 오래된 위치를 계속 내보내면 차는 움직이는데 위치는 고정되어
+    # 하류가 엉뚱한 경로를 따라간다. 발행을 멈춰 하류가 타임아웃 정지하게 한다.
+    t_now = self.get_clock().now().nanoseconds * 1e-9
+    if self.last_fix_time is not None and \
+            (t_now - self.last_fix_time) > self.fix_timeout:
+      if not self.fix_lost:
+        self.get_logger().error(
+            f'GPS 끊김 ({t_now - self.last_fix_time:.1f}s) → 위치 발행 중단 '
+            f'(하류가 타임아웃으로 정지함)')
+        self.fix_lost = True
       return
     now = self.get_clock().now().to_msg()
     q = tft.quaternion_from_euler(0.0, 0.0, self.yaw)
