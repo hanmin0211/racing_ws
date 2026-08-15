@@ -27,6 +27,15 @@
 cd /home/han/racing_ws && colcon build && source install/setup.bash
 ```
 
+**★ 재실행 전에는 반드시 완전 정리** (`pkill -f ros2` 로는 부족하다)
+```bash
+bash tools/ros_cleanup.sh
+```
+> 노드 실행파일 경로가 `/opt/ros/humble/lib/...` 라 `ros2` 패턴에 안 걸린다.
+> Ctrl-C 해도 **런처만 죽고 자식 노드가 고아로 남아** 쌓이고, NTRIP 클라이언트가
+> 여러 개가 되면 NGII 1접속 제한에 걸려 **401 Unauthorized / RTCM 0프레임**이 된다.
+> (2026-08-15 현장에서 NTRIP 3개·global_path_publisher 4개가 쌓여 RTK가 계속 401)
+
 **★ bringup.launch.py 가 RTK(ngii_rtk)를 이미 포함한다.**
 따로 `ngii_rtk.launch.py` 를 켜면 **NTRIP 클라이언트가 2개**가 되어
 NGII 계정당 1접속 제한에 걸려 `401 Unauthorized` 가 나고 RTCM이 0프레임이 된다.
