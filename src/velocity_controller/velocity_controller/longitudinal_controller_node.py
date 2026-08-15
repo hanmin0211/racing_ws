@@ -53,12 +53,16 @@ class LongitudinalController(Node):
     # ⚠ 구동모터는 아직 벤치 미검증이라 기본값을 보수적으로 둔다.
     #    벤치 검증(FF/PID 재식별) 후 v_max를 단계적으로 올릴 것.
     self.declare_parameter('v_max', 1.0)
-    self.declare_parameter('v_min', 0.5)       # 4WD 코너링 스톨 방지 최소
+    # 0.5 → 0.25: 곡률 감속이 실제로 걸리려면 하한이 낮아야 한다.
+    # (첫 실주행에서 코너 진입이 빨랐는데, v_min 0.5가 감속을 막고 있었다)
+    self.declare_parameter('v_min', 0.25)     # 코너링 스톨 방지 최소
     self.declare_parameter('v_slow', 0.8)
     self.declare_parameter('v_slalom', 0.6)
     self.declare_parameter('v_reverse', -0.5)
     # ---- 감속 규칙 ----
-    self.declare_parameter('curvature_gain', 2.5)   # v = v_max/(1+gain·|κ|)
+    # 2.5 → 6.0: FF 미보정이라 실제 속도가 명령보다 높게 나오므로 감속을 강하게.
+    # 예) κ=0.23(R=4.4m) 에서 2.5면 63%, 6.0이면 42%로 줄어든다.
+    self.declare_parameter('curvature_gain', 6.0)   # v = v_max/(1+gain·|κ|)
     self.declare_parameter('max_accel', 1.0)        # m/s²
     self.declare_parameter('max_decel', 1.8)        # m/s²
     self.declare_parameter('stop_line_trigger', 19.0)

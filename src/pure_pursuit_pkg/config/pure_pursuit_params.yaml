@@ -21,12 +21,15 @@ local_pure_pursuit:
     max_steering_deg: 18.0
     # ---- lookahead (속도비례) ----
     k_ld: 0.6
-    min_lookahead: 1.0
+    # 1.0 → 1.8: 짧은 lookahead 는 조향이 흔들리고 경로를 물결치듯 따라간다.
+    min_lookahead: 1.8
     max_lookahead: 4.0
     # ---- 속도 ----
-    target_speed: 1.0                # 초기 튜닝 시작 속도(m/s) — 반드시 저속부터
+    target_speed: 0.5                # FF 미보정이라 실제는 이보다 빠르게 나온다
     min_speed: 0.4
-    curvature_speed_gain: 2.0        # 곡률 클수록 감속 (v = target/(1+gain·|κ|))
+    # 2.0 → 6.0: 첫 실주행에서 코너 진입이 빨랐다. FF 미보정 상태라
+    # 실제 속도가 명령보다 높게 나오므로 감속을 더 강하게 건다.
+    curvature_speed_gain: 6.0        # v = target/(1+gain·|κ|)
     # ---- 토픽/제어 ----
     local_path_topic: "/local_path"
     odom_topic: "/odometry/filtered"
@@ -34,4 +37,5 @@ local_pure_pursuit:
     control_rate: 20.0
     path_timeout: 0.5                # 초; 이보다 오래 경로 없으면 정지
     # ---- 조향 슬루레이트 (부드러운 sweep / 조향모터 보호) ----
-    max_steer_rate_deg: 90.0         # 도/초
+    # 90 → 60: 급조향 억제(조향모터 부하·오버슈트 감소)
+    max_steer_rate_deg: 60.0         # 도/초
