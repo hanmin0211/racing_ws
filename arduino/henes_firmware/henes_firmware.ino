@@ -144,6 +144,18 @@ float commanded_velocity = 0.0;  // 소프트스타트 반영된 PID 목표
 float current_velocity = 0.0;
 float target_steer_angle = 0.0;  // ROS 목표 조향각(도)
 
+// ---- 개루프(open-loop) 모드 : FF/PID 식별 전용 ----
+// `PWM:x` 명령을 받으면 속도 PID를 우회하고 지정 PWM을 그대로 인가한다.
+// FF(정지마찰·속도비례 항)를 재식별하려면 '이 PWM에서 실제로 몇 m/s가 나오는가'를
+// 측정해야 하는데, PID가 개입하면 그 관계가 가려지기 때문이다.
+// ★ 안전가드(스톨 감지)·워치독은 개루프에서도 그대로 살아있다.
+// `VEL:` 명령이 오면 즉시 폐루프로 복귀한다.
+bool openloop_active = false;
+int openloop_target_pwm = 0;
+int openloop_pwm = 0;            // 레이트 제한이 적용된 실제 인가값
+#define OPENLOOP_RATE     3      // 사이클(10ms)당 최대 변화 → 급가속 방지
+#define MAX_OPENLOOP_PWM 140     // 식별용 상한 (MAX_DRIVE_PWM 과 별개)
+
 signed long encoder1count = 0, encoder2count = 0, prev_encoder1 = 0;
 unsigned long prev_time = 0, last_rx_time = 0, last_tel_time = 0;
 bool watchdog_tripped = false;
@@ -179,13 +191,15 @@ NewPing sonar[SONAR_NUM] = {
 
 // ============================ 5. 저수준 모터 제어 =============================
 void front_motor_control(int pwm) {
-  pwm = constrain(pwm, -MAX_DRIVE_PWM, MAX_DRIVE_PWM);
+  int lim = openloop_active ? MAX_OPENLOOP_PWM : MAX_DRIVE_PWM;
+  pwm = constrain(pwm, -lim, lim);
   if (pwm > 0)      { digitalWrite(MOTOR1_ENA, HIGH); digitalWrite(MOTOR1_ENB, LOW);  analogWrite(MOTOR1_PWM, pwm); }
   else if (pwm < 0) { digitalWrite(MOTOR1_ENA, LOW);  digitalWrite(MOTOR1_ENB, HIGH); analogWrite(MOTOR1_PWM, -pwm); }
   else              { digitalWrite(MOTOR1_ENA, LOW);  digitalWrite(MOTOR1_ENB, LOW);  analogWrite(MOTOR1_PWM, 0); }
 }
 void rear_motor_control(int pwm) {
-  pwm = constrain(pwm, -MAX_DRIVE_PWM, MAX_DRIVE_PWM);
+  int lim = openloop_active ? MAX_OPENLOOP_PWM : MAX_DRIVE_PWM;
+  pwm = constrain(pwm, -lim, lim);
   if (pwm > 0)      { digitalWrite(MOTOR2_ENA, HIGH); digitalWrite(MOTOR2_ENB, LOW);  analogWrite(MOTOR2_PWM, pwm); }
   else if (pwm < 0) { digitalWrite(MOTOR2_ENA, LOW);  digitalWrite(MOTOR2_ENB, HIGH); analogWrite(MOTOR2_PWM, -pwm); }
   else              { digitalWrite(MOTOR2_ENA, LOW);  digitalWrite(MOTOR2_ENB, LOW);  analogWrite(MOTOR2_PWM, 0); }
@@ -270,6 +284,19 @@ void apply_acceleration_limit() {
   else if (target_velocity < commanded_velocity) commanded_velocity = max(target_velocity, commanded_velocity - md);
 }
 void velocity_pid_control() {
+  // 개루프 모드: PID를 건너뛰고 지정 PWM을 레이트 제한만 걸어 인가한다.
+  if (openloop_active) {
+    int d = openloop_target_pwm - openloop_pwm;
+    if (d >  OPENLOOP_RATE) d =  OPENLOOP_RATE;
+    if (d < -OPENLOOP_RATE) d = -OPENLOOP_RATE;
+    openloop_pwm += d;
+    velocity_pwm_output = constrain(openloop_pwm,
+                                    -MAX_OPENLOOP_PWM, MAX_OPENLOOP_PWM);
+    velocity_error_sum = 0.0;
+    velocity_error_old = 0.0;
+    commanded_velocity = 0.0;
+    return;
+  }
   velocity_error = commanded_velocity - current_velocity;
   float ed = (velocity_error - velocity_error_old) / VELOCITY_DT;
   float ff = 0.0;
@@ -344,7 +371,7 @@ void safety_guard() {
   // --- 구동 스톨: PWM 높은데 안 움직이고 목표는 있음 ---
   if (abs(velocity_pwm_output) > DRIVE_STALL_PWM &&
       fabs(current_velocity) < DRIVE_STALL_SPEED &&
-      fabs(target_velocity) > 0.05) {
+      (fabs(target_velocity) > 0.05 || openloop_target_pwm != 0)) {
     drive_stall_ms += CONTROL_DT_MS;
     if (drive_stall_ms >= DRIVE_STALL_MS) drive_stalled = true;
   } else {
@@ -353,7 +380,9 @@ void safety_guard() {
   if (drive_stalled) {
     velocity_pwm_output = 0;             // 컷
     velocity_error_sum = 0;
-    if (fabs(target_velocity) < 0.05) drive_stalled = false;  // 목표 0되면 해제
+    // 목표가 0(폐루프) 또는 개루프 지령 0이면 해제
+    if (fabs(target_velocity) < 0.05 && openloop_target_pwm == 0)
+      drive_stalled = false;
   }
 
   // --- 조향 스톨: PWM 높은데 ADC 안 변하고 오차 큼 ---
@@ -392,6 +421,21 @@ void parseCommand(String line) {
     int st = vi + 4, en = line.indexOf(",", st);
     float v = (en >= 0 ? line.substring(st, en) : line.substring(st)).toFloat();
     target_velocity = constrain(v, -3.0, 3.0);
+    if (openloop_active) {           // VEL 명령 → 즉시 폐루프 복귀
+      openloop_active = false;
+      openloop_target_pwm = 0;
+      openloop_pwm = 0;
+    }
+  }
+  // 개루프 식별 명령: "PWM:<-140..140>" — 속도 PID를 우회한다.
+  int pi = line.indexOf("PWM:");
+  if (pi >= 0) {
+    int st = pi + 4, en = line.indexOf(",", st);
+    int v = (en >= 0 ? line.substring(st, en) : line.substring(st)).toInt();
+    openloop_active = true;
+    openloop_target_pwm = constrain(v, -MAX_OPENLOOP_PWM, MAX_OPENLOOP_PWM);
+    target_velocity = 0.0;
+    commanded_velocity = 0.0;
   }
   int si = line.indexOf("STEER:");
   if (si >= 0) {
@@ -407,6 +451,9 @@ void check_watchdog() {
     if (!watchdog_tripped) Serial.println("WATCHDOG: serial timeout - stop");
     watchdog_tripped = true;
     target_velocity = 0.0;
+    openloop_active = false;      // 개루프도 즉시 해제
+    openloop_target_pwm = 0;
+    openloop_pwm = 0;
     // 조향은 중앙으로 몰지 않고 정지(freeze)한다. comms 끊긴 뒤 중앙 복귀를
     // 시도하다 breakaway 스티션에 걸려 저PWM 스톨 → 모터 발열/소손하는 것을 방지.
     // (steering_pid_control이 watchdog_tripped를 보고 PWM 0 출력)
@@ -424,6 +471,7 @@ void send_telemetry() {
   Serial.print(" TARGET="); Serial.print(target_velocity, 3);
   Serial.print(" PWM="); Serial.print(velocity_pwm_output);
   Serial.print(" SLOPE="); Serial.print(slope);
+  Serial.print(" MODE="); Serial.print(openloop_active ? "OPENLOOP" : "PID");
   // 소나 ping_cm()은 에코 대기(최대 ~11ms/개) 블로킹이라 3개를 한 번에 핑하면
   // 100Hz 제어루프가 밀린다. 매 텔레메트리(50ms)마다 1개씩만 순번으로 핑하고
   // 나머지는 직전 캐시값을 낸다(각 소나 ~150ms/6.7Hz 갱신). 완전 비블로킹이
