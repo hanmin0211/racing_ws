@@ -1,0 +1,27 @@
+# navsat_transform.yaml
+# =======================
+# GPS(/fix, WGS84 위경도)를 로컬 평면좌표(x, y, m)로 변환해 /odometry/gps 로
+# 발행하는 navsat_transform_node 설정.
+#
+# 핵심: datum(원점)을 지금까지 파이프라인 전체에서 써온 원점과
+# 정확히 동일하게 고정한다. (gps_to_local_fit.py 로 waypoint 경로를 만들
+# 때 사용한 원점, 그리고 기존 waypoint_follower/pure_pursuit.py 의
+# 하드코딩된 origin_x/origin_y 와 검증을 통해 동일함을 확인한 값)
+#
+#   origin_lat = 36.970661166666666
+#   origin_lon = 127.87485216666667
+#   (UTM 52N 기준 origin_x=399848.522, origin_y=4092209.171 과 일치 확인됨)
+
+navsat_transform:
+  ros__parameters:
+    frequency: 30.0
+    delay: 3.0
+    magnetic_declination_radians: 0.0   # 지역 자기편각 (필요시 국토지리정보원 값으로 교체)
+    yaw_offset: 0.0
+    zero_altitude: true
+    broadcast_utm_transform: false
+    publish_filtered_gps: true
+    use_odometry_yaw: false             # IMU(orientation)의 yaw를 초기 정렬에 사용
+    wait_for_datum: false
+
+   # datum: [36.970661166666666, 127.87485216666667, 0.0]  # [lat, lon, yaw]

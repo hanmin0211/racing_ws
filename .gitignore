@@ -1,0 +1,19 @@
+# colcon 빌드 산출물 (340MB → 재생성 가능하므로 추적하지 않음)
+build/
+install/
+log/
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# 에디터/OS
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# 임시
+nano

@@ -1,0 +1,36 @@
+ublox_gps_node:
+  ros__parameters:
+    debug: 0                    # Range 0-4 (0 means no debug statements will print)
+    device: /dev/ttyACM0
+    frame_id: gps
+    uart1:
+      baudrate: 460800
+    gnss:
+      # RTK 안정성/속도를 위해 다중 위성군(멀티 GNSS)을 모두 사용한다.
+      # 위성이 많을수록 RTK Fixed가 빠르고 잘 유지된다. NGII VRS-RTCM32(MSM)는
+      # GPS/GLONASS/Galileo/BeiDou/QZSS 보정을 모두 제공한다.
+      gps: true
+      glonass: true
+      beidou: true
+      galileo: true
+      qzss: true       # 한국에서 QZSS(일본 위성) 신호도 가시 - 보강에 도움
+      imes: false
+    # TMODE3 Config
+    tmode3: 0                   # Survey-In Mode
+    sv_in:
+      reset: True               # True: disables and re-enables survey-in (resets)
+                                # False: Disables survey-in only if TMODE3 is
+                                # disabled
+      min_dur: 300              # Survey-In Minimum Duration [s]
+      acc_lim: 3.0              # Survey-In Accuracy Limit [m]
+ 
+    inf:
+      all: true                   # Whether to display all INF messages in console
+ 
+    publish:
+      all: false
+      nav:
+        all: true
+        relposned: true
+        posllh: true
+        posecef: true

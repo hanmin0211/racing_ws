@@ -1,0 +1,24 @@
+gps_local_bridge:
+  ros__parameters:
+    # waypoint_save_pkg(waypoint_save.py)가 저장한 파일 경로와 반드시 동일하게 맞출 것
+    waypoint_file: "/home/han/waypoints/all_waypoint.yaml"
+
+    # 이 실제 시스템 기준 토픽명 (nmea_navsat_driver = /fix, handsfree_ros2_imu 패키지 확인 필요)
+    gps_topic: "/fix"
+    imu_topic: "handsfree/imu"
+
+    utm_zone: 52
+    utm_hemisphere_north: true
+
+    # 'first_waypoint' (기본, 첫 웨이포인트를 원점으로) 또는 'static'
+    origin_mode: "first_waypoint"
+    origin_latitude: 0.0
+    origin_longitude: 0.0
+
+    # imu_gps_auto_calibrator 실행 결과로 나온 offset_deg 값을 여기에 입력 (아직 없으면 0.0 유지)
+    yaw_offset_deg: 0.0
+
+    waypoint_publish_interval: 0.05
+    startup_delay_sec: 3.0
+
+    min_fix_status: 0

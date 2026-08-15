@@ -1,0 +1,170 @@
+import numpy as np
+import rclpy
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry, Path
+from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
+from std_msgs.msg import Float64MultiArray
+
+
+class LocalSlidingWindowNode(Node):
+
+  def __init__(self):
+    super().__init__('local_sliding_window_node')
+
+    # rosbag 재생 기반 시뮬레이션이므로 시뮬레이션 시간을 따라가려면
+    # 실행 시 --ros-args -p use_sim_time:=true 옵션을 붙여주세요.
+    # (use_sim_time은 rclpy가 자동으로 선언하는 파라미터라 여기서 다시
+    #  declare_parameter로 선언하면 중복 선언 에러가 납니다.)
+
+    # 퍼블리셔
+    self.local_path_pub = self.create_publisher(Path, '/local_path', 10)
+    # rqt_plot 등으로 3차 다항식 계수(a,b,c,d) 변화를 그래프로 확인하기 위한 퍼블리셔
+    self.poly_coeffs_pub = self.create_publisher(Float64MultiArray, '/poly_coeffs', 10)
+
+    # 전역 경로는 한 번만 퍼블리시되는 경우가 많으므로 TRANSIENT_LOCAL QoS로
+    # 늦게 뜬 노드도 마지막 메시지를 받을 수 있도록 함
+    global_path_qos = QoSProfile(
+        depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL
+    )
+    self.global_path_sub = self.create_subscription(
+        Path, '/global_path', self.global_path_callback, global_path_qos
+    )
+    self.odom_sub = self.create_subscription(
+        Odometry, '/odom', self.odom_callback, 10
+    )
+
+    # 데이터 저장 변수
+    self.WINDOW_SIZE = 20
+    self.global_waypoints = np.array([])  # [[x, y], [x, y], ...] 형태로 저장
+    self.car_x = 0.0
+    self.car_y = 0.0
+    self.car_yaw = 0.0
+    self.is_path_received = False
+    self.is_odom_received = False
+
+  def global_path_callback(self, msg):
+    # Path 메시지 -> numpy 배열로 변환
+    pts = []
+    for pose in msg.poses:
+      pts.append([pose.pose.position.x, pose.pose.position.y])
+    self.global_waypoints = np.array(pts)
+    self.is_path_received = True
+
+  def odom_callback(self, msg):
+    self.car_x = msg.pose.pose.position.x
+    self.car_y = msg.pose.pose.position.y
+
+    # 쿼터니언(Quaternion)을 Yaw 각도로 변환
+    q = msg.pose.pose.orientation
+    siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+    cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+    self.car_yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    self.is_odom_received = True
+
+    # 데이터가 모두 들어오면 슬라이싱 및 퍼블리시 수행
+    self.process_sliding_window()
+
+  def get_closest_index(self):
+    # 차량 위치와 전역 경로 점들 간의 최단 거리 인덱스 계산
+    if len(self.global_waypoints) == 0:
+      return 0
+    distances = np.hypot(
+        self.global_waypoints[:, 0] - self.car_x,
+        self.global_waypoints[:, 1] - self.car_y,
+    )
+    return int(np.argmin(distances))
+
+  def process_sliding_window(self):
+    if not self.is_path_received or not self.is_odom_received:
+      return
+    if len(self.global_waypoints) < 2:
+      return
+
+    closest_idx = self.get_closest_index()
+    total_pts = len(self.global_waypoints)
+
+    # 1. 전방 웨이포인트 슬라이싱 (Sliding Window)
+    # 전역 경로가 폐루프(closed loop) 트랙이라는 전제 하에 순환 인덱싱 사용
+    win_size = min(self.WINDOW_SIZE, total_pts)
+    indices = [(closest_idx + i) % total_pts for i in range(win_size)]
+    forward_global = self.global_waypoints[indices]
+
+    # 2. 글로벌 좌표계 -> 차량 기준 상대 좌표계(base_link)로 변환
+    local_pts = []
+    for pt in forward_global:
+      dx = float(pt[0]) - self.car_x
+      dy = float(pt[1]) - self.car_y
+
+      local_x = dx * np.cos(self.car_yaw) + dy * np.sin(self.car_yaw)
+      local_y = -dx * np.sin(self.car_yaw) + dy * np.cos(self.car_yaw)
+      local_pts.append([local_x, local_y])
+
+    local_pts = np.array(local_pts)
+    x_local = local_pts[:, 0]
+    y_local = local_pts[:, 1]
+
+    # x_local이 단조증가하지 않으면(급커브 등) 3차 다항식 피팅이 왜곡될 수 있음
+    if not np.all(np.diff(x_local) > 0):
+      self.get_logger().warn(
+          'x_local이 단조증가하지 않습니다. 곡선 피팅이 불안정할 수 있습니다.'
+      )
+
+    # 3. 최소자승법(Least Squares Method)을 이용한 3차 다항식 피팅
+    try:
+      coeffs = np.polyfit(x_local, y_local, 3)
+      self.get_logger().info(
+          f'Poly Coeffs -> a: {coeffs[0]:.6f}, b: {coeffs[1]:.6f}, '
+          f'c: {coeffs[2]:.6f}, d: {coeffs[3]:.6f}'
+      )
+      poly_func = np.poly1d(coeffs)
+
+      # rqt_plot에서 /poly_coeffs/data[0]~[3]으로 a,b,c,d 그래프 확인 가능
+      coeffs_msg = Float64MultiArray()
+      coeffs_msg.data = [float(coeffs[0]), float(coeffs[1]),
+                         float(coeffs[2]), float(coeffs[3])]
+      self.poly_coeffs_pub.publish(coeffs_msg)
+    except Exception as e:
+      self.get_logger().warn(f'다항식 피팅 실패: {e}')
+      return
+
+    # 4. 피팅된 3차 곡선 위에서 미래 점 재추출
+    # base_link 좌표계이므로 차량은 항상 원점(0,0)에 위치함
+    min_x = 0.0
+    max_x = max(x_local[-1], min_x + 2.0)
+    x_future = np.linspace(min_x, max_x, self.WINDOW_SIZE)
+    y_future = poly_func(x_future)
+
+    # 5. Path 메시지로 포장하여 /local_path 토픽으로 퍼블리시
+    local_path_msg = Path()
+    local_path_msg.header.stamp = self.get_clock().now().to_msg()
+    local_path_msg.header.frame_id = 'base_link'
+
+    poses_list = []
+    for fx, fy in zip(x_future, y_future):
+      pose = PoseStamped()
+      pose.header = local_path_msg.header
+      pose.pose.position.x = float(fx)
+      pose.pose.position.y = float(fy)
+      pose.pose.position.z = 0.0
+      poses_list.append(pose)
+
+    local_path_msg.poses = poses_list
+    self.local_path_pub.publish(local_path_msg)
+
+
+def main(args=None):
+  rclpy.init(args=args)
+  node = LocalSlidingWindowNode()
+  try:
+    rclpy.spin(node)
+  except KeyboardInterrupt:
+    pass
+  finally:
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+  main()

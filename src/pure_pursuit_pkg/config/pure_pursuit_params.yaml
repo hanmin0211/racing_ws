@@ -1,0 +1,37 @@
+# pure_pursuit_params.yaml
+# ==========================
+# 현재 파이프라인(local_pure_pursuit_node)용 파라미터.
+# 실차 튜닝 시 이 값들을 바꿔가며 재실행하세요.
+#
+# 데이터 흐름: /local_path(base_link, local_sliding_window 생성) + /odometry/filtered
+#   → local_pure_pursuit → /cmd_vel(linear.x=속도[m/s], angular.z=조향각[도, 좌+/우−])
+#   → serial_bridge → "VEL:x,STEER:y" → henes_firmware
+#
+# ※ 구버전(gps_local_realtime_node / pure_pursuit_node / /vehicle_local_pose / /drive)은
+#   폐기됨. 그 설정을 여기서 제거함.
+
+local_pure_pursuit:
+  ros__parameters:
+    # ---- 차량 제원 ----
+    wheelbase: 0.785                 # HENES T870 브룬 축거 실측 (m)
+    # 실사용 최대 타각. 물리 한계는 20°지만 그 지점에서 포텐셔미터가 ADC 0으로
+    # 포화(위치 피드백 상실 + 엔드스톱 컷)하므로 18°로 제한해 벼랑 끝을 피한다.
+    # 펌웨어 STEER_MAX_ANGLE(20.0)은 캘리브 기준값이라 그대로 두어야 매핑이 맞는다.
+    # ※ 18°의 최소 회전반경 = 2.42m (축거 0.785m) → 경로 최소 반경 2.8m 이상 권장
+    max_steering_deg: 18.0
+    # ---- lookahead (속도비례) ----
+    k_ld: 0.6
+    min_lookahead: 1.0
+    max_lookahead: 4.0
+    # ---- 속도 ----
+    target_speed: 1.0                # 초기 튜닝 시작 속도(m/s) — 반드시 저속부터
+    min_speed: 0.4
+    curvature_speed_gain: 2.0        # 곡률 클수록 감속 (v = target/(1+gain·|κ|))
+    # ---- 토픽/제어 ----
+    local_path_topic: "/local_path"
+    odom_topic: "/odometry/filtered"
+    cmd_topic: "/cmd_vel"
+    control_rate: 20.0
+    path_timeout: 0.5                # 초; 이보다 오래 경로 없으면 정지
+    # ---- 조향 슬루레이트 (부드러운 sweep / 조향모터 보호) ----
+    max_steer_rate_deg: 90.0         # 도/초

@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+control.launch.py — 종/횡방향 제어 체인 (실제 모터까지 나감).
+
+  local_pure_pursuit      : /local_path       → /steering_cmd (조향각[도])
+  longitudinal_controller : /curvature 등     → /target_speed (m/s)
+  vehicle_cmd_mux         : 위 둘 + teleop/E-stop → /cmd_vel  (단일 출구)
+  serial_bridge           : /cmd_vel          → "VEL:x,STEER:y" → Arduino
+
+★ 역할 분담: ROS는 '목표 속도·조향각'까지만 책임지고, PWM 변환과 스톨가드는
+  펌웨어가 담당한다. ROS가 raw PWM을 쏘면 펌웨어 안전가드가 무력화된다.
+
+⚠ 이 런치는 **모터를 실제로 구동**한다. bringup에는 control:=true 로만 붙는다.
+
+  ros2 launch pure_pursuit_pkg control.launch.py
+  ros2 launch pure_pursuit_pkg control.launch.py max_speed:=0.6   # 더 보수적으로
+
+전제: bringup(로컬라이제이션+경로)이 이미 돌아 /local_path·/curvature 발행 중.
+"""
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+  pp_share = get_package_share_directory('pure_pursuit_pkg')
+  default_params = os.path.join(pp_share, 'config', 'pure_pursuit_params.yaml')
+
+  pp_params = LaunchConfiguration('pp_params')
+  arduino_port = LaunchConfiguration('arduino_port')
+  max_speed = LaunchConfiguration('max_speed')
+  max_steer = LaunchConfiguration('max_steer_deg')
+  teleop = LaunchConfiguration('teleop')
+
+  return LaunchDescription([
+      DeclareLaunchArgument('pp_params', default_value=default_params),
+      DeclareLaunchArgument('arduino_port', default_value='auto'),
+      # 구동모터 벤치검증 전이라 보수적 기본값. 검증 후 상향할 것.
+      DeclareLaunchArgument('max_speed', default_value='1.0'),
+      DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
+      # teleop:=true 면 키보드 수동 제어 노드도 함께 띄운다(먹스에서 사람 우선).
+      DeclareLaunchArgument('teleop', default_value='false'),
+
+      # 횡방향: 조향각만 발행 (속도는 종방향이 소유)
+      Node(
+          package='pure_pursuit_pkg',
+          executable='local_pure_pursuit_node',
+          name='local_pure_pursuit',
+          output='screen',
+          parameters=[pp_params, {'standalone': False}],
+      ),
+
+      # 종방향: 미션/곡률/장애물 종합 → 목표속도
+      Node(
+          package='velocity_controller',
+          executable='longitudinal_controller',
+          name='longitudinal_controller',
+          output='screen',
+          parameters=[{'v_max': max_speed}],
+      ),
+
+      # 명령 먹스: 단일 /cmd_vel 출구 + 최종 안전 클램프
+      Node(
+          package='velocity_controller',
+          executable='vehicle_cmd_mux',
+          name='vehicle_cmd_mux',
+          output='screen',
+          parameters=[{'max_speed': max_speed, 'max_steer_deg': max_steer}],
+      ),
+
+      # 시리얼 브리지: /cmd_vel → Arduino, 텔레메트리 → 구조화 토픽
+      Node(
+          package='velocity_controller',
+          executable='serial_bridge',
+          name='serial_bridge_node',
+          output='screen',
+          parameters=[{
+              'port': arduino_port,
+              'baud': 57600,
+              'watchdog_timeout': 0.5,
+              'max_steer_deg': max_steer,
+          }],
+      ),
+
+      # (선택) 키보드 수동 제어 — 먹스에서 자율보다 우선
+      Node(
+          package='velocity_controller',
+          executable='teleop_keyboard',
+          name='teleop_keyboard',
+          output='screen',
+          prefix='xterm -e',
+          parameters=[{'max_speed': max_speed, 'max_steer_deg': max_steer}],
+          condition=IfCondition(teleop),
+      ),
+  ])

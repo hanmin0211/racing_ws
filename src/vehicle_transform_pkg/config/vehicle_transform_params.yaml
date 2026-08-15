@@ -1,0 +1,16 @@
+vehicle_transform:
+  ros__parameters:
+    lookahead_window_m: 8.0
+    min_forward_x: -1.0
+    min_points_for_fit: 4
+    poly_degree: 3
+    publish_rate_hz: 20.0
+    curve_sample_count: 20
+    # ★ 루프(폐곡선) 트랙 대응: 가장 가까운 웨이포인트 인덱스로부터
+    #   이 개수만큼만 연속으로 사용. 트랙이 자기 자신과 가까이 지나가는
+    #   지점(시작/끝, 코너)에서 엉뚱한 구간이 섞이는 것을 방지.
+    #   급격한 헤어핀(U턴) 구간에서는 이 값을 줄여서 U턴 전체가
+    #   한 창에 다 들어오지 않게 하는 것이 좋다.
+    forward_index_count: 20
+    origin_lat: 36.970661166666666
+    origin_lon: 127.87485216666667

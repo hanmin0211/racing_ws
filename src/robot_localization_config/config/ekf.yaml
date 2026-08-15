@@ -1,0 +1,61 @@
+# ekf.yaml
+# ==========
+# robot_localization 의 ekf_node 설정.
+# IMU(handsfree/imu, 실제 자이로/가속도/방향)와
+# navsat_transform_node가 GPS를 변환해 내놓는 /odometry/gps 를 융합해서
+# /odometry/filtered (map 프레임 기준, 로컬 x,y + yaw)를 발행한다.
+#
+# 이 구성은 robot_localization 공식 문서의 "GPS를 이용한 로컬라이제이션"
+# 예제와 동일한 패턴이다 (ekf_node 1개 + navsat_transform_node 조합).
+# 참고: robot_localization ROS wiki, github.com/cra-ros-pkg/robot_localization
+
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: true            # 지상 차량이므로 z, roll, pitch 는 융합에서 제외
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map            # GPS 기반 절대 위치를 쓰므로 world_frame = map
+
+    # ---- IMU 입력 ----
+    # gps_heading_init 노드가 10m 직진 GPS-course로 yaw를 맵 좌표계에 정렬해
+    # 재발행하는 /imu/corrected 를 사용한다. (캘리브 전에는 원본 통과, 완료 후
+    # 정렬값 적용) 원본은 handsfree/imu.
+    imu0: /imu/corrected
+    imu0_config: [false, false, false,   # x, y, z position (사용 안 함)
+                  true,  true,  true,    # roll, pitch, yaw orientation (사용)
+                  false, false, false,   # x, y, z velocity (사용 안 함)
+                  true,  true,  true,    # roll, pitch, yaw velocity (각속도 - 사용)
+                  true,  true,  false]   # x, y, z linear acceleration (수평 가속도만 사용)
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 10
+    imu0_remove_gravitational_acceleration: true
+    # 이상치(스파이크) 제거: 각속도/가속도가 현재 필터 상태와 마할라노비스
+    # 거리 기준으로 너무 동떨어지면 그 측정값을 버린다. (Mahalanobis 거리는
+    # 측정 공분산으로 정규화된 "몇 시그마만큼 벗어났는가"를 나타내는 값이며,
+    # 이상치 판별의 통계적 표준 기법이다.) 값은 로그를 보며 튜닝 필요 -
+    # 너무 작으면 정상 데이터도 계속 버려지고, 너무 크면 이상치가 안 걸러짐.
+   # imu0_twist_rejection_threshold: 2.0
+   # imu0_linear_acceleration_rejection_threshold: 2.0
+
+    # ---- GPS(navsat_transform 변환 결과) 입력 ----
+    odom0: /odometry/gps
+    odom0_config: [true,  true,  false,  # x, y 위치만 사용 (z는 2D 모드라 다 제외)
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    odom0_differential: false
+    odom0_relative: false
+    odom0_queue_size: 10
+    # GPS 위치 튐(멀티패스, 순간 오차) 방지: 마할라노비스 거리 기준
+    # rejection threshold. 예시로 참고한 공개 설정(odom0_pose_rejection_threshold: 20.0)
+    # 보다 보수적으로(더 엄격하게) 5.0으로 시작 - 실측 GPS covariance(약 2.8 m^2)
+    # 기준으로 튜닝 필요. 값을 낮출수록 더 엄격하게 걸러짐.
+    odom0_pose_rejection_threshold: 5.0
+
+    print_diagnostics: true
+    debug: false
