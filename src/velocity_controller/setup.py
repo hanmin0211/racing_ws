@@ -35,6 +35,8 @@ setup(
         'longitudinal_controller = velocity_controller.longitudinal_controller_node:main',
         'vehicle_cmd_mux = velocity_controller.vehicle_cmd_mux_node:main',
         'teleop_keyboard = velocity_controller.teleop_keyboard_node:main',
+        'encoder_calib = velocity_controller.encoder_calib_node:main',
+        'ff_sweep = velocity_controller.ff_sweep_node:main',
         ],
     },
 )

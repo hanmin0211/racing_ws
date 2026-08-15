@@ -76,6 +76,15 @@ class SerialBridgeNode(Node):
             '/cmd_vel',
             self.cmd_vel_callback,
             10)
+        # 개루프 PWM 요청(FF 식별 전용). 값이 오면 VEL 대신 PWM: 명령을 보낸다.
+        # 0을 받거나 openloop_timeout 동안 소식이 없으면 폐루프(VEL)로 자동 복귀.
+        self.openloop_pwm = None
+        self.openloop_time = None
+        self.declare_parameter('openloop_timeout', 0.5)
+        self.openloop_timeout = float(
+            self.get_parameter('openloop_timeout').value)
+        self.create_subscription(Int32, '/drive_pwm_cmd',
+                                 self.drive_pwm_callback, 10)
 
         # ---------- 발행자: Arduino 상태를 ROS2 토픽으로 재발행 ----------
         self.status_pub = self.create_publisher(String, '/vehicle_status', 10)
@@ -88,6 +97,11 @@ class SerialBridgeNode(Node):
         self.steer_err_pub = self.create_publisher(Float64, '/steering_error', 10)
         self.obstacle_pub = self.create_publisher(Float64, '/obstacle_distance', 10)
         self.stall_pub = self.create_publisher(Bool, '/vehicle_stall', 10)
+        # 엔코더 원시 카운트 — 엔코더 스케일(counts_per_revolution) 검증에 필수.
+        # RTK 이동거리와 비교해 1카운트당 실제 거리를 역산한다.
+        self.enc_pub = self.create_publisher(Int32, '/encoder_count', 10)
+        # 개루프 식별용: 현재 인가 중인 구동 PWM
+        self.drive_pwm_pub = self.create_publisher(Int32, '/drive_pwm', 10)
         # 소나 유효 최대거리[m]. NewPing은 미검출 시 0을 주므로 그대로 쓰면
         # '장애물 0m'로 오인해 급정지한다 → 미검출은 이 값(=없음)으로 변환.
         self.declare_parameter('sonar_max_range', 2.0)
@@ -114,7 +128,8 @@ class SerialBridgeNode(Node):
         # Arduino가 보내는 "STATUS_10ms: ENC1=... VEL=... ..." 형식을 뽑아내는 정규식
         self.status_pattern = re.compile(
             r'STATUS_10ms:\s*ENC1=(-?\d+)\s*VEL=(-?\d+\.\d+)\s*TARGET=(-?\d+\.\d+)\s*'
-            r'PWM=(-?\d+)\s*SLOPE=(\w+)\s*SONAR1=(-?\d+\.\d+)\s*SONAR2=(-?\d+\.\d+)\s*SONAR3=(-?\d+\.\d+)'
+            # SLOPE 와 SONAR1 사이에 MODE= 등 필드가 추가돼도 깨지지 않게 .*? 사용
+            r'PWM=(-?\d+)\s*SLOPE=(\w+).*?SONAR1=(-?\d+\.\d+)\s*SONAR2=(-?\d+\.\d+)\s*SONAR3=(-?\d+\.\d+)'
         )
 
     # ------------------------------------------------------------------
@@ -145,9 +160,27 @@ class SerialBridgeNode(Node):
         self.last_cmd_time = self.get_clock().now()
 
     # ------------------------------------------------------------------
+    def drive_pwm_callback(self, msg: Int32):
+        """개루프 PWM 요청. FF 식별(ff_sweep) 전용."""
+        self.openloop_pwm = int(msg.data)
+        self.openloop_time = self.get_clock().now()
+        self.last_cmd_time = self.openloop_time
+
+    # ------------------------------------------------------------------
     def send_command(self):
         """0.05초(20Hz)마다 실행. 현재 목표값을 Arduino로 전송."""
-        cmd = f'VEL:{self.target_vel:.2f},STEER:{self.target_steer:.1f}\n'
+        # 개루프 요청이 살아있으면 PWM 명령, 아니면 평소대로 VEL 명령
+        ol = False
+        if self.openloop_pwm is not None and self.openloop_time is not None:
+            age = (self.get_clock().now() - self.openloop_time).nanoseconds / 1e9
+            if age <= self.openloop_timeout and self.openloop_pwm != 0:
+                ol = True
+            elif age > self.openloop_timeout:
+                self.openloop_pwm = None      # 만료 → 폐루프 복귀
+        if ol:
+            cmd = f'PWM:{self.openloop_pwm},STEER:{self.target_steer:.1f}\n'
+        else:
+            cmd = f'VEL:{self.target_vel:.2f},STEER:{self.target_steer:.1f}\n'
         try:
             self.ser.write(cmd.encode('utf-8'))
         except serial.SerialException as e:
@@ -204,8 +237,10 @@ class SerialBridgeNode(Node):
             if line.startswith('STATUS_10ms'):
                 m = self.status_pattern.search(line)
                 if m:
-                    _, vel, _, _, _, s1, s2, s3 = m.groups()
+                    enc1, vel, _, pwm, _, s1, s2, s3 = m.groups()
                     self.speed_pub.publish(Float64(data=float(vel)))
+                    self.enc_pub.publish(Int32(data=int(enc1)))
+                    self.drive_pwm_pub.publish(Int32(data=int(pwm)))
                     # 미검출(0.00)은 '장애물 없음'이므로 최대거리로 치환한 뒤 최솟값.
                     ds = []
                     for s in (s1, s2, s3):
