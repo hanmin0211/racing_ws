@@ -166,7 +166,11 @@ bool drive_stalled = false, steer_stalled = false;
 int prev_sensorValue = STEER_CENTER;
 
 // 바퀴 파라미터
-const float wheel_radius = 0.13;
+// ★ RTK 실측 보정(2026-08-15). encoder_calib 결과 보정계수 1.0208
+//   (RTK 8.844m vs 엔코더 환산 8.664m, 3076counts, 직진편차 0.24m).
+//   0.13 은 공칭 추정값이었고 실제 유효 구름반경이 조금 더 컸다.
+//   ※ 재검증: encoder_calib 다시 돌려 보정계수가 1.00±0.02 면 통과.
+const float wheel_radius = 0.1327;
 const int counts_per_revolution = -290;
 const float wheel_circumference = 2 * 3.14159 * wheel_radius;
 
