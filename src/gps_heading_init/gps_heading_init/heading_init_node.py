@@ -55,17 +55,24 @@ class HeadingInitNode(Node):
     self.declare_parameter('calib_distance', 10.0)
     # direct_localization의 invert_imu_yaw와 반드시 같은 값이어야 yaw_offset이 일관됨.
     self.declare_parameter('invert_imu_yaw', False)
+    # 캘리브 중 허용할 최대 진행방향 편차[도]. 이보다 휘면 직진이 아니라고 보고 거부.
+    self.declare_parameter('max_deviation_deg', 20.0)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
     self.calib_distance = float(self.get_parameter('calib_distance').value)
     self.invert_imu_yaw = bool(self.get_parameter('invert_imu_yaw').value)
+    self.max_deviation = math.radians(
+        float(self.get_parameter('max_deviation_deg').value))
 
     self.lat0 = None
     self.lon0 = None
     self.cos_lat0 = 1.0
     self.imu_yaw = None
     self.done_time = None
+    self.prev_e = None
+    self.prev_n = None
+    self.max_dev = 0.0
 
     # 오프셋은 래치(TRANSIENT_LOCAL)로 발행 — 이 노드가 종료해도 이미 구독 중인
     # direct_localization이 값을 받도록. (같은 이유로 course도 래치)
@@ -95,6 +102,8 @@ class HeadingInitNode(Node):
     if self.lat0 is None:
       self.lat0, self.lon0 = msg.latitude, msg.longitude
       self.cos_lat0 = math.cos(math.radians(self.lat0))
+      self.prev_e = self.prev_n = None
+      self.max_dev = 0.0
       self.get_logger().info(
           f'시작점 기록: ({self.lat0:.7f}, {self.lon0:.7f}). 직진 시작하세요.')
       return
@@ -103,9 +112,36 @@ class HeadingInitNode(Node):
     north = (msg.latitude - self.lat0) * M_PER_DEG
     dist = math.hypot(east, north)
 
+    # ★ 직진성 검증: 시작점→현재점의 '직선 방향'을 헤딩으로 쓰기 때문에,
+    # 캘리브 중 곡선으로 가거나 후진하면 그 직선이 실제 진행방향과 달라져
+    # yaw_offset이 통째로 틀어진다(전 구간 경로 이탈로 이어짐).
+    # 최근 구간의 진행방향과 전체 직선방향이 크게 다르면 캘리브를 거부한다.
+    if self.prev_e is not None:
+      seg_e, seg_n = east - self.prev_e, north - self.prev_n
+      if math.hypot(seg_e, seg_n) > 0.3:      # 유의미하게 움직였을 때만 평가
+        seg_course = math.atan2(seg_n, seg_e)
+        chord_course = math.atan2(north, east)
+        dev = abs(normalize_angle(seg_course - chord_course))
+        self.max_dev = max(getattr(self, 'max_dev', 0.0), dev)
+        self.prev_e, self.prev_n = east, north
+    else:
+      self.prev_e, self.prev_n = east, north
+
     if dist >= self.calib_distance:
       if self.imu_yaw is None:
         self.get_logger().warn('IMU yaw 미수신 — 헤딩 계산 보류.')
+        return
+      max_dev = getattr(self, 'max_dev', 0.0)
+      if max_dev > self.max_deviation:
+        self.get_logger().error(
+            f'❌ 직진이 아닙니다 (최대 편차 {math.degrees(max_dev):.0f}° > '
+            f'{math.degrees(self.max_deviation):.0f}°). 헤딩 캘리브 무효 — '
+            f'차량을 되돌려 **곧게** 다시 {self.calib_distance:.0f}m 직진하세요.')
+        # 처음부터 다시
+        self.lat0 = None
+        self.prev_e = self.prev_n = None
+        self.max_dev = 0.0
+        self._last_log_m = -1
         return
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
