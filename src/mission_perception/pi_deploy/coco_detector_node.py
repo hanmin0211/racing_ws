@@ -52,6 +52,7 @@ from rclpy.node import Node                             # noqa: E402
 from std_msgs.msg import String                         # noqa: E402
 
 from common.hailo_inference import HailoInfer           # noqa: E402
+from common.toolbox import default_preprocess           # noqa: E402
 from object_detection_post_process import extract_detections   # noqa: E402
 
 HEF_PATH = os.path.expanduser('~/models/yolov8s_coco.hef')
@@ -186,9 +187,12 @@ class CocoTrafficLightNode(Node):
         if not ok:
             return
 
-        # 모델 입력(640x640)에 맞춰 리사이즈. 원본 좌표로 되돌리려 배율을 남긴다.
+        # ★ cv2.resize 로 640x480 → 640x640 을 만들면 세로가 1.33배 늘어난다.
+        # YOLO 는 왜곡 안 된 이미지로 학습돼 있어 검출률이 떨어진다.
+        # default_preprocess 는 비율을 유지하며 회색으로 패딩한다(레터박스).
+        # 기존 detector_node.py 도 이걸 쓴다 — 맞춰둔다.
         self.result_holder.clear()
-        resized = cv2.resize(frame, (self.width, self.height))
+        resized = default_preprocess(frame, self.width, self.height)
         self.hailo.run([resized], self._cb)
 
         waited = 0.0
