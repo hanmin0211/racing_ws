@@ -19,7 +19,58 @@
 
 | 파일 | 파이에서의 위치 |
 |---|---|
-| `detector_node.py` | `~/ros2_ws/src/traffic_light_detector/traffic_light_detector/detector_node.py` |
+| `detector_node.py` | `~/ros2_ws/.../traffic_light_detector/detector_node.py` |
+| `coco_detector_node.py` | `~/ros2_ws/.../traffic_light_detector/coco_detector_node.py` |
+
+## 검출기가 두 개인 이유 — 비교용
+
+| | `detector_node` | `coco_detector_node` |
+|---|---|---|
+| 모델 | `~/yolov8s.hef` (커스텀 2클래스) | `~/models/yolov8s_coco.hef` (COCO 80클래스) |
+| 출처 | 누가 언제 학습했는지 **불명**. 데이터셋·`best.pt` 없음 | Hailo Model Zoo v2.13.0 사전컴파일 |
+| 색 판별 | 모델이 직접 (`traffic_green`/`traffic_red`) | **세로 위치 + HSV 교차검증** |
+| 노랑 | ❌ 없음 | ✅ 있음 |
+| 재학습 | **불가** (데이터·DFC 둘 다 없음) | 불필요 |
+| 칩 속도 | 185 FPS | 240 FPS |
+| 토픽 | `/traffic_light_state` | `/traffic_light_state_coco` |
+
+**칩과 카메라는 한 프로세스만 점유한다.** 동시에 못 켜니 번갈아 실행해서
+실제 신호등으로 비교할 것.
+
+```bash
+ros2 run traffic_light_detector coco_traffic_light_node
+```
+
+### COCO 쪽 상태 판별 방식
+
+COCO 는 `traffic light`(class 9)의 **위치만** 알려주고 색은 안 알려준다.
+그래서 박스를 잘라 직접 판별한다. 대회 신호등 도면(전체 116cm, 신호부
+24×56cm, 램프 지름 10cm, 간격 16/15/16)에서 램프 중심을 정규화하면
+
+```
+빨강 0.29    노랑 0.50    초록 0.71
+```
+
+**위치를 주로, 색을 보조로** 쓴다. 위치는 물리적으로 고정이라 조명·노출에
+안 흔들리지만 색조는 흔들린다. 특히 한국 신호등의 '초록'은 실제로 청록이라
+(도면에서도 아래 램프가 파랗게 그려져 있다) 순수 초록만 찾으면 놓친다.
+둘이 어긋나면 `NONE` 으로 떨어뜨려 빨간 간판·초록 나무 오탐을 막는다.
+
+파라미터 `use_color_check:=false` 로 색 검증을 꺼서 위치만으로 볼 수 있다
+(색이 안 맞을 때 원인 분리용).
+
+### 검출 거리 (계산값, 실측 필요)
+
+램프가 10cm 뿐이라 거리 한계가 있다. 640px 입력 기준 추정:
+
+| 거리 | 신호부 폭 | 램프 지름 |
+|---|---|---|
+| 3m | ~49 px | ~20 px |
+| 5m | ~29 px | ~12 px |
+| 8m | ~18 px | ~7 px |
+
+**5m 까지는 넉넉, 8m 부터 위태롭다.** 차량 0.4m/s 면 5m 는 12초 전이라
+충분하다. 화각 추정치라 실물로 반드시 실측할 것.
 
 파이 쪽 나머지(패키지 뼈대, HailoRT, ROS2 Humble 소스빌드, `yolov8s.hef`)는
 `~/Downloads/라즈베리파이5_Hailo8_YOLO_구축매뉴얼.docx` 절차로 이미 구축돼 있다.
