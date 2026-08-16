@@ -27,6 +27,8 @@ FF가 틀리면 PID가 그걸 억지로 메우느라 게인이 비정상적으�
       이 노드는 /drive_pwm_cmd 로 개루프 PWM을 요청한다.
 """
 
+import time
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64, Int32
@@ -51,6 +53,7 @@ class FFSweep(Node):
     self.speed = 0.0
     self.samples = []          # (pwm, speed)
     self.done = False
+    self.done_time = None
 
     self.pub = self.create_publisher(Int32, '/drive_pwm_cmd', 10)
     self.create_subscription(Float64, '/current_speed', self.speed_cb, 10)
@@ -67,6 +70,10 @@ class FFSweep(Node):
   def tick(self):
     if self.done:
       self.pub.publish(Int32(data=0))
+      # 정지 명령을 1초간 보낸 뒤 스스로 종료 → 요약이 자동 출력된다.
+      # (예전엔 Ctrl-C 해야 결과가 나왔고, 남은 노드가 다음 실행과 충돌했다)
+      if self.done_time is not None and (time.time() - self.done_time) > 1.0:
+        raise SystemExit
       return
 
     self.pwm += self.rate * self.dt
@@ -74,6 +81,7 @@ class FFSweep(Node):
       self.get_logger().info(
           f'종료 조건 도달 (PWM {self.pwm:.0f}, 속도 {self.speed:.2f}m/s) → 정지')
       self.done = True
+      self.done_time = time.time()
       self.pub.publish(Int32(data=0))
       return
 

@@ -78,6 +78,7 @@ class StraightDrive(Node):
     self.dist = 0.0
     self.t0 = None
     self.done = False
+    self.done_time = None
     self.dt = 0.05
     self.create_timer(self.dt, self.tick)
     self.create_timer(1.0, self.report)
@@ -124,11 +125,17 @@ class StraightDrive(Node):
     if not self.done:
       self.get_logger().info(f'정지: {reason} (이동 {self.dist:.2f}m)')
       self.done = True
+      self.done_time = self.now()
     self.pub.publish(Twist())
 
   def tick(self):
     if self.done:
       self.pub.publish(Twist())
+      # 정지 명령을 1초간 확실히 보낸 뒤 **스스로 종료**한다.
+      # 끝난 노드가 살아남아 0을 계속 발행하면, 다음에 실행한 인스턴스와
+      # /cmd_vel 을 두고 싸워서 차가 움직이지 않는다(2026-08-16 현장에서 겪음).
+      if self.done_time is not None and (self.now() - self.done_time) > 1.0:
+        raise SystemExit
       return
     if self.x0 is None:
       self.get_logger().info('대기중 — /odometry/filtered 필요 (헤딩 정렬 후 실행)',
@@ -148,10 +155,11 @@ class StraightDrive(Node):
 
     # 출발 램프 (급가속 방지)
     v = self.speed * min(1.0, el / max(0.1, self.accel_time))
-    # 도착 전 감속
+    # 도착 전 감속. 감속 구간을 1.0m/30%로 두니 마지막 1m 가 24초나 걸렸다
+    # (실제 속도가 명령보다 낮아 더 심해진다) → 0.5m/60% 로 완화.
     remain = self.target - self.dist
-    if remain < 1.0:
-      v *= max(0.3, remain / 1.0)
+    if remain < 0.5:
+      v *= max(0.6, remain / 0.5)
 
     # 헤딩 유지 보정 (출발 헤딩 대비 오차를 조향으로 되돌림)
     err = math.degrees(norm(self.yaw0 - self.yaw))
