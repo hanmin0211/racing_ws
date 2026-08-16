@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'camera_node = mission_perception.camera_node:main',
+            'traffic_light_bridge = mission_perception.traffic_light_bridge:main',
         ],
     },
 )
