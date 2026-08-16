@@ -22,6 +22,7 @@ GPS 이동방향(course)을 '진짜 헤딩'으로 삼아, 그 순간 IMU yaw와�
 파라미터:
   fix_topic, imu_topic : 입력 (기본 /fix, handsfree/imu)
   calib_distance       : 직진 거리[m] (기본 10.0)
+  restart_settle_sec   : 직진성 검증 실패 후 재시작 전 정지 대기[s] (기본 3.0)
 """
 
 import math
@@ -57,6 +58,10 @@ class HeadingInitNode(Node):
     self.declare_parameter('invert_imu_yaw', False)
     # 캘리브 중 허용할 최대 진행방향 편차[도]. 이보다 휘면 직진이 아니라고 보고 거부.
     self.declare_parameter('max_deviation_deg', 20.0)
+    # 실패 후 재시작: 차량이 이 시간만큼 멈춰 있어야 새 시작점을 잡는다.
+    self.declare_parameter('restart_settle_sec', 3.0)
+    self.declare_parameter('restart_settle_radius', 0.5)   # 이보다 움직이면 '이동 중'
+    self.declare_parameter('restart_settle_timeout', 20.0)  # 정지 감지 실패 시 탈출
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -64,6 +69,18 @@ class HeadingInitNode(Node):
     self.invert_imu_yaw = bool(self.get_parameter('invert_imu_yaw').value)
     self.max_deviation = math.radians(
         float(self.get_parameter('max_deviation_deg').value))
+    self.settle_sec = float(self.get_parameter('restart_settle_sec').value)
+    self.settle_radius = float(self.get_parameter('restart_settle_radius').value)
+    self.settle_timeout = float(self.get_parameter('restart_settle_timeout').value)
+
+    # 실패 후 재무장 대기 상태 (최초 1회차에는 적용하지 않는다 — 런치 직후엔
+    # 차가 서 있는 게 정상이고, 괜히 3초를 더 기다리게 만들 이유가 없다)
+    self.rearming = False
+    self._settle_lat = None
+    self._settle_lon = None
+    self._settle_t = 0.0
+    self._rearm_t0 = 0.0
+    self._last_settle_log = 0.0
 
     self.lat0 = None
     self.lon0 = None
@@ -94,12 +111,56 @@ class HeadingInitNode(Node):
     y = yaw_from_quat(msg.orientation)
     self.imu_yaw = -y if self.invert_imu_yaw else y
 
+  def _settled(self, msg: NavSatFix) -> bool:
+    """실패 후 재시작: 차량이 실제로 멈출 때까지 시작점 기록을 미룬다.
+
+    실패 직후 곧바로 시작점을 잡으면, 운전자가 차를 되돌리는 그 동작이 다음
+    시도의 앞구간으로 기록돼 또 '직진 아님'으로 거부된다. 현장에서 실제로
+    이것 때문에 2회 연속 실패했다(1차 실패 110ms 뒤에 2차 시작점이 잡힘).
+    """
+    t = self.get_clock().now().nanoseconds * 1e-9
+    if self._settle_lat is None:
+      self._settle_lat, self._settle_lon = msg.latitude, msg.longitude
+      self._settle_t = self._rearm_t0 = t
+      return False
+
+    cos_lat = math.cos(math.radians(self._settle_lat))
+    de = (msg.longitude - self._settle_lon) * M_PER_DEG * cos_lat
+    dn = (msg.latitude - self._settle_lat) * M_PER_DEG
+    if math.hypot(de, dn) > self.settle_radius:
+      # 아직 움직이는 중 — 기준점을 현재로 옮기고 정지 타이머를 리셋
+      self._settle_lat, self._settle_lon = msg.latitude, msg.longitude
+      self._settle_t = t
+
+    still = t - self._settle_t
+    if still >= self.settle_sec:
+      return True
+
+    # RTK가 나빠 위치가 계속 튀면 영원히 '정지'로 안 잡힌다. 그 경우 노드가
+    # 조용히 멎어버리는 게 원래 버그보다 나쁘므로 탈출구를 둔다.
+    if t - self._rearm_t0 >= self.settle_timeout:
+      self.get_logger().warn(
+          f'정지 감지 실패 ({self.settle_timeout:.0f}s 경과 — GPS 튐 가능). '
+          f'그대로 시작점을 잡는다. 차량이 멈춰 있는지 눈으로 확인할 것.')
+      return True
+
+    if t - self._last_settle_log >= 2.0:
+      self._last_settle_log = t
+      self.get_logger().info(
+          f'재시작 대기: 차량을 세우고 기다리세요 '
+          f'({still:.0f}/{self.settle_sec:.0f}s)')
+    return False
+
   def fix_cb(self, msg: NavSatFix):
     if self.done_time is not None:
       return
     if math.isnan(msg.latitude) or abs(msg.latitude) < 1e-9:
       return
     if self.lat0 is None:
+      if self.rearming and not self._settled(msg):
+        return
+      self.rearming = False
+      self._settle_lat = None
       self.lat0, self.lon0 = msg.latitude, msg.longitude
       self.cos_lat0 = math.cos(math.radians(self.lat0))
       self.prev_e = self.prev_n = None
@@ -137,11 +198,14 @@ class HeadingInitNode(Node):
             f'❌ 직진이 아닙니다 (최대 편차 {math.degrees(max_dev):.0f}° > '
             f'{math.degrees(self.max_deviation):.0f}°). 헤딩 캘리브 무효 — '
             f'차량을 되돌려 **곧게** 다시 {self.calib_distance:.0f}m 직진하세요.')
-        # 처음부터 다시
+        # 처음부터 다시. 단, 차를 되돌리는 동안은 시작점을 잡지 않는다(_settled).
         self.lat0 = None
         self.prev_e = self.prev_n = None
         self.max_dev = 0.0
         self._last_log_m = -1
+        self.rearming = True
+        self._settle_lat = None
+        self._last_settle_log = 0.0
         return
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
