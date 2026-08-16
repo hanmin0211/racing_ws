@@ -52,6 +52,8 @@ def generate_launch_description():
   invert_imu_yaw = LaunchConfiguration('invert_imu_yaw')
   control = LaunchConfiguration('control')
   arduino_port = LaunchConfiguration('arduino_port')
+  auto_calib = LaunchConfiguration('auto_calib')
+  auto_calib_speed = LaunchConfiguration('auto_calib_speed')
 
   return LaunchDescription([
       DeclareLaunchArgument('rviz', default_value='true'),
@@ -65,6 +67,11 @@ def generate_launch_description():
       # 실제 모터가 구동된다. 기본 false(안전). 포트는 auto(자동감지).
       DeclareLaunchArgument('control', default_value='false'),
       DeclareLaunchArgument('arduino_port', default_value='auto'),
+      # ⚠ auto_calib:=true 면 헤딩 캘리브 10m를 차가 스스로 직진해서 한다.
+      # 헤딩을 모르는 개루프 전진이므로 앞을 비우고 E-stop을 쥔 채로 쓸 것.
+      # control:=true 여야 실제로 움직인다(serial_bridge가 있어야 명령이 나감).
+      DeclareLaunchArgument('auto_calib', default_value='false'),
+      DeclareLaunchArgument('auto_calib_speed', default_value='0.3'),
 
       # 1. RTK GPS (ublox_dgnss + nav_sat_fix + NTRIP)
       IncludeLaunchDescription(
@@ -91,6 +98,8 @@ def generate_launch_description():
               'imu_topic': 'handsfree/imu',
               'calib_distance': calib_distance,
               'invert_imu_yaw': invert_imu_yaw,
+              'auto_drive': auto_calib,
+              'auto_speed': auto_calib_speed,
           }],
       ),
 

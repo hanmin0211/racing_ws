@@ -19,15 +19,35 @@ GPS 이동방향(course)을 '진짜 헤딩'으로 삼아, 그 순간 IMU yaw와�
 노드는 값만 계산하고 빠져도 로컬라이제이션이 계속 돌아간다. 재캘리브가
 필요하면 이 노드를 다시 실행하면 된다(이미 떠 있는 구독자가 새 값을 받음).
 
+자동 직진(auto_drive) — 기본 꺼짐:
+  IMU yaw는 재시작마다 리셋되므로 매 세션 10m 직진이 필요한데, 사람이 밀거나
+  teleop으로 몰면 잘 휜다(현장 로그에서 편차 43°·157°로 2연속 거부됨).
+  조향 0°를 유지하는 건 기계가 더 잘하므로, 차량이 스스로 직진하게 할 수 있다.
+
+  명령은 /teleop/cmd_vel 로 낸다. vehicle_cmd_mux 우선순위가
+  E-stop > teleop > 자율 이므로 (a) pure_pursuit의 '정지'를 덮어쓰고
+  (b) mux의 teleop_timeout(0.5s)이 데드맨으로 동작해 이 노드가 죽으면
+  0.5초 안에 자동 정지하며 (c) E-stop은 그대로 최상위로 남는다.
+  → mux를 고치지 않고 얻는 성질들이다.
+
+  ⚠ 헤딩을 모르는 상태의 **개루프 직진**이다. 차가 향한 쪽으로 그냥 간다.
+    앞이 비어 있는지 확인하고, E-stop을 손에 쥔 채로 쓸 것.
+  ⚠ wasd_teleop 등 다른 teleop과 동시에 쓰지 말 것 (같은 토픽을 두고 싸운다).
+
 파라미터:
   fix_topic, imu_topic : 입력 (기본 /fix, handsfree/imu)
   calib_distance       : 직진 거리[m] (기본 10.0)
   restart_settle_sec   : 직진성 검증 실패 후 재시작 전 정지 대기[s] (기본 3.0)
+  auto_drive           : 자동 직진 사용 (기본 False — 반드시 명시적으로 켤 것)
+  auto_speed           : 자동 직진 속도[m/s] (기본 0.3)
+  auto_countdown       : 출발 전 카운트다운[s] (기본 5.0)
+  auto_timeout         : 출발 후 10m 미달 시 포기[s] (기본 90.0)
 """
 
 import math
 
 import rclpy
+from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import (DurabilityPolicy, QoSProfile, qos_profile_sensor_data)
 from sensor_msgs.msg import Imu, NavSatFix
@@ -62,6 +82,15 @@ class HeadingInitNode(Node):
     self.declare_parameter('restart_settle_sec', 3.0)
     self.declare_parameter('restart_settle_radius', 0.5)   # 이보다 움직이면 '이동 중'
     self.declare_parameter('restart_settle_timeout', 20.0)  # 정지 감지 실패 시 탈출
+    # 자동 직진 — 기본 꺼짐. 켜면 차가 스스로 움직이므로 반드시 명시적 opt-in.
+    self.declare_parameter('auto_drive', False)
+    self.declare_parameter('auto_speed', 0.3)
+    self.declare_parameter('auto_countdown', 5.0)
+    self.declare_parameter('auto_timeout', 90.0)
+    # 조향 중앙 역산용 (펌웨어와 같은 값이어야 카운트 환산이 맞다)
+    self.declare_parameter('wheelbase', 0.785)
+    self.declare_parameter('steer_counts_per_deg', 21.2)
+    self.declare_parameter('steer_center', 424)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -82,6 +111,19 @@ class HeadingInitNode(Node):
     self._rearm_t0 = 0.0
     self._last_settle_log = 0.0
 
+    self.auto_drive = bool(self.get_parameter('auto_drive').value)
+    self.auto_speed = float(self.get_parameter('auto_speed').value)
+    self.auto_countdown = float(self.get_parameter('auto_countdown').value)
+    self.auto_timeout = float(self.get_parameter('auto_timeout').value)
+    self.wheelbase = float(self.get_parameter('wheelbase').value)
+    self.counts_per_deg = float(self.get_parameter('steer_counts_per_deg').value)
+    self.steer_center = int(self.get_parameter('steer_center').value)
+    self.track = []               # 캘리브 구간 궤적 (조향 중앙 역산용)
+    self.drive_t0 = None          # 카운트다운 시작 시각
+    self.drive_aborted = False    # 실패/타임아웃 후에는 자동 재주행하지 않는다
+    self.brake_until = None       # 이 시각까지 0을 쏴서 세운다
+    self._last_cd_log = -1
+
     self.lat0 = None
     self.lon0 = None
     self.cos_lat0 = 1.0
@@ -98,14 +140,25 @@ class HeadingInitNode(Node):
     self.course_pub = self.create_publisher(Float64, '/heading/gps_course',
                                             latched)
 
+    # 자동 직진용. auto_drive가 꺼져 있으면 이 토픽에 아무것도 쓰지 않는다
+    # (쓰면 mux가 teleop 모드로 붙잡혀 자율 주행이 막힌다).
+    self.drive_pub = self.create_publisher(Twist, '/teleop/cmd_vel', 10)
+
     self.create_subscription(NavSatFix, fix_topic, self.fix_cb,
                              qos_profile_sensor_data)
     self.create_subscription(Imu, imu_topic, self.imu_cb, 50)
     self.create_timer(0.3, self.shutdown_check)
+    if self.auto_drive:
+      self.create_timer(0.1, self.drive_tick)
 
     self.get_logger().info(
         f'헤딩 초기화(1회성) 시작: {self.calib_distance:.0f}m 직진하면 '
         f'yaw_offset 계산 후 자동 종료 (fix={fix_topic}, imu={imu_topic})')
+    if self.auto_drive:
+      self.get_logger().warn(
+          f'⚠ 자동 직진 켜짐: GPS 수신 후 {self.auto_countdown:.0f}초 뒤 '
+          f'{self.auto_speed:.2f}m/s로 스스로 {self.calib_distance:.0f}m 전진한다. '
+          f'앞을 비우고 E-stop을 손에 쥘 것.')
 
   def imu_cb(self, msg: Imu):
     y = yaw_from_quat(msg.orientation)
@@ -151,6 +204,43 @@ class HeadingInitNode(Node):
           f'({still:.0f}/{self.settle_sec:.0f}s)')
     return False
 
+  def _steer_bias(self):
+    """직진 궤적의 활꼴 높이로 조향 중앙(STEER_CENTER) 오차를 역산한다.
+
+    자동 직진은 조향 0°를 명령하므로, 그래도 호를 그렸다면 그건 사람 손이
+    아니라 기계의 계통 오차다(= 고칠 수 있다). 현 → 궤적 최대 수직거리 h와
+    현 길이 c로 곡률을 구하고, 자전거 모델로 조향각 오차를 낸다.
+
+        κ = 8h/c²          (원호 근사)
+        δ = atan(κ·L)      (L = 축거)
+        ΔADC = δ · counts_per_deg
+
+    반환: (h[m], δ[도], 권장 STEER_CENTER). 좌로 휘면 δ>0.
+    """
+    if len(self.track) < 3:
+      return None
+    e0, n0 = self.track[0]
+    e1, n1 = self.track[-1]
+    cx, cy = e1 - e0, n1 - n0
+    c = math.hypot(cx, cy)
+    if c < 1.0:
+      return None
+    h = 0.0
+    for (e, n) in self.track:
+      # 외적 부호: 현(chord) 진행방향 기준 왼쪽이 +
+      d = (cx * (n - n0) - cy * (e - e0)) / c
+      if abs(d) > abs(h):
+        h = d
+    # ★ 원호는 곡률 중심의 반대쪽으로 부푼다. 좌회전이면 중심이 왼쪽이므로
+    # 호는 현 기준 '오른쪽'으로 불룩하다 → 활꼴 높이 부호가 회전방향과 반대.
+    # 그래서 뒤집어 회전방향 기준(좌가 +)으로 맞춘다.
+    h = -h
+    kappa = 8.0 * h / (c * c)
+    delta_deg = math.degrees(math.atan(kappa * self.wheelbase))
+    # +각도(좌) = ADC 증가. 좌로 휘었다면 실제 직진 ADC는 현재값보다 작다.
+    new_center = self.steer_center - delta_deg * self.counts_per_deg
+    return h, delta_deg, new_center
+
   def fix_cb(self, msg: NavSatFix):
     if self.done_time is not None:
       return
@@ -165,13 +255,17 @@ class HeadingInitNode(Node):
       self.cos_lat0 = math.cos(math.radians(self.lat0))
       self.prev_e = self.prev_n = None
       self.max_dev = 0.0
+      self.track = [(0.0, 0.0)]
       self.get_logger().info(
           f'시작점 기록: ({self.lat0:.7f}, {self.lon0:.7f}). 직진 시작하세요.')
+      if self.auto_drive and self.drive_t0 is None:
+        self.drive_t0 = self.get_clock().now().nanoseconds * 1e-9
       return
 
     east = (msg.longitude - self.lon0) * M_PER_DEG * self.cos_lat0
     north = (msg.latitude - self.lat0) * M_PER_DEG
     dist = math.hypot(east, north)
+    self.track.append((east, north))
 
     # ★ 직진성 검증: 시작점→현재점의 '직선 방향'을 헤딩으로 쓰기 때문에,
     # 캘리브 중 곡선으로 가거나 후진하면 그 직선이 실제 진행방향과 달라져
@@ -206,11 +300,22 @@ class HeadingInitNode(Node):
         self.rearming = True
         self._settle_lat = None
         self._last_settle_log = 0.0
+        if self.auto_drive:
+          # 조향 0인데도 휘었다면 기계 쪽 문제(STEER_CENTER 어긋남 등)일 수 있다.
+          # 같은 조건으로 또 10m를 자동 전진하면 공간만 까먹으므로 재주행 안 함.
+          self.drive_aborted = True
+          self.get_logger().error(
+              '자동 직진이었는데도 휘었다 — STEER_CENTER(424) 어긋남 의심. '
+              '자동 재주행하지 않는다. 수동으로 다시 시도할 것.')
+          self._stop_driving('직진성 검증 실패')
         return
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
+      # max_dev를 성공 시에도 남긴다: 자동 직진에서 이 값이 매번 한쪽으로
+      # 크게 나오면 STEER_CENTER가 어긋났다는 신호다(무료 진단).
       self.get_logger().info(
-          f'✅ 헤딩 초기화 완료: {dist:.1f}m 직진. '
+          f'✅ 헤딩 초기화 완료: {dist:.1f}m 직진 (최대 편차 '
+          f'{math.degrees(max_dev):.0f}°). '
           f'GPS course={math.degrees(course):.1f}°, '
           f'IMU yaw={math.degrees(self.imu_yaw):.1f}°, '
           f'→ yaw_offset={math.degrees(yaw_offset):.1f}°')
@@ -218,15 +323,87 @@ class HeadingInitNode(Node):
       self.off_pub.publish(Float64(data=float(yaw_offset)))
       self.course_pub.publish(Float64(data=float(course)))
       self.done_time = self.get_clock().now().nanoseconds * 1e-9
+
+      # 조향 중앙 진단: 자동 직진(조향 0° 명령)이었을 때만 의미가 있다.
+      # 사람이 밀었으면 휘어짐이 사람 탓이라 STEER_CENTER를 못 물어본다.
+      bias = self._steer_bias() if self.auto_drive else None
+      if bias is not None:
+        h, delta_deg, new_center = bias
+        side = '좌' if h > 0 else '우'
+        if abs(h) < 0.10:
+          self.get_logger().info(
+              f'조향 중앙 점검: 횡편차 {h:+.2f}m — STEER_CENTER '
+              f'{self.steer_center} 양호 (보정 불필요)')
+        else:
+          self.get_logger().warn(
+              f'조향 중앙 어긋남: 10m에서 {side}로 {abs(h):.2f}m 휘었다 '
+              f'(조향각 오차 {delta_deg:+.2f}°). '
+              f'STEER_CENTER {self.steer_center} → {new_center:.0f} 권장. '
+              f'⚠ 부호는 첫 회에 눈으로 확인할 것 (휜 방향과 맞는지).')
+
+      if self.auto_drive:
+        self._stop_driving('캘리브 완료')
     else:
       if int(dist) != getattr(self, '_last_log_m', -1):
         self._last_log_m = int(dist)
         self.get_logger().info(f'직진 중... {dist:.1f}/{self.calib_distance:.0f}m')
 
+  def _stop_driving(self, reason):
+    """구동을 멈춘다. 1초간 0을 쏴서 세운 뒤 토픽을 놓는다.
+
+    놓으면 mux의 teleop_timeout(0.5s)이 지나 자율(AUTO)로 자동 인계된다.
+    """
+    if self.brake_until is None:
+      self.get_logger().info(f'자동 직진 종료: {reason}')
+    self.brake_until = self.get_clock().now().nanoseconds * 1e-9 + 1.0
+
+  def drive_tick(self):
+    """자동 직진: 조향 0°로 곧게 전진. auto_drive일 때만 타이머가 붙는다."""
+    t = self.get_clock().now().nanoseconds * 1e-9
+
+    # 제동 구간: 0을 쏴서 세우고, 끝나면 토픽을 놓아 AUTO로 인계
+    if self.brake_until is not None:
+      if t < self.brake_until:
+        self.drive_pub.publish(Twist())
+      return
+
+    if self.drive_aborted or self.done_time is not None:
+      return
+    if self.drive_t0 is None:      # 아직 시작점(=유효 GPS)이 없다
+      return
+
+    elapsed = t - self.drive_t0
+    if elapsed < self.auto_countdown:
+      left = int(self.auto_countdown - elapsed) + 1
+      if left != self._last_cd_log:
+        self._last_cd_log = left
+        self.get_logger().warn(f'자동 직진 {left}초 전... (E-stop 준비)')
+      self.drive_pub.publish(Twist())   # 카운트다운 중엔 정지 명령
+      return
+
+    if elapsed - self.auto_countdown > self.auto_timeout:
+      self.drive_aborted = True
+      self.get_logger().error(
+          f'❌ 자동 직진 타임아웃: {self.auto_timeout:.0f}초 안에 '
+          f'{self.calib_distance:.0f}m를 못 갔다. 구동 FF 부족이나 스톨 의심 — '
+          f'수동으로 직진시키거나 auto_speed를 올릴 것.')
+      self._stop_driving('타임아웃')
+      return
+
+    cmd = Twist()
+    cmd.linear.x = self.auto_speed
+    cmd.angular.z = 0.0            # 조향각[도] — 곧게
+    self.drive_pub.publish(cmd)
+
   def shutdown_check(self):
     # 오프셋 발행 후 1초 지나면 자동 종료 (래치 전파 시간 확보)
     if self.done_time is not None:
-      if self.get_clock().now().nanoseconds * 1e-9 - self.done_time > 1.0:
+      t = self.get_clock().now().nanoseconds * 1e-9
+      # 제동이 안 끝났으면 기다린다. 먼저 죽어버리면 차가 굴러가는 채로
+      # mux가 AUTO로 넘어간다.
+      if self.brake_until is not None and t < self.brake_until:
+        return
+      if t - self.done_time > 1.0:
         self.get_logger().info('yaw_offset 발행 완료 → 노드 자동 종료.')
         rclpy.shutdown()
 
