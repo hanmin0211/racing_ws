@@ -30,6 +30,7 @@
 | 구동 기본 | 방향(전/후진), 스톨가드, 엔코더 스케일 실측 |
 | 안전 | E-stop, 워치독, 엔드스톱, 스톨 컷 — 전부 실하드웨어 검증 |
 | **통합 자율주행** | **1회 성공** (30.7m, 평균오차 0.32m) |
+| **신호등 인식** (파이5+Hailo-8) | 실동작 — 30Hz 발행, 노트북 수신 확인 (2026-08-16) |
 
 ### ⬜ 남은 것
 
@@ -38,7 +39,8 @@
 | **구동 FF/PID 튜닝** | **실측 확인됨**: 0.25 명령 → 실제 0.157m/s (37% 미달), 6초 스톨 후 0.33 급발진. 도구(`ff_sweep`) 준비 완료 |
 | 코너 추종 개선 | 후반부(급코너) 오차 0.45m — lookahead 튜닝 필요 |
 | 본 경로 기록 | 현재 경로는 테스트용 |
-| **미션 인지** | **0%** — 카메라 드라이버조차 없음 |
+| **정지선·횡단보도 인지** | 모델에 없음 (신호등 2클래스뿐). 별도 학습+HEF 재컴파일 or 고전 영상처리 |
+| **신호등 → 주행 연동** | `/traffic_light_state` 는 오는데 **아직 아무도 안 쓴다**. 어디서 멈출지(정지 지점)가 미정 |
 
 ---
 
@@ -55,6 +57,8 @@
 | 엔코더 | SPI 카운터 | CS 22, 23 |
 | 소나 3개 | | 11, 12, 13 |
 | 차량 | HENES T870, **축거 0.785m** | 전폭 775 / 전장 1400mm |
+| **인지 보드** | Raspberry Pi 5 8GB + **AI HAT+ (Hailo-8, 26TOPS)** | 랜선 직결 **192.168.99.8** (`pi` 계정, 키 등록됨) |
+| **카메라** | Logitech **C920** | **파이 USB** `/dev/video0` (노트북 아님!) |
 
 ### udev 규칙 (없으면 동작 안 함)
 ```
@@ -113,6 +117,9 @@ global_path_publisher → /global_path ─┐
               serial_bridge → "VEL:x,STEER:y" → Arduino(henes_firmware)
                             ↑ 텔레메트리
    /current_speed /steering_angle /steering_error /encoder_count /obstacle_distance /vehicle_stall
+
+[C920] → [파이5 + Hailo-8, YOLOv8s] → /traffic_light_state ─랜선(DDS)→ (아직 소비자 없음)
+              별도 보드 192.168.99.8              "RED"/"GREEN"/"NONE" 30Hz
 ```
 
 ### ★ 역할 분담 원칙
@@ -136,6 +143,9 @@ global_path_publisher → /global_path ─┐
 | `src/waypoint_follower/` | `local_path_core.py`(계산부), `local_sliding_window_node`, `global_path_publisher`, `waypoint_recorder`, **`tracking_monitor`** |
 | `src/pure_pursuit_pkg/` | `local_pure_pursuit_node`, `control.launch.py`, `config/pure_pursuit_params.yaml` |
 | `src/velocity_controller/` | `serial_bridge`, `vehicle_cmd_mux`, `longitudinal_controller`, `teleop_keyboard`, `wasd_teleop`, **`encoder_calib`**, **`ff_sweep`**, `steering_demo/sweep` |
+| `src/mission_perception/` | `camera_node` (노트북 카메라 → `/camera/image_raw`) |
+| `src/mission_perception/pi_deploy/` | **파이 배포 원본** — `detector_node.py`, README. 파이 SD카드가 죽어도 여기 남는다 |
+| `tools/pi_link.sh` | 파이 랜선 연결 (**매 부팅 후 1회**) + `--check` 진단 |
 | `tools/local_path_harness.py` | **오프라인 경로 검증** (야외 없이 회귀 테스트) |
 | `tools/heading_check.py` | 헤딩 부호 검증 (곡선 주행 필요) |
 | `tools/ros_cleanup.sh` | **ROS 고아 프로세스 정리** (필수, 아래 함정 참조) |
@@ -157,6 +167,18 @@ NGII_PW=ngii ros2 launch gps_localization bringup.launch.py control:=true max_sp
 - `auto_calib:=true` 면 차량이 스스로 10m 직진해 헤딩을 잡는다 (**실차 미검증**).
   헤딩을 모르는 개루프 전진이라 앞을 비우고 E-stop 준비 필수. 끝나면
   STEER_CENTER 점검값도 로그에 나온다. 안 붙이면 기존대로 사람이 밀어야 한다.
+
+### 신호등 인식 (파이5 + Hailo-8)
+```bash
+bash tools/pi_link.sh              # 노트북 쪽 네트워크 — 매 부팅 후 1회
+bash tools/pi_link.sh --check      # 링크·dnsmasq·포워딩·SSH 한 번에 진단
+
+ssh pi@192.168.99.8
+  source ~/ros2_humble/install/setup.bash && source ~/ros2_ws/install/setup.bash
+  nohup ros2 run traffic_light_detector traffic_light_node > ~/tld.log 2>&1 < /dev/null & disown
+```
+노트북에서 `ros2 topic echo /traffic_light_state` 로 확인된다(별도 DDS 설정 불필요).
+파이 노드 종료는 `pkill -f '[t]raffic_light_node'` — 대괄호 없으면 SSH 세션이 죽는다.
 
 ### 재실행 전 반드시
 ```bash
@@ -194,6 +216,9 @@ arduino --upload --board arduino:avr:mega:cpu=atmega2560 --port /dev/ttyACM0 \
 | 9 | IMU는 **재시작마다 yaw 기준 리셋** | 매 세션 10m 재캘리브 필수 |
 | 10 | 배터리 방전 시 조향 breakaway 실패 + 보드 리셋 | 완충 확인 |
 | 11 | **헤딩 캘리브 거부 뒤 110ms 만에 재측정 시작** — 차를 되돌리는 동작이 다음 시도 앞구간으로 기록돼 연속 실패. 2026-08-16에 43°→157°로 2연속 당함 | **고쳐짐**(`7ed98c8`): 3초 정지 확인 후 재시작 |
+| 12 | **파이5 USB-C는 전원 전용** — 파이4의 USB 가젯 모드가 없어 PC에 꽂아도 네트워크가 안 된다. 전력도 부족(5V/5A 필요) | 랜선 또는 WiFi로 연결. 전원은 27W 이상 어댑터 |
+| 13 | **IP 포워딩·iptables NAT는 재부팅하면 날아간다** (ufw 규칙·고정 IP는 파일로 남아 유지됨) | 매 부팅 후 `bash tools/pi_link.sh` |
+| 14 | **신호등 1프레임 오탐** — 카메라가 신호등을 안 봐도 6.6초에 4번 GREEN 이 튀었다. 제어에 물리면 한 프레임이 '출발' 명령이 된다 | **고쳐짐**(`d52374a`): 5프레임 연속 일치해야 확정. 로그의 `걸러낸튐` 이 늘면 threshold 조정 |
 
 ---
 
@@ -264,5 +289,17 @@ local_sliding_window: n_back 5, n_forward 20, poly_order 3,
 ## 10. 일정
 
 대회 **2026-08-22** (약 6일 남음).
-완주 기반 완성도 약 85%, 미션 포함 약 55%.
-**완주를 먼저 확정하고 남은 시간을 미션에 쓰는 것이 맞다.**
+
+| 항목 | 완성도 | 비고 |
+|---|---|---|
+| 완주(주행) | **약 75%** | FF 미해결이 확정돼 85%에서 하향. 고치는 길은 명확 |
+| 신호등 인식 | **약 90%** | 파이+Hailo 실동작. 실외 검증만 남음 |
+| 정지선·횡단보도 | **0%** | 모델에 클래스 자체가 없음 |
+| 인지 → 주행 연동 | **0%** | 토픽은 오는데 소비자가 없음 |
+
+**구동 FF가 최우선이다.** 2번(코너 튜닝)과 auto_calib 검증이 여기 물려 있고,
+속도가 명령대로 안 나오면 신호등을 봐도 제때 못 선다.
+
+**미결(외부 확인 필요)**: 대회 규칙상 미션 구간을 **GPS 사전기록 경로**로
+통과해도 되는가. 가능하면 정지선 인지 없이도 신호등만으로 미션이 성립하고,
+불가하면 정지선 인지를 새로 만들어야 한다 — 남은 일정 배분이 여기서 갈린다.
