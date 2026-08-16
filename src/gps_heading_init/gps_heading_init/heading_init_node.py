@@ -265,7 +265,10 @@ class HeadingInitNode(Node):
     east = (msg.longitude - self.lon0) * M_PER_DEG * self.cos_lat0
     north = (msg.latitude - self.lat0) * M_PER_DEG
     dist = math.hypot(east, north)
-    self.track.append((east, north))
+    # 캘리브가 끝나지 않고 세션이 길어져도 무한정 쌓이지 않게 상한을 둔다.
+    # 정상 캘리브(10m, ~5Hz)는 100점 안팎이라 걸릴 일이 없다.
+    if len(self.track) < 2000:
+      self.track.append((east, north))
 
     # ★ 직진성 검증: 시작점→현재점의 '직선 방향'을 헤딩으로 쓰기 때문에,
     # 캘리브 중 곡선으로 가거나 후진하면 그 직선이 실제 진행방향과 달라져
