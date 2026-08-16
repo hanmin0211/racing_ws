@@ -87,7 +87,9 @@ float steerADCToAngle(int adc) {
 
 // ============================ 3. 안전 파라미터 ================================
 // ★ 벤치 테스트는 이 값들을 낮게 시작해서 단계적으로 올린다.
-#define MAX_DRIVE_PWM    80   // 구동 PWM 상한 (초기 낮게; 검증 후 최대 255까지)
+// 구동 PWM 상한. 80은 근거 없는 보수값이었고, FF 실측 결과 1.5m/s에 PWM 71이
+// 필요해 PID 여유를 더한 111 로 상향(ff_sweep 권장치). 스톨가드가 보호한다.
+#define MAX_DRIVE_PWM   111
 // 조향 PWM 상한. 90은 벤치 초기 보수값이었는데, 실측 결과 '완전 정지 상태에서의
 // breakaway(정지마찰 뜯기)'에 부족했다(움직이는 중엔 90으로 충분히 잘 감).
 // 130으로 상향 — 스톨가드(PWM>30이 250ms간 무이동 시 컷 + 1.5s 쿨다운)가 보호한다.
@@ -175,11 +177,18 @@ const int counts_per_revolution = -290;
 const float wheel_circumference = 2 * 3.14159 * wheel_radius;
 
 // 구동 속도 PID
-float velocity_kp = 30.0, velocity_ki = 24.0, velocity_kd = 0.5;
+// ★ FF가 정확해졌으므로 PID는 작은 오차만 보정하면 된다. 이전 30/24 는 틀린 FF를
+//   억지로 메우던 값이고, 정지마찰에 걸린 6초 동안 적분이 쌓였다가 터지는
+//   **급발진의 원인**이었다(2026-08-16 현장 관측). 대폭 낮춘다.
+float velocity_kp = 8.0, velocity_ki = 4.0, velocity_kd = 0.2;
 float velocity_error = 0.0, velocity_error_old = 0.0, velocity_error_sum = 0.0;
 int velocity_pwm_output = 0;
 const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
-const float STATIC_FF = 35.0, VELOCITY_FF_GAIN = 60.0;
+// ★ FF 실측 식별(2026-08-16, ff_sweep 103샘플, 속도 0.06~1.15m/s, PWM 22~62,
+//   피팅 잔차 RMS 4.3 PWM). 이전 35/60 은 근거 불명이었고 속도항이 3배 과다했다.
+//   ※ 스윕을 한 방향에서만 했으므로 경사 편향 가능성이 있다. 반대 방향으로
+//     한 번 더 재서 평균 내면 더 정확해진다.
+const float STATIC_FF = 40.5, VELOCITY_FF_GAIN = 20.7;
 
 // 조향 위치 PID
 float steering_kp = 1.0, steering_ki = 0.0, steering_kd = 0.2;
