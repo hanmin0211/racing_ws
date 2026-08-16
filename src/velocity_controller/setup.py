@@ -37,6 +37,7 @@ setup(
         'teleop_keyboard = velocity_controller.teleop_keyboard_node:main',
         'encoder_calib = velocity_controller.encoder_calib_node:main',
         'ff_sweep = velocity_controller.ff_sweep_node:main',
+        'straight_drive = velocity_controller.straight_drive_node:main',
         ],
     },
 )
