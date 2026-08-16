@@ -14,12 +14,16 @@ import cv2
 import numpy as np
 
 # --- 하드웨어 의존 모듈 스텁 (import 만 통과시키면 된다) ---------------
-for name in ('common', 'common.hailo_inference', 'object_detection_post_process'):
-    m = types.ModuleType(name)
-    sys.modules[name] = m
+# common 은 패키지로 만들어야 `from common.toolbox import ...` 가 통한다.
+for name in ('common', 'common.hailo_inference', 'common.toolbox',
+             'object_detection_post_process'):
+    sys.modules[name] = types.ModuleType(name)
+sys.modules['common'].__path__ = []            # 패키지로 인식시킨다
 sys.modules['common.hailo_inference'].HailoInfer = object
+sys.modules['common.toolbox'].default_preprocess = lambda img, w, h: img
 sys.modules['object_detection_post_process'].extract_detections = lambda *a: None
 sys.modules['common'].hailo_inference = sys.modules['common.hailo_inference']
+sys.modules['common'].toolbox = sys.modules['common.toolbox']
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import coco_detector_node as M   # noqa: E402
