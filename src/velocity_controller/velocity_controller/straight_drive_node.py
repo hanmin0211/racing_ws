@@ -32,6 +32,8 @@ import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
+from std_msgs.msg import Float64
 
 
 def norm(a):
@@ -60,6 +62,15 @@ class StraightDrive(Node):
 
     self.pub = self.create_publisher(Twist, str(g('cmd_topic')), 10)
     self.create_subscription(Odometry, '/odometry/filtered', self.odom_cb, 10)
+    # ★ 주행 중 헤딩 캘리브가 완료되면 yaw 가 오프셋만큼 통째로 점프한다.
+    # (heading_init 은 10m 지점에서 끝나므로 30m 주행이면 반드시 겪는다)
+    # 그때 기준(yaw0)을 같이 옮겨주지 않으면, 차는 똑바로 가는데 '헤딩오차 130°'
+    # 라는 유령 오차가 생기고 조향 보정이 계속 들어가 **실제로 휘어버린다.**
+    # 2026-08-16 현장에서 실제로 발생: 뒤쪽 20m가 그렇게 휘었다.
+    latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+    self.yaw_offset = None
+    self.create_subscription(Float64, '/heading/yaw_offset',
+                             self.offset_cb, latched)
 
     self.x0 = self.y0 = self.yaw0 = None
     self.x = self.y = self.yaw = None
@@ -78,6 +89,20 @@ class StraightDrive(Node):
 
   def now(self):
     return self.get_clock().now().nanoseconds * 1e-9
+
+  def offset_cb(self, msg):
+    """헤딩 오프셋이 바뀌면 기준 yaw도 같은 양만큼 옮긴다."""
+    new = float(msg.data)
+    if self.yaw_offset is None:
+      self.yaw_offset = new
+      return
+    delta = new - self.yaw_offset
+    self.yaw_offset = new
+    if abs(delta) > 1e-6 and self.yaw0 is not None:
+      self.yaw0 = norm(self.yaw0 + delta)
+      self.get_logger().info(
+          f'헤딩 캘리브 적용됨 ({math.degrees(delta):+.1f}°) → 기준 헤딩을 '
+          f'{math.degrees(self.yaw0):.1f}° 로 재설정 (유령 오차 방지)')
 
   def odom_cb(self, msg):
     self.x = msg.pose.pose.position.x
