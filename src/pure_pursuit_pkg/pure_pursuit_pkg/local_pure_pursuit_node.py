@@ -31,7 +31,7 @@ import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry, Path
 from rclpy.node import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Bool, Float64
 
 
 class LocalPurePursuit(Node):
@@ -95,6 +95,11 @@ class LocalPurePursuit(Node):
     self.create_subscription(Path, lp_topic, self.path_cb, 10)
     self.create_subscription(Odometry, odom_topic, self.odom_cb, 10)
     self.create_subscription(Float64, '/curvature', self.curv_cb, 10)
+    # ★ 완주 신호. 경로 끝에서 local_sliding_window 가 /local_path 발행을 멈추므로
+    # 아래 path_timeout 에 걸리는데, 그건 고장이 아니라 정상 종료다.
+    # 이 구분이 없으면 대회 중 완주했는데 '경로 0.5s 끊김' 경고만 보인다.
+    self.goal_reached = False
+    self.create_subscription(Bool, '/goal_reached', self.goal_cb, 10)
     self.create_timer(1.0 / rate, self.control)
 
     self.get_logger().info(
@@ -111,6 +116,11 @@ class LocalPurePursuit(Node):
   def curv_cb(self, msg: Float64):
     self.curvature = float(msg.data)
 
+  def goal_cb(self, msg: Bool):
+    if bool(msg.data) and not self.goal_reached:
+      self.goal_reached = True
+      self.get_logger().info('🏁 완주 신호 수신 — 조향 중앙 복귀 후 정지 (고장 아님)')
+
   def stop(self, reason=None):
     # 속도는 0, 조향은 슬루레이트로 서서히 중앙(0)으로 (급조향 없이 안전 정지)
     max_step = self.max_steer_rate / self.control_rate
@@ -124,7 +134,10 @@ class LocalPurePursuit(Node):
       cmd.angular.z = float(self.prev_steer_deg)
       self.cmd_pub.publish(cmd)
     if reason:
-      self.get_logger().warn(f'정지: {reason}', throttle_duration_sec=1.0)
+      # 완주는 정상 종료다 — WARN 으로 찍으면 현장에서 고장으로 오인한다.
+      log = (self.get_logger().info if reason.startswith('🏁')
+             else self.get_logger().warn)
+      log(f'정지: {reason}', throttle_duration_sec=5.0)
 
   def find_lookahead(self, ld_target):
     """/local_path(차량기준) 위에서 차량으로부터 호길이 ld_target 인 점을 찾는다."""
@@ -144,13 +157,17 @@ class LocalPurePursuit(Node):
     return pts[-1]   # 경로가 짧으면 마지막 점
 
   def control(self):
+    # 완주가 먼저다 — 완주하면 /local_path 가 끊기므로 아래 타임아웃에 걸린다.
+    if self.goal_reached:
+      self.stop('🏁 완주 (정상 종료)')
+      return
     # 안전: 경로가 최근에 안 왔으면 정지
     if self.last_path_time is None:
       self.stop('경로 대기중')
       return
     dt = (self.get_clock().now() - self.last_path_time).nanoseconds * 1e-9
     if dt > self.path_timeout:
-      self.stop(f'경로 {dt:.1f}s 끊김')
+      self.stop(f'⚠ 경로 {dt:.1f}s 끊김 — 완주 신호 없음. GPS/IMU 확인')
       return
     if len(self.path_pts) < 2:
       self.stop('경로 점 부족')

@@ -142,15 +142,23 @@ def simulate(wps, args):
     # 조향 슬루레이트 제한
     delta = max(delta - max_step, min(delta + max_step, d_target))
 
+    # ★ 실제 바퀴 각도 = 명령각 + 캘리브 오차.
+    # 조향 중심(STEER_CENTER)이 틀어져 있거나 COUNTS_PER_DEG 가 어긋나면
+    # 명령한 각도와 실제 각도가 다르다. 실전 트랙은 최대 16.3°를 요구해
+    # 한계 18°까지 여유가 1.7°뿐이므로 이 오차가 완주를 좌우한다.
+    real = delta + math.radians(args.steer_bias)
+    real *= args.steer_scale
+    real = max(-max_steer, min(max_steer, real))
+
     # 자전거 모델 전진
     x += v * math.cos(yaw) * dt
     y += v * math.sin(yaw) * dt
-    yaw += v / L * math.tan(delta) * dt
+    yaw += v / L * math.tan(real) * dt
     travelled += v * dt
 
     log['x'].append(x); log['y'].append(y)
     log['cte'].append(cross_track(wps, x, y))
-    log['delta'].append(math.degrees(delta))
+    log['delta'].append(math.degrees(real))
     log['v'].append(v)
     log['s'].append(travelled)
     log['kappa'].append(kappa_path)
@@ -275,6 +283,10 @@ def main():
   ap.add_argument('--max-time', type=float, default=900.0)
   ap.add_argument('--init-offset', type=float, default=0.0,
                   help='출발 시 횡방향으로 어긋난 거리[m] — 수렴성 확인용')
+  ap.add_argument('--steer-bias', type=float, default=0.0,
+                  help='조향 캘리브 오차[도] — 중심이 틀어진 경우')
+  ap.add_argument('--steer-scale', type=float, default=1.0,
+                  help='조향 스케일 오차 — COUNTS_PER_DEG 어긋남 (1.0=정확)')
   ap.add_argument('--init-heading-err', type=float, default=0.0,
                   help='출발 시 헤딩 오차[도]')
   ap.add_argument('--plot', default=None)
