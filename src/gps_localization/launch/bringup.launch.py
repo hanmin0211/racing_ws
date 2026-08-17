@@ -113,9 +113,9 @@ def generate_launch_description():
               'fix_topic': '/fix',
               'imu_topic': 'handsfree/imu',
               'output_topic': '/odometry/filtered',
-              'origin_x': 399848.522,
-              'origin_y': 4092209.171,
-              'utm_epsg': 32652,
+              # 원점은 지정하지 않는다 — config/site_origin.yaml 이 정본이고
+              # 노드가 직접 읽는다. 여기서 덮어쓰면 waypoint_recorder 와
+              # 어긋날 수 있다(어긋나면 전역경로가 통째로 평행이동한다).
               'rate': 30.0,
               'publish_tf': True,
               'invert_imu_yaw': invert_imu_yaw,

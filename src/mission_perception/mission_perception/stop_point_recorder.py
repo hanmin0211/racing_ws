@@ -40,6 +40,7 @@ from pyproj import Transformer
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import NavSatFix
+from waypoint_follower.site_origin import declare_and_get
 
 
 class StopPointRecorder(Node):
@@ -48,17 +49,13 @@ class StopPointRecorder(Node):
     super().__init__('stop_point_recorder')
 
     self.declare_parameter('fix_topic', '/fix')
-    self.declare_parameter('utm_epsg', 32652)
-    self.declare_parameter('origin_x', 399848.522)
-    self.declare_parameter('origin_y', 4092209.171)
+    # 원점은 config/site_origin.yaml 이 정본 — waypoint_recorder 와 반드시 동일.
+    epsg, self.origin_x, self.origin_y = declare_and_get(self)
     self.declare_parameter('output_file',
                            os.path.expanduser('~/stop_points.yaml'))
 
     g = lambda n: self.get_parameter(n).value  # noqa: E731
-    self.origin_x = float(g('origin_x'))
-    self.origin_y = float(g('origin_y'))
     self.out = str(g('output_file'))
-    epsg = int(g('utm_epsg'))
     self.tf = Transformer.from_crs('EPSG:4326', f'EPSG:{epsg}', always_xy=True)
 
     self.fix = None          # (lat, lon, x, y, h_acc)

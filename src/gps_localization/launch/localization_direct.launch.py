@@ -50,9 +50,7 @@ def generate_launch_description():
               'fix_topic': '/fix',
               'imu_topic': '/imu/corrected',
               'output_topic': '/odometry/filtered',
-              'origin_x': 399848.522,
-              'origin_y': 4092209.171,
-              'utm_epsg': 32652,
+              # 원점은 config/site_origin.yaml 이 정본 (노드가 직접 읽음).
               'rate': 30.0,
               'publish_tf': True,
           }],

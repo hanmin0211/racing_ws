@@ -19,13 +19,18 @@ class PurePursuit(Node):
         self.yaml_file = "/home/han/gps_converter/waypoints_local_resampled_0.3.yaml"
 
         # Origin 세팅
-        self.origin_x = 399848.522
-        self.origin_y = 4092209.171
+        # ⚠ 이 노드는 현재 파이프라인(control.launch.py)에서 쓰이지 않는다.
+        # 제어는 pure_pursuit_pkg/local_pure_pursuit_node 가 담당하며 그쪽은
+        # /local_path(차량기준)만 써서 원점과 무관하다.
+        # 그래도 원점이 어긋난 채 남아 있으면 나중에 되살릴 때 150km 틀어지므로
+        # 정본(config/site_origin.yaml)을 읽게 맞춰 둔다.
+        from waypoint_follower.site_origin import load_site_origin
+        _epsg, self.origin_x, self.origin_y, _src = load_site_origin()
 
         # WGS84 -> UTM52N 변환기 세팅
         self.transformer = Transformer.from_crs(
             "EPSG:4326",
-            "EPSG:32652",
+            f"EPSG:{_epsg}",
             always_xy=True
         )
 

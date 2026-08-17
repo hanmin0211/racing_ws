@@ -116,9 +116,14 @@ class LocalSlidingWindowNode(Node):
       gap = float(np.hypot(
           self.global_waypoints[0, 0] - self.global_waypoints[-1, 0],
           self.global_waypoints[0, 1] - self.global_waypoints[-1, 1]))
-      self.get_logger().info(
-          f'전역 경로 수신: {len(self.global_waypoints)}점, '
-          f'시작-끝 {gap:.2f}m → {"닫힌 루프" if self.closed else "열린 경로"}')
+      # global_path_publisher 는 1Hz로 계속 재발행하므로 매번 찍으면 로그가
+      # 이 한 줄로 도배돼 다른 메시지가 안 보인다. 내용이 바뀔 때만 찍는다.
+      sig = (len(self.global_waypoints), round(gap, 2), self.closed)
+      if sig != getattr(self, '_path_sig', None):
+        self._path_sig = sig
+        self.get_logger().info(
+            f'전역 경로 수신: {len(self.global_waypoints)}점, '
+            f'시작-끝 {gap:.2f}m → {"닫힌 루프" if self.closed else "열린 경로"}')
     self.is_path_received = True
 
   def odom_callback(self, msg):

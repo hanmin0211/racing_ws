@@ -32,8 +32,11 @@ from rclpy.node import Node
 from std_msgs.msg import Int32
 
 # 펌웨어 현재 설정 (henes_firmware.ino 와 일치시킬 것)
+# ★ 2026-08-16: 여기가 0.13 으로 굳어 있는 동안 펌웨어는 이미 0.1327 이었다.
+#   그래서 "보정계수 1.019 — 엔코더 2% 과소" 라는 가짜 결과가 나왔다.
+#   실제로는 0.998 로 이미 정확한 상태였다. 펌웨어를 고치면 여기도 같이 고칠 것.
 FW_COUNTS_PER_REV = 290.0
-FW_WHEEL_RADIUS = 0.13
+FW_WHEEL_RADIUS = 0.1327
 FW_CIRCUMFERENCE = 2.0 * math.pi * FW_WHEEL_RADIUS
 
 
@@ -137,11 +140,17 @@ class EncoderCalib(Node):
       print('    직진이 아니면 RTK 직선거리가 실제 주행거리보다 짧아 계수가 왜곡된다.')
     print(f'  ★ 보정계수 = {r["factor"]:.4f}')
     print()
+    if abs(r['factor'] - 1.0) < 0.03:
+      print('  ✅ 엔코더 정확 (오차 3% 이내) — 펌웨어 수정 불필요.')
+      print('     속도가 명령보다 낮다면 원인은 엔코더가 아니라')
+      print('     FF / MAX_DRIVE_PWM / PID 쪽이다.')
+      print('=' * 60)
+      return
     print('  적용 방법 — henes_firmware.ino 에서 둘 중 하나:')
     new_cpr = FW_COUNTS_PER_REV / r['factor'] if r['factor'] > 1e-6 else 0
     new_rad = FW_WHEEL_RADIUS * r['factor']
-    print(f'    counts_per_revolution : -290  →  {-new_cpr:.1f}')
-    print(f'    (또는) wheel_radius   : 0.13  →  {new_rad:.4f}')
+    print(f'    counts_per_revolution : {-FW_COUNTS_PER_REV:.0f}  →  {-new_cpr:.1f}')
+    print(f'    (또는) wheel_radius   : {FW_WHEEL_RADIUS:.4f}  →  {new_rad:.4f}')
     print('    ※ 둘 중 하나만 고칠 것. 물리적으로는 타이어 눌림 때문이므로')
     print('      wheel_radius 쪽을 고치는 편이 의미가 분명하다.')
     print('=' * 60)

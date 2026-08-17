@@ -36,6 +36,7 @@ from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from sensor_msgs.msg import Imu, NavSatFix
 from std_msgs.msg import Float64
 from tf2_ros import TransformBroadcaster
+from waypoint_follower.site_origin import declare_and_get
 
 
 def yaw_from_quat(q):
@@ -53,9 +54,10 @@ class DirectLocalizationNode(Node):
     # 원본 IMU를 받고, /heading/yaw_offset(heading_init이 계산)를 직접 적용한다.
     self.declare_parameter('imu_topic', 'handsfree/imu')
     self.declare_parameter('output_topic', '/odometry/filtered')
-    self.declare_parameter('origin_x', 399848.522)
-    self.declare_parameter('origin_y', 4092209.171)
-    self.declare_parameter('utm_epsg', 32652)
+    # ★ 원점은 config/site_origin.yaml 이 정본이다.
+    # 이 값이 waypoint_recorder 와 1mm라도 다르면 전역경로가 통째로 평행이동해
+    # 차가 엉뚱한 곳을 따라간다. 그래서 같은 로더를 공유한다.
+    epsg, self.origin_x, self.origin_y = declare_and_get(self)
     self.declare_parameter('rate', 30.0)
     self.declare_parameter('publish_tf', True)
     self.declare_parameter('frame_id', 'map')
@@ -79,9 +81,6 @@ class DirectLocalizationNode(Node):
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
     output_topic = self.get_parameter('output_topic').value
-    self.origin_x = float(self.get_parameter('origin_x').value)
-    self.origin_y = float(self.get_parameter('origin_y').value)
-    epsg = int(self.get_parameter('utm_epsg').value)
     rate = float(self.get_parameter('rate').value)
     self.publish_tf = bool(self.get_parameter('publish_tf').value)
     self.frame_id = self.get_parameter('frame_id').value
