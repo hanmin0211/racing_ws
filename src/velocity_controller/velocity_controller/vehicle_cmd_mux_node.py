@@ -22,9 +22,12 @@ vehicle_cmd_mux_node.py — 종방향(속도) + 횡방향(조향)을 합쳐 최�
 출력: /cmd_vel(Twist)
 """
 
+import math
+
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_msgs.msg import Bool, Float64
 
 
@@ -41,6 +44,12 @@ class VehicleCmdMux(Node):
     self.declare_parameter('input_timeout', 0.5)  # 자율 입력 끊김 판정
     self.declare_parameter('teleop_timeout', 0.5)  # 이 시간 지나면 teleop 해제
     self.declare_parameter('rate', 20.0)
+    # ★ 헤딩 캘리브 완료 전에는 자율(AUTO)을 막는다.
+    # direct_localization 은 yaw_offset=0(=IMU 원시 yaw, 방향 의미 없음)으로도
+    # odom 을 발행한다. 그 위에서 로컬경로·조향이 계산되므로, 캘리브 전에
+    # control:=true 로 띄우면 **차가 엉뚱한 방향으로 스스로 출발한다.**
+    # teleop 과 E-stop 은 막지 않는다 — 캘리브 10m 직진을 사람이 몰아야 하므로.
+    self.declare_parameter('require_heading_calib', True)
 
     g = lambda n: self.get_parameter(n).value  # noqa: E731
     self.max_steer = float(g('max_steer_deg'))
@@ -58,17 +67,34 @@ class VehicleCmdMux(Node):
     self.teleop_time = None
     self.estop = False
     self.last_mode = None
+    self.require_calib = bool(g('require_heading_calib'))
+    self.heading_ready = not self.require_calib
 
     self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
     self.create_subscription(Float64, '/target_speed', self.speed_cb, 10)
     self.create_subscription(Float64, '/steering_cmd', self.steer_cb, 10)
     self.create_subscription(Twist, '/teleop/cmd_vel', self.teleop_cb, 10)
     self.create_subscription(Bool, '/e_stop', self.estop_cb, 10)
+    # heading_init 은 계산 후 종료하므로 latched(TRANSIENT_LOCAL)로 발행한다.
+    # 늦게 뜬 먹스도 과거 값을 받아야 하므로 같은 QoS 로 구독한다.
+    latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+    self.create_subscription(Float64, '/heading/yaw_offset',
+                             self.heading_cb, latched)
     self.create_timer(1.0 / rate, self.tick)
 
     self.get_logger().info(
         f'명령 먹스 시작: 조향±{self.max_steer}° 속도 {self.min_speed}~'
         f'{self.max_speed}m/s (E-stop > teleop > 자율)')
+    if self.require_calib:
+      self.get_logger().warn(
+          '헤딩 캘리브 대기 — /heading/yaw_offset 을 받기 전에는 자율(AUTO)을 '
+          '거부한다. teleop 으로 10m 직진해 캘리브를 끝낼 것.')
+
+  def heading_cb(self, msg):
+    if not self.heading_ready:
+      self.heading_ready = True
+      self.get_logger().info(
+          f'헤딩 캘리브 완료 ({math.degrees(float(msg.data)):.1f}°) — 자율 허용')
 
   def now(self):
     return self.get_clock().now().nanoseconds * 1e-9
@@ -101,6 +127,9 @@ class VehicleCmdMux(Node):
     elif self.fresh(self.teleop_time, self.teleop_timeout) and self.teleop:
       # 사람이 잡으면 사람이 우선 (teleop은 이미 도 단위로 발행)
       v, s, mode = self.teleop.linear.x, self.teleop.angular.z, 'TELEOP'
+    elif not self.heading_ready:
+      # 캘리브 전 자율 거부. 이유를 명시해야 현장에서 '왜 안 가지'로 헤매지 않는다.
+      mode = 'STOP(헤딩 캘리브 전)'
     elif self.fresh(self.speed_time, self.input_timeout) and \
             self.fresh(self.steer_time, self.input_timeout):
       v, s, mode = self.target_speed, self.steer_deg, 'AUTO'

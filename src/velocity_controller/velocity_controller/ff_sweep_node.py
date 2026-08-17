@@ -41,7 +41,9 @@ class FFSweep(Node):
   def __init__(self):
     super().__init__('ff_sweep')
     self.declare_parameter('ramp_rate', 4.0)     # PWM/초 — 느릴수록 정확
-    self.declare_parameter('max_pwm', 140)
+    # 펌웨어 MAX_OPENLOOP_PWM(230)과 맞춘다. 여기가 낮으면 쓰려는 속도 범위를
+    # 다 못 덮고 결국 외삽하게 된다 — FF 가 10배 틀렸던 원인이 그 외삽이었다.
+    self.declare_parameter('max_pwm', 230)
     self.declare_parameter('max_speed', 1.2)     # 이 속도 넘으면 종료 [m/s]
     self.declare_parameter('start_pwm', 10)
     self.declare_parameter('settle_speed', 0.05)  # 이 이하는 '정지'로 간주
