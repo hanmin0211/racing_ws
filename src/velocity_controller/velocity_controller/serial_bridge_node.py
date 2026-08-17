@@ -47,9 +47,11 @@ class SerialBridgeNode(Node):
         # 18°로 제한한다. (예전 하드코딩 30°는 실제보다 훨씬 커서 위험했음)
         self.declare_parameter('max_steer_deg', 18.0)
 
-        port = self._resolve_port(
-            self.get_parameter('port').get_parameter_value().string_value)
+        self._port_param = self.get_parameter('port').get_parameter_value().string_value
+        port = self._resolve_port(self._port_param)
         baud = self.get_parameter('baud').get_parameter_value().integer_value
+        self._baud = baud
+        self._reconnects = 0
         self.watchdog_timeout = self.get_parameter('watchdog_timeout').get_parameter_value().double_value
         self.max_steer_deg = float(self.get_parameter('max_steer_deg').value)
 
@@ -183,8 +185,12 @@ class SerialBridgeNode(Node):
             cmd = f'VEL:{self.target_vel:.2f},STEER:{self.target_steer:.1f}\n'
         try:
             self.ser.write(cmd.encode('utf-8'))
-        except serial.SerialException as e:
-            self.get_logger().error(f'시리얼 전송 실패: {e}')
+        except Exception as e:  # noqa: BLE001
+            # 읽기 스레드가 _reconnect 로 복구하는 중일 수 있다. 여기서 같이
+            # 재연결을 시도하면 두 스레드가 포트를 두고 싸우므로 로그만 남긴다.
+            # 재연결이 끝나면 다음 주기부터 자동으로 다시 나간다.
+            self.get_logger().error(f'시리얼 전송 실패: {e}',
+                                    throttle_duration_sec=2.0)
 
     # ------------------------------------------------------------------
     def watchdog_check(self):
@@ -199,6 +205,34 @@ class SerialBridgeNode(Node):
 
     # ------------------------------------------------------------------
 # ------------------------------------------------------------------
+    def _reconnect(self, err):
+        """시리얼이 끊겼을 때 포트를 다시 찾아 연결한다.
+
+        아두이노가 리셋되면 USB 장치번호와 /dev/ttyACM* 번호가 함께 바뀌므로
+        원래 경로를 다시 열어봐야 소용없다. _resolve_port 로 재탐색한다.
+        """
+        self._reconnects += 1
+        self.get_logger().error(
+            f'시리얼 끊김({err}) — 재연결 시도 #{self._reconnects}',
+            throttle_duration_sec=2.0)
+        try:
+            self.ser.close()
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(1.0)
+        try:
+            port = self._resolve_port(self._port_param)
+            ser = serial.Serial(port, self._baud, timeout=0.1)
+            time.sleep(2.0)          # 아두이노 부트로더 대기
+            ser.reset_input_buffer()
+            self.ser = ser
+            self.get_logger().warn(
+                f'✅ 시리얼 재연결 성공: {port} (총 {self._reconnects}회)')
+        except Exception as e:  # noqa: BLE001
+            self.get_logger().error(
+                f'재연결 실패 ({e}) — 1초 뒤 재시도', throttle_duration_sec=5.0)
+            time.sleep(1.0)
+
     def read_serial_loop(self):
         """별도 스레드에서 계속 Arduino로부터 오는 줄을 읽어서 처리."""
         self.get_logger().info("Serial read thread started")
@@ -213,7 +247,13 @@ class SerialBridgeNode(Node):
                     self.get_logger().debug(f"RAW: {repr(line)}")
 
             except Exception as e:
-                self.get_logger().error(f"Serial read error: {e}")
+                # ★ 아두이노가 USB 재열거되면 열어둔 포트가 죽고 여기로 떨어진다.
+                # 예전엔 continue 만 해서 초당 수천 줄 에러를 뿌리며 영영 복구되지
+                # 않았다(2026-08-17 현장: Device 012→015→016→017 로 4회 재열거,
+                # 포트도 ttyACM0↔ttyACM1 로 바뀜). 주행 중 한 번 나면 랩이 끝난다.
+                # → 포트를 다시 탐색해서 재연결한다. 재연결까지 차는 펌웨어
+                #   워치독(0.5s)으로 이미 정지 상태이므로 안전하다.
+                self._reconnect(e)
                 continue
 
             if not line:

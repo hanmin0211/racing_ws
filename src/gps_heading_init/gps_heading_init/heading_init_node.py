@@ -78,6 +78,9 @@ class HeadingInitNode(Node):
     self.declare_parameter('invert_imu_yaw', False)
     # 캘리브 중 허용할 최대 진행방향 편차[도]. 이보다 휘면 직진이 아니라고 보고 거부.
     self.declare_parameter('max_deviation_deg', 20.0)
+    # 직진성 평가를 시작할 최소 현 길이[m]. 이보다 짧으면 현 방향 자체가
+    # 노이즈라서 비교가 무의미하다(위 fix_callback 주석 참고).
+    self.declare_parameter('min_chord_for_dev', 2.0)
     # 실패 후 재시작: 차량이 이 시간만큼 멈춰 있어야 새 시작점을 잡는다.
     self.declare_parameter('restart_settle_sec', 3.0)
     self.declare_parameter('restart_settle_radius', 0.5)   # 이보다 움직이면 '이동 중'
@@ -98,6 +101,8 @@ class HeadingInitNode(Node):
     self.invert_imu_yaw = bool(self.get_parameter('invert_imu_yaw').value)
     self.max_deviation = math.radians(
         float(self.get_parameter('max_deviation_deg').value))
+    self.min_chord_for_dev = float(
+        self.get_parameter('min_chord_for_dev').value)
     self.settle_sec = float(self.get_parameter('restart_settle_sec').value)
     self.settle_radius = float(self.get_parameter('restart_settle_radius').value)
     self.settle_timeout = float(self.get_parameter('restart_settle_timeout').value)
@@ -132,6 +137,7 @@ class HeadingInitNode(Node):
     self.prev_e = None
     self.prev_n = None
     self.max_dev = 0.0
+    self.max_dev_at = 0.0
 
     # 오프셋은 래치(TRANSIENT_LOCAL)로 발행 — 이 노드가 종료해도 이미 구독 중인
     # direct_localization이 값을 받도록. (같은 이유로 course도 래치)
@@ -255,6 +261,7 @@ class HeadingInitNode(Node):
       self.cos_lat0 = math.cos(math.radians(self.lat0))
       self.prev_e = self.prev_n = None
       self.max_dev = 0.0
+      self.max_dev_at = 0.0
       self.track = [(0.0, 0.0)]
       self.get_logger().info(
           f'시작점 기록: ({self.lat0:.7f}, {self.lon0:.7f}). 직진 시작하세요.')
@@ -277,10 +284,18 @@ class HeadingInitNode(Node):
     if self.prev_e is not None:
       seg_e, seg_n = east - self.prev_e, north - self.prev_n
       if math.hypot(seg_e, seg_n) > 0.3:      # 유의미하게 움직였을 때만 평가
-        seg_course = math.atan2(seg_n, seg_e)
-        chord_course = math.atan2(north, east)
-        dev = abs(normalize_angle(seg_course - chord_course))
-        self.max_dev = max(getattr(self, 'max_dev', 0.0), dev)
+        # ★ 현(시작점→현재점)이 짧으면 그 방향은 의미가 없다.
+        # 출발 직후엔 현이 0.3~0.5m 뿐이라 GPS 노이즈(2cm)와 출발 시 차체
+        # 흔들림·미세 후진만으로도 방향이 수십 도 튄다. 그걸 진행방향과
+        # 비교하면 멀쩡한 직진이 77° 편차로 거부된다(2026-08-17 현장).
+        # 현이 min_chord_m 이상 자란 뒤부터 평가한다.
+        if dist >= self.min_chord_for_dev:
+          seg_course = math.atan2(seg_n, seg_e)
+          chord_course = math.atan2(north, east)
+          dev = abs(normalize_angle(seg_course - chord_course))
+          if dev > getattr(self, 'max_dev', 0.0):
+            self.max_dev = dev
+            self.max_dev_at = dist      # 어디서 최악이었는지 (진단용)
         self.prev_e, self.prev_n = east, north
     else:
       self.prev_e, self.prev_n = east, north
@@ -292,13 +307,15 @@ class HeadingInitNode(Node):
       max_dev = getattr(self, 'max_dev', 0.0)
       if max_dev > self.max_deviation:
         self.get_logger().error(
-            f'❌ 직진이 아닙니다 (최대 편차 {math.degrees(max_dev):.0f}° > '
+            f'❌ 직진이 아닙니다 (최대 편차 {math.degrees(max_dev):.0f}° @ '
+            f'{getattr(self, "max_dev_at", 0.0):.1f}m 지점 > '
             f'{math.degrees(self.max_deviation):.0f}°). 헤딩 캘리브 무효 — '
             f'차량을 되돌려 **곧게** 다시 {self.calib_distance:.0f}m 직진하세요.')
         # 처음부터 다시. 단, 차를 되돌리는 동안은 시작점을 잡지 않는다(_settled).
         self.lat0 = None
         self.prev_e = self.prev_n = None
         self.max_dev = 0.0
+        self.max_dev_at = 0.0
         self._last_log_m = -1
         self.rearming = True
         self._settle_lat = None
