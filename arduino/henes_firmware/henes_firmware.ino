@@ -89,7 +89,11 @@ float steerADCToAngle(int adc) {
 // ★ 벤치 테스트는 이 값들을 낮게 시작해서 단계적으로 올린다.
 // 구동 PWM 상한. 80은 근거 없는 보수값이었고, FF 실측 결과 1.5m/s에 PWM 71이
 // 필요해 PID 여유를 더한 111 로 상향(ff_sweep 권장치). 스톨가드가 보호한다.
-#define MAX_DRIVE_PWM   111
+// 111 은 잘못 식별된 FF 에서 나온 값이고, 실제로는 천장으로 작동해
+// 0.33 m/s 에서 속도를 막고 있었다. 모터는 24V 240W(16000rpm) 이고
+// 111 은 듀티 43% 에 불과하다. 190 은 약 0.7~0.8 m/s 에 해당하며
+// 255 대비 여유(경사·배터리 새그용)를 남긴다.
+#define MAX_DRIVE_PWM   190
 // 조향 PWM 상한. 90은 벤치 초기 보수값이었는데, 실측 결과 '완전 정지 상태에서의
 // breakaway(정지마찰 뜯기)'에 부족했다(움직이는 중엔 90으로 충분히 잘 감).
 // 130으로 상향 — 스톨가드(PWM>30이 250ms간 무이동 시 컷 + 1.5s 쿨다운)가 보호한다.
@@ -186,7 +190,12 @@ const float wheel_circumference = 2 * 3.14159 * wheel_radius;
 // ★ FF가 정확해졌으므로 PID는 작은 오차만 보정하면 된다. 이전 30/24 는 틀린 FF를
 //   억지로 메우던 값이고, 정지마찰에 걸린 6초 동안 적분이 쌓였다가 터지는
 //   **급발진의 원인**이었다(2026-08-16 현장 관측). 대폭 낮춘다.
-float velocity_kp = 8.0, velocity_ki = 4.0, velocity_kd = 0.2;
+// ★ PID 게인은 플랜트 기울기에 비례해야 한다. 기울기가 200 PWM/(m/s) 인데
+// kp=8 이면 0.1m/s 오차에 0.8 PWM — P 제어가 사실상 없는 것과 같았다.
+// FF 가 제대로 들어간 지금은 PID 가 작은 오차만 다듬으면 된다.
+//   kp=50  → 0.1m/s 오차에 5 PWM
+//   ki=30  → 0.1m/s 오차가 1초 지속되면 3 PWM 추가 (수 초 내 수렴)
+float velocity_kp = 50.0, velocity_ki = 30.0, velocity_kd = 1.0;
 float velocity_error = 0.0, velocity_error_old = 0.0, velocity_error_sum = 0.0;
 int velocity_pwm_output = 0;
 const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
@@ -194,7 +203,18 @@ const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
 //   피팅 잔차 RMS 4.3 PWM). 이전 35/60 은 근거 불명이었고 속도항이 3배 과다했다.
 //   ※ 스윕을 한 방향에서만 했으므로 경사 편향 가능성이 있다. 반대 방향으로
 //     한 번 더 재서 평균 내면 더 정확해진다.
-const float STATIC_FF = 40.5, VELOCITY_FF_GAIN = 20.7;
+// ★ 2026-08-17 재설정. 이전 값(40.5 / 20.7)은 **바퀴가 접지되지 않은 상태**의
+// ff_sweep 에서 나온 것이라 속도항이 10배 작았다. 그 결과 FF 가 내야 할 몫을
+// 적분항이 전부 메우게 되어 (a) 적분 클램프에 걸려 속도가 0.33m/s 에서 막히고
+// (b) 적분이 포화돼 코너 감속이 수십 초 지연됐다.
+//
+// 지면 실측 2점으로 역산:
+//     MAX_DRIVE_PWM 80  → 0.198 m/s
+//     MAX_DRIVE_PWM 111 → 0.33  m/s
+//   ⇒ 기울기 ≈ 200~240 PWM/(m/s), 절편 ≈ 30~42
+// 보수적으로 200 / 35 를 쓴다. ±20% 틀려도 PID 가 흡수하는 범위다.
+// 마른 노면에서 ff_sweep 을 다시 돌리면 이 값을 확정할 수 있다.
+const float STATIC_FF = 35.0, VELOCITY_FF_GAIN = 200.0;
 
 // 조향 위치 PID
 float steering_kp = 1.0, steering_ki = 0.0, steering_kd = 0.2;
@@ -323,7 +343,10 @@ void velocity_pid_control() {
   else if (commanded_velocity < -0.02) ff = -STATIC_FF + VELOCITY_FF_GAIN * commanded_velocity;
   // 조건부 안티와인드업
   float ts = velocity_error_sum + velocity_error * VELOCITY_DT;
-  ts = constrain(ts, -25.0, 25.0);
+  // ★ 적분 클램프. ki 가 4→30 으로 커졌으므로 같은 ±25 를 쓰면 적분 권한이
+  // 750 PWM 이 되어 조금만 어긋나도 포화한다. FF 가 맞는 지금은 적분이
+  // ±90 PWM 정도만 다듬으면 충분하다 (경사·배터리 새그 보정분).
+  ts = constrain(ts, -3.0, 3.0);
   float tout = ff + velocity_kp * velocity_error + velocity_ki * ts + velocity_kd * ed;
   bool sat_p = (tout > MAX_DRIVE_PWM && velocity_error > 0);
   bool sat_n = (tout < -MAX_DRIVE_PWM && velocity_error < 0);
