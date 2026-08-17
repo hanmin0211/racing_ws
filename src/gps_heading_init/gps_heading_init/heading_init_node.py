@@ -30,7 +30,13 @@ GPS 이동방향(course)을 '진짜 헤딩'으로 삼아, 그 순간 IMU yaw와�
   0.5초 안에 자동 정지하며 (c) E-stop은 그대로 최상위로 남는다.
   → mux를 고치지 않고 얻는 성질들이다.
 
-  ⚠ 헤딩을 모르는 상태의 **개루프 직진**이다. 차가 향한 쪽으로 그냥 간다.
+  ★ 직진 유지는 폐루프다. 헤딩의 **절대값**은 아직 모르지만(그걸 구하는 게
+    이 노드의 목적) 출발 시점 대비 **변화량**은 IMU 로 정확히 알 수 있으므로,
+    '출발할 때의 yaw 를 유지'하면 절대 헤딩을 몰라도 곧게 간다.
+    조향 0° 만 주는 개루프면 STEER_CENTER 가 조금만 어긋나도 계속 휘어
+    직진성 검증에서 거부된다(2026-08-18 현장: 우측 쏠림).
+
+  ⚠ 그래도 **차가 향한 방향으로 간다**. 목적지를 아는 주행이 아니다.
     앞이 비어 있는지 확인하고, E-stop을 손에 쥔 채로 쓸 것.
   ⚠ wasd_teleop 등 다른 teleop과 동시에 쓰지 말 것 (같은 토픽을 두고 싸운다).
 
@@ -42,6 +48,10 @@ GPS 이동방향(course)을 '진짜 헤딩'으로 삼아, 그 순간 IMU yaw와�
   auto_speed           : 자동 직진 속도[m/s] (기본 0.3)
   auto_countdown       : 출발 전 카운트다운[s] (기본 5.0)
   auto_timeout         : 출발 후 10m 미달 시 포기[s] (기본 90.0)
+  auto_heading_gain    : 직진 유지 게인 [도/도] (기본 1.5)
+  auto_max_correction  : 보정 조향각 상한[도] (기본 5.0)
+  auto_steer_bias      : 조향 중앙 어긋남 임시 상쇄용 트림[도] (기본 0.0).
+                         좌로 더 가게 하려면 +. 근본 해결은 STEER_CENTER 수정.
 """
 
 import math
@@ -90,6 +100,12 @@ class HeadingInitNode(Node):
     self.declare_parameter('auto_speed', 0.3)
     self.declare_parameter('auto_countdown', 5.0)
     self.declare_parameter('auto_timeout', 90.0)
+    # 자동 직진 중 헤딩 유지 (절대 헤딩을 몰라도 '출발 시점 대비 변화'로 곧게 간다)
+    self.declare_parameter('auto_heading_gain', 1.5)   # 도/도
+    self.declare_parameter('auto_max_correction', 5.0)  # 보정 조향각 상한[도]
+    # 조향 중앙이 틀어진 걸 임시 상쇄하는 수동 트림[도]. 좌로 더 가게 하려면 +.
+    # 근본 해결은 STEER_CENTER 수정이고, 이건 현장 임시 대응용이다.
+    self.declare_parameter('auto_steer_bias', 0.0)
     # 조향 중앙 역산용 (펌웨어와 같은 값이어야 카운트 환산이 맞다)
     self.declare_parameter('wheelbase', 0.785)
     self.declare_parameter('steer_counts_per_deg', 21.2)
@@ -120,6 +136,10 @@ class HeadingInitNode(Node):
     self.auto_speed = float(self.get_parameter('auto_speed').value)
     self.auto_countdown = float(self.get_parameter('auto_countdown').value)
     self.auto_timeout = float(self.get_parameter('auto_timeout').value)
+    self.auto_heading_gain = float(self.get_parameter('auto_heading_gain').value)
+    self.auto_max_corr = float(self.get_parameter('auto_max_correction').value)
+    self.auto_steer_bias = float(self.get_parameter('auto_steer_bias').value)
+    self.drive_yaw0 = None        # 자동 직진 시작 시점의 IMU yaw (기준)
     self.wheelbase = float(self.get_parameter('wheelbase').value)
     self.counts_per_deg = float(self.get_parameter('steer_counts_per_deg').value)
     self.steer_center = int(self.get_parameter('steer_center').value)
@@ -316,6 +336,7 @@ class HeadingInitNode(Node):
         self.prev_e = self.prev_n = None
         self.max_dev = 0.0
         self.max_dev_at = 0.0
+        self.drive_yaw0 = None      # 재시도 시 기준 헤딩도 다시 잡는다
         self._last_log_m = -1
         self.rearming = True
         self._settle_lat = None
@@ -410,9 +431,32 @@ class HeadingInitNode(Node):
       self._stop_driving('타임아웃')
       return
 
+    # ★ 헤딩 유지. 조향 0°만 주는 개루프면 STEER_CENTER 가 조금만 어긋나도
+    # 차가 한쪽으로 계속 휘고, 그러면 직진성 검증에서 거부된다
+    # (2026-08-18 현장: 우측으로 계속 쏠림).
+    #
+    # 헤딩의 **절대값**은 아직 모르지만(그걸 구하는 게 이 노드의 목적),
+    # 출발 시점 대비 **변화량**은 IMU 만으로 정확히 알 수 있다. 그래서
+    # '출발할 때의 yaw 를 유지'하는 폐루프를 걸면 절대 헤딩을 몰라도 곧게 간다.
+    # straight_drive 가 같은 방식으로 30m 를 ±3° 로 유지한 실적이 있다.
+    steer = 0.0
+    if self.imu_yaw is not None:
+      if self.drive_yaw0 is None:
+        self.drive_yaw0 = self.imu_yaw
+        self.get_logger().info(
+            f'직진 기준 헤딩 고정: {math.degrees(self.drive_yaw0):.1f}° '
+            f'(절대값은 무의미, 변화량만 사용)')
+      err = math.degrees(normalize_angle(self.drive_yaw0 - self.imu_yaw))
+      steer = max(-self.auto_max_corr,
+                  min(self.auto_max_corr, self.auto_heading_gain * err))
+    # 수동 트림(조향 중앙이 틀어진 걸 임시로 상쇄하고 싶을 때)
+    steer += self.auto_steer_bias
+    steer = max(-self.auto_max_corr - abs(self.auto_steer_bias),
+                min(self.auto_max_corr + abs(self.auto_steer_bias), steer))
+
     cmd = Twist()
     cmd.linear.x = self.auto_speed
-    cmd.angular.z = 0.0            # 조향각[도] — 곧게
+    cmd.angular.z = float(steer)   # 조향각[도]
     self.drive_pub.publish(cmd)
 
   def shutdown_check(self):
