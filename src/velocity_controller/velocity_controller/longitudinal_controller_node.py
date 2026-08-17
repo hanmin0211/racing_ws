@@ -31,7 +31,7 @@ import time
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64, String
+from std_msgs.msg import Bool, Float64, String
 
 # 미션별 고정 속도 정책. None = 일반 주행 연산(곡률·정지선·장애물) 사용.
 # 새 미션 추가는 여기에 한 줄이면 된다.
@@ -98,6 +98,7 @@ class LongitudinalController(Node):
     self.mission = 'DRIVE'
     self.profiled_speed = 0.0        # 슬루레이트 적용된 목표
     self.last_curv_time = None       # 곡률 수신 시각(경로 살아있는지 판단)
+    self.goal_reached = False        # 완주 래치 (한 번 서면 다시 안 달린다)
 
     self.pub = self.create_publisher(Float64, '/target_speed', 10)
     self.create_subscription(Float64, '/curvature', self.curvature_cb, 10)
@@ -105,6 +106,10 @@ class LongitudinalController(Node):
     self.create_subscription(Float64, '/stop_line_distance', self.stop_cb, 10)
     self.create_subscription(Float64, '/obstacle_distance', self.obs_cb, 10)
     self.create_subscription(String, '/mission_state', self.mission_cb, 10)
+    # ★ 완주 신호. 이게 없으면 경로 끝에서 local_sliding_window 가 /curvature
+    # 발행을 멈추고, 여기서는 그걸 '경로 끊김'으로만 인식한다. 완주로 선 것과
+    # 센서 고장으로 선 것이 로그상 구분되지 않아 대회 중 원인 판단이 늦어진다.
+    self.create_subscription(Bool, '/goal_reached', self.goal_cb, 10)
     self.create_timer(self.dt, self.control_loop)
 
     self.get_logger().info(
@@ -124,6 +129,13 @@ class LongitudinalController(Node):
 
   def obs_cb(self, msg):
     self.obstacle_dist = float(msg.data)
+
+  def goal_cb(self, msg):
+    """완주 신호. 한 번 True 면 래치한다(경로 끝에서 왔다갔다 하지 않도록)."""
+    if bool(msg.data) and not self.goal_reached:
+      self.goal_reached = True
+      self.get_logger().info(
+          '🏁 완주 신호 수신 — 감속 정지합니다 (고장 아님)')
 
   def mission_cb(self, msg):
     new = msg.data.strip().upper()
@@ -166,13 +178,25 @@ class LongitudinalController(Node):
     return max(v, self.v_min) if v > 0.05 else 0.0
 
   def control_loop(self):
+    # 완주가 먼저다. 완주하면 local_sliding_window 가 /curvature 발행을 멈추므로
+    # 아래 '끊김' 분기에 걸리는데, 그건 고장이 아니라 정상 종료다.
+    # 순서를 바꾸면 대회 중 완주했는데 '경로 끊김' 경고만 보고 고장으로 오판한다.
+    if self.goal_reached:
+      # 급정거하지 않고 감속 프로파일로 세운다(정지지점 오버슈트 방지).
+      self.profiled_speed = max(0.0, self.profiled_speed - self.max_decel * self.dt)
+      self.publish(self.profiled_speed, profiled=False)
+      if self.profiled_speed <= 1e-3:
+        self.get_logger().info('🏁 완주 정지 완료', throttle_duration_sec=10.0)
+      return
     # 안전: 경로(곡률)가 끊기면 정지. 단 수신 이력이 없으면(아직 시작 전) 정지 유지.
     if self.last_curv_time is None:
       self.publish(0.0, profiled=False)
       return
     if time.time() - self.last_curv_time > self.curv_timeout:
-      self.get_logger().warn('경로(/curvature) 끊김 → 정지',
-                             throttle_duration_sec=2.0)
+      self.get_logger().warn(
+          '⚠ 경로(/curvature) 끊김 → 정지 — 완주 신호는 없었다. '
+          'GPS/IMU 끊김이나 로컬경로 생성 실패를 의심할 것',
+          throttle_duration_sec=2.0)
       self.profiled_speed = 0.0
       self.publish(0.0, profiled=False)
       return
