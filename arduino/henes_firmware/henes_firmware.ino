@@ -156,7 +156,13 @@ bool openloop_active = false;
 int openloop_target_pwm = 0;
 int openloop_pwm = 0;            // 레이트 제한이 적용된 실제 인가값
 #define OPENLOOP_RATE     3      // 사이클(10ms)당 최대 변화 → 급가속 방지
-#define MAX_OPENLOOP_PWM 140     // 식별용 상한 (MAX_DRIVE_PWM 과 별개)
+// 식별용 상한 (MAX_DRIVE_PWM 과 별개).
+// ★ 2026-08-17: 140 이면 지면에서 약 0.5 m/s 까지만 측정된다. 그 위를 쓰려면
+//   외삽해야 하는데, 바로 그 외삽이 FF 를 10배 틀리게 만든 원인이었다.
+//   **실제로 쓸 속도 범위 전체를 스윕이 덮어야 한다.**
+//   모터는 24V 240W(16000rpm) 이고 현재 듀티는 43% 에 불과하다. 230 은
+//   원차 설계 속도(약 1.4 m/s) 이내이며 255 대비 여유도 남긴다.
+#define MAX_OPENLOOP_PWM 230
 
 signed long encoder1count = 0, encoder2count = 0, prev_encoder1 = 0;
 unsigned long prev_time = 0, last_rx_time = 0, last_tel_time = 0;
