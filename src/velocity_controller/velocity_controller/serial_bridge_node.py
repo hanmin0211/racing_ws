@@ -215,14 +215,32 @@ class SerialBridgeNode(Node):
         원래 경로를 다시 열어봐야 소용없다. _resolve_port 로 재탐색한다.
         """
         self._reconnects += 1
+        # ★ 백오프. 포트를 여는 것 자체가 DTR 로 아두이노를 리셋시키므로,
+        # 재연결을 빠르게 반복하면 **우리가 리셋 루프를 유지하게 된다.**
+        # 2026-08-17 현장에서 3.3초 주기로 29회 반복됐다(연결 → 0.32초 뒤 끊김).
+        # 연속 실패가 쌓이면 간격을 늘려 보드가 스스로 안정될 시간을 준다.
+        now = time.time()
+        if now - getattr(self, '_last_reconnect_t', 0.0) < 10.0:
+            self._fail_streak = getattr(self, '_fail_streak', 0) + 1
+        else:
+            self._fail_streak = 0
+        self._last_reconnect_t = now
+        wait = min(1.0 * (2 ** min(self._fail_streak, 4)), 16.0)
         self.get_logger().error(
-            f'시리얼 끊김({err}) — 재연결 시도 #{self._reconnects}',
+            f'시리얼 끊김({err}) — 재연결 시도 #{self._reconnects} '
+            f'(연속 실패 {self._fail_streak}회, {wait:.0f}초 대기)',
             throttle_duration_sec=2.0)
+        if self._fail_streak >= 3:
+            self.get_logger().error(
+                '⚠ 재연결이 반복된다. 아두이노가 부팅 직후 리셋되는 상황일 수 '
+                '있다(조향이 중앙에서 크게 벗어나 있으면 부팅 시 조향모터가 '
+                '전류를 끌어 브라운아웃). 앞바퀴를 중앙으로 맞추고 전원을 확인할 것.',
+                throttle_duration_sec=15.0)
         try:
             self.ser.close()
         except Exception:  # noqa: BLE001
             pass
-        time.sleep(1.0)
+        time.sleep(wait)
         try:
             port = self._resolve_port(self._port_param)
             ser = serial.Serial(port, self._baud, timeout=0.1)
