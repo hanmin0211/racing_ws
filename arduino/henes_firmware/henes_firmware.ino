@@ -176,7 +176,20 @@ int openloop_pwm = 0;            // 레이트 제한이 적용된 실제 인가�
 
 signed long encoder1count = 0, encoder2count = 0, prev_encoder1 = 0;
 unsigned long prev_time = 0, last_rx_time = 0, last_tel_time = 0;
-bool watchdog_tripped = false;
+// ★ 부팅 직후에는 '워치독 작동' 상태로 시작한다 (true).
+//
+// false 로 두면 setup() 의 last_rx_time=millis() 때문에 **명령을 한 번도
+// 받지 않았는데도 조향 PID 가 즉시 돌기 시작한다.** 목표각은 0(중앙)이라
+// 바퀴가 중앙에서 벗어나 있으면 부팅하자마자 조향모터에 최대 PWM 이 걸린다.
+//
+// 2026-08-17 현장: 조향이 중앙에서 15° 벗어난 상태였고, 부팅 0.32초 뒤마다
+// 정확히 리셋이 반복됐다(전류 급증 → 5V 강하 → 브라운아웃 → 재부팅 → 반복).
+// serial_bridge 가 재연결할 때마다 DTR 로 또 리셋시켜 루프가 유지됐다.
+//
+// true 로 시작하면 첫 명령(VEL:/STEER:/PWM:)이 올 때까지 모터가 완전히
+// 꺼져 있어 이 루프가 성립하지 않는다. 명령이 오면 handle_line() 이
+// watchdog_tripped=false 로 풀어준다.
+bool watchdog_tripped = true;
 
 // 스톨 상태
 unsigned long drive_stall_ms = 0, steer_stall_ms = 0, steer_cut_ms = 0;
