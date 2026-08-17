@@ -20,6 +20,7 @@ control.launch.py — 종/횡방향 제어 체인 (실제 모터까지 나감).
 """
 
 import os
+import shutil
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -38,6 +39,16 @@ def generate_launch_description():
   max_speed = LaunchConfiguration('max_speed')
   max_steer = LaunchConfiguration('max_steer_deg')
   teleop = LaunchConfiguration('teleop')
+
+  # teleop_keyboard 는 키 입력을 받아야 하므로 자체 터미널이 필요하다(xterm).
+  # xterm 이 없으면 런치가 조용히 실패한다 — 현장에서 '왜 키가 안 먹지'로
+  # 헤매게 되므로 여기서 미리 알린다. 없을 땐 별도 터미널에서 직접 실행할 것:
+  #   ros2 run velocity_controller teleop_keyboard
+  teleop_prefix = 'xterm -e' if shutil.which('xterm') else ''
+  if not teleop_prefix:
+    print('[control] ⚠ xterm 이 없다. teleop:=true 는 키 입력을 못 받는다.\n'
+          '[control]   별도 터미널에서 실행할 것: '
+          'ros2 run velocity_controller teleop_keyboard')
 
   return LaunchDescription([
       DeclareLaunchArgument('pp_params', default_value=default_params),
@@ -95,7 +106,7 @@ def generate_launch_description():
           executable='teleop_keyboard',
           name='teleop_keyboard',
           output='screen',
-          prefix='xterm -e',
+          prefix=teleop_prefix,
           parameters=[{'max_speed': max_speed, 'max_steer_deg': max_steer}],
           condition=IfCondition(teleop),
       ),
