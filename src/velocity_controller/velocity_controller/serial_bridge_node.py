@@ -99,6 +99,9 @@ class SerialBridgeNode(Node):
         self.steer_err_pub = self.create_publisher(Float64, '/steering_error', 10)
         self.obstacle_pub = self.create_publisher(Float64, '/obstacle_distance', 10)
         self.stall_pub = self.create_publisher(Bool, '/vehicle_stall', 10)
+        # 공급전압 진단 (mV). vcc=현재, vmin=직전 구간 최솟값(순간 강하 포착)
+        self.vcc_pub = self.create_publisher(Int32, '/vcc_mv', 10)
+        self.vmin_pub = self.create_publisher(Int32, '/vcc_min_mv', 10)
         # 엔코더 원시 카운트 — 엔코더 스케일(counts_per_revolution) 검증에 필수.
         # RTK 이동거리와 비교해 1카운트당 실제 거리를 역산한다.
         self.enc_pub = self.create_publisher(Int32, '/encoder_count', 10)
@@ -297,6 +300,23 @@ class SerialBridgeNode(Node):
                     self.steer_ang_pub.publish(Float64(data=act))
                     cmd = float(line.split(' ANG=')[1].split()[0])
                     self.steer_err_pub.publish(Float64(data=cmd - act))
+                # ★ 공급전압. 펌웨어는 계속 보내고 있었는데 파싱하지 않아
+                # 토픽으로 나오지 않았다. 주행 중 전원이 꺼지는 원인을
+                # (배터리 sag / 브라운아웃) 판별하려면 이 값이 필요하다.
+                # VMIN 은 직전 텔레메트리 구간의 **최솟값**이라 순간 강하를 잡는다.
+                # ⚠ 절대값은 모터 PWM 노이즈에 오염될 수 있다(밴드갭 ADC).
+                #   'VMIN 이 갑자기 낮아졌다'는 추세로 보고, 리셋 발생 여부와
+                #   함께 판단할 것.
+                if 'VCC=' in line:
+                    self.vcc_pub.publish(
+                        Int32(data=int(line.split('VCC=')[1].split()[0])))
+                if 'VMIN=' in line:
+                    vmin = int(line.split('VMIN=')[1].split()[0])
+                    self.vmin_pub.publish(Int32(data=vmin))
+                    if 0 < vmin < 4300:
+                        self.get_logger().warn(
+                            f'⚠ 공급전압 강하: VMIN={vmin}mV — 배터리/전원 확인',
+                            throttle_duration_sec=3.0)
             elif line.startswith('STALL:'):
                 drive = line.split('drive=')[1].split()[0].strip()
                 steer = line.split('steer=')[1].split()[0].strip()
