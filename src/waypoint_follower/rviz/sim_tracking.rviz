@@ -40,6 +40,17 @@ Visualization Manager:
       Line Style: Billboards
       Line Width: 0.25
       Buffer Length: 1
+    - Class: rviz_default_plugins/Path
+      Name: SimTrail
+      Enabled: true
+      Topic:
+        Value: /sim_trail
+        Depth: 5
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+      Color: 40; 120; 255
+      Line Style: Billboards
+      Line Width: 0.12
     - Class: rviz_default_plugins/Odometry
       Name: Odometry
       Enabled: true

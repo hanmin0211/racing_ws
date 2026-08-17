@@ -22,8 +22,9 @@ RTK GPS(/fix, 위경도)를 받아 UTM 52N으로 변환하고 기존 파이프�
 
 파라미터:
   fix_topic     : GPS 토픽 (기본 /fix)
-  utm_epsg      : UTM 대역 EPSG (기본 32652 = UTM 52N, 한국 중부)
-  origin_x/y    : 로컬좌표 원점 (기본 399848.522 / 4092209.171)
+  utm_epsg      : UTM 대역 EPSG — 기본값은 config/site_origin.yaml 에서 읽음
+  origin_x/y    : 로컬좌표 원점 — 기본값은 config/site_origin.yaml 에서 읽음
+                  (장소가 바뀌면 그 파일만 고치면 전 노드가 따라온다)
   point_spacing : 점 간격[m] (기본 1.0)
   stop_seconds  : 정지 판정 시간[s] (기본 3.0)
   require_rtk   : True면 RTK Fixed일 때만 기록 (기본 False, 아니면 경고만)
@@ -42,6 +43,7 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import NavSatFix
 from std_srvs.srv import Trigger
 
+from waypoint_follower.site_origin import declare_and_get
 from waypoint_follower.waypoint_resample import resample, save_waypoints
 
 DEFAULT_OUT = ('/home/han/racing_ws/src/pure_pursuit_pkg/config/'
@@ -54,23 +56,29 @@ class WaypointRecorder(Node):
     super().__init__('waypoint_recorder')
 
     self.declare_parameter('fix_topic', '/fix')
-    self.declare_parameter('utm_epsg', 32652)
-    self.declare_parameter('origin_x', 399848.522)
-    self.declare_parameter('origin_y', 4092209.171)
+    # 원점은 config/site_origin.yaml 이 정본. utm_epsg/origin_x/origin_y 파라미터를
+    # 여기서 선언하고 읽는다(CLI -p 로 덮어쓰기 가능).
+    epsg, self.origin_x, self.origin_y = declare_and_get(self)
     self.declare_parameter('point_spacing', 1.0)
     self.declare_parameter('stop_seconds', 3.0)
     self.declare_parameter('require_rtk', False)
+    # ★ RTK 판정은 status.status 가 아니라 **공분산**으로 한다.
+    # 지금 쓰는 ublox_nav_sat_fix_hp 드라이버는 RTK Fixed 에서도
+    # status.status=1(SBAS) 만 내보내고 2(GBAS)를 절대 안 준다.
+    # 그래서 status>=2 조건으로 걸면 require_rtk:=true 일 때 한 점도 기록되지
+    # 않는다(2026-08-17 확인: 공분산 2.9mm 인데 status=1).
+    # 공분산은 position_covariance_type=3(KNOWN)으로 항상 실려오고
+    # Fixed(수 mm) / Float(수십 cm) 구분이 훨씬 확실하다.
+    self.declare_parameter('max_h_std', 0.05)   # 수평 표준편차 상한 [m]
     self.declare_parameter('output_file', DEFAULT_OUT)
     # 저장 시 균일 간격 리샘플 파일도 함께 생성 (0이면 생성 안 함)
     self.declare_parameter('resample_spacing', 0.5)
 
     fix_topic = self.get_parameter('fix_topic').value
-    epsg = int(self.get_parameter('utm_epsg').value)
-    self.origin_x = float(self.get_parameter('origin_x').value)
-    self.origin_y = float(self.get_parameter('origin_y').value)
     self.spacing = float(self.get_parameter('point_spacing').value)
     self.stop_seconds = float(self.get_parameter('stop_seconds').value)
     self.require_rtk = bool(self.get_parameter('require_rtk').value)
+    self.max_h_std = float(self.get_parameter('max_h_std').value)
     self.output_file = self.get_parameter('output_file').value
     self.resample_spacing = float(self.get_parameter('resample_spacing').value)
 
@@ -93,16 +101,32 @@ class WaypointRecorder(Node):
     self.get_logger().info(
         f'웨이포인트 레코더 시작: {fix_topic} 구독, {self.spacing:.1f}m마다 기록, '
         f'{self.stop_seconds:.0f}s 정지 시 자동저장 → {self.output_file}')
+    self.get_logger().info(
+        f'RTK 필터: {"ON — 수평 σ ≤ %.0fcm 인 점만 기록" % (self.max_h_std * 100)}'
+        if self.require_rtk else 'RTK 필터: OFF — 모든 점 기록 (품질 무관)')
 
   def fix_cb(self, msg: NavSatFix):
     if math.isnan(msg.latitude) or abs(msg.latitude) < 1e-9:
       return
-    # RTK 품질 확인 (NavSatFix.status.status: 2 이상이면 대체로 RTK/DGPS)
-    if self.require_rtk and msg.status.status < 2:
-      if not self._warned_rtk:
-        self.get_logger().warn('RTK Fixed 아님 — 기록 보류 (require_rtk=True).')
+    # RTK 품질 확인 — 공분산(수평 표준편차) 기준. 위 declare_parameter 주석 참고.
+    h_std = math.sqrt(max(0.0, msg.position_covariance[0]
+                          + msg.position_covariance[4]))
+    if self.require_rtk:
+      if msg.position_covariance_type == 0:
+        # 공분산을 못 믿는 드라이버면 status 로 폴백
+        ok = msg.status.status >= 2
+      else:
+        ok = h_std <= self.max_h_std
+      if not ok:
+        self.get_logger().warn(
+            f'RTK 정밀도 미달 (수평 σ={h_std * 100:.1f}cm > '
+            f'{self.max_h_std * 100:.0f}cm) — 기록 보류',
+            throttle_duration_sec=3.0)
         self._warned_rtk = True
-      return
+        return
+      if self._warned_rtk:
+        self.get_logger().info(f'RTK 회복 (수평 σ={h_std * 100:.1f}cm) — 기록 재개')
+        self._warned_rtk = False
 
     utm_x, utm_y = self.tf.transform(msg.longitude, msg.latitude)
     x = utm_x - self.origin_x
@@ -121,7 +145,7 @@ class WaypointRecorder(Node):
       self.last_xy = (x, y)
       self.saved = False
       self.get_logger().info(
-          f'점 기록 #{len(self.waypoints)}: ({x:.2f}, {y:.2f})')
+          f'점 기록 #{len(self.waypoints)}: ({x:.2f}, {y:.2f})  σ={h_std * 100:.1f}cm')
 
   def check_stop(self):
     if (self.waypoints and not self.saved

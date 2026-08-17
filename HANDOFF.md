@@ -12,7 +12,7 @@
 ## 0. 한 줄 요약
 
 **첫 통합 자율주행에 성공했다** (2026-08-16 새벽, 30.7m 주행, 횡방향 오차 평균 0.32m).
-조향은 완성. 로컬라이제이션·경로 생성 완성. **남은 건 구동 FF/PID 튜닝과 미션 인지.**
+조향은 완성. 로컬라이제이션·경로 생성 완성. **남은 건 속도 추종 잔차(명령의 64%)와 미션 인지.** FF 식별은 완료.
 
 ---
 
@@ -36,11 +36,11 @@
 
 | 항목 | 비고 |
 |---|---|
-| **구동 FF/PID 튜닝** | **실측 확인됨**: 0.25 명령 → 실제 0.157m/s (37% 미달), 6초 스톨 후 0.33 급발진. 도구(`ff_sweep`) 준비 완료 |
+| **속도 추종 잔차** | FF 식별은 **완료**(`ea57ad2`). 0.198→0.257 m/s (+30%). 다만 명령 0.4 의 **64%** 로 아직 부족 — 원인 후보 (a) 엔코더 과대측정 (b) 경사 |
 | 코너 추종 개선 | 후반부(급코너) 오차 0.45m — lookahead 튜닝 필요 |
 | 본 경로 기록 | 현재 경로는 테스트용 |
 | **정지선·횡단보도 인지** | 모델에 없음 (신호등 2클래스뿐). 별도 학습+HEF 재컴파일 or 고전 영상처리 |
-| **신호등 → 주행 연동** | `/traffic_light_state` 는 오는데 **아직 아무도 안 쓴다**. 어디서 멈출지(정지 지점)가 미정 |
+| **정지 지점 기록** | `traffic_light_bridge` 로 연동은 됐다(제어 코드 무수정). **대회장에서 좌표를 찍어야** 동작한다 — `stop_point_recorder` |
 
 ---
 
@@ -118,8 +118,10 @@ global_path_publisher → /global_path ─┐
                             ↑ 텔레메트리
    /current_speed /steering_angle /steering_error /encoder_count /obstacle_distance /vehicle_stall
 
-[C920] → [파이5 + Hailo-8, YOLOv8s] → /traffic_light_state ─랜선(DDS)→ (아직 소비자 없음)
-              별도 보드 192.168.99.8              "RED"/"GREEN"/"NONE" 30Hz
+[C920] → [파이5 + Hailo-8, YOLOv8s] → /traffic_light_state ─랜선(DDS)→ traffic_light_bridge
+              별도 보드 192.168.99.8         "RED"/"GREEN"/"NONE" 30Hz        + GPS 정지지점
+                                                                                    ↓
+                                                            /stop_line_distance → longitudinal_controller
 ```
 
 ### ★ 역할 분담 원칙
@@ -143,7 +145,7 @@ global_path_publisher → /global_path ─┐
 | `src/waypoint_follower/` | `local_path_core.py`(계산부), `local_sliding_window_node`, `global_path_publisher`, `waypoint_recorder`, **`tracking_monitor`** |
 | `src/pure_pursuit_pkg/` | `local_pure_pursuit_node`, `control.launch.py`, `config/pure_pursuit_params.yaml` |
 | `src/velocity_controller/` | `serial_bridge`, `vehicle_cmd_mux`, `longitudinal_controller`, `teleop_keyboard`, `wasd_teleop`, **`encoder_calib`**, **`ff_sweep`**, `steering_demo/sweep` |
-| `src/mission_perception/` | `camera_node` (노트북 카메라 → `/camera/image_raw`) |
+| `src/mission_perception/` | `camera_node`, **`traffic_light_bridge`**(신호등→정지거리), **`stop_point_recorder`**(대회장에서 정지지점 찍기) |
 | `src/mission_perception/pi_deploy/` | **파이 배포 원본** — `detector_node.py`, README. 파이 SD카드가 죽어도 여기 남는다 |
 | `tools/pi_link.sh` | 파이 랜선 연결 (**매 부팅 후 1회**) + `--check` 진단 |
 | `tools/local_path_harness.py` | **오프라인 경로 검증** (야외 없이 회귀 테스트) |
@@ -228,17 +230,29 @@ arduino --upload --board arduino:avr:mega:cpu=atmega2560 --port /dev/ttyACM0 \
 ```bash
 ros2 run velocity_controller ff_sweep --ros-args -p max_speed:=1.2 -p ramp_rate:=4.0
 ```
-개활지 직선 30m 필요. 도구가 `STATIC_FF`/`VELOCITY_FF_GAIN`/`MAX_DRIVE_PWM` 권장치를
-자동 출력한다.
+**FF 식별 자체는 끝났다** (2026-08-16 22:28, `ea57ad2`). ff_sweep 103샘플, 잔차 4.3 PWM:
 
-현재 값(35 / 60 / 80)은 **실부하에서 부족한 것으로 확인됐다**. 2026-08-16 주행
-GPS 로그(헤딩 정렬 후 195초, 30.7m): 명령이 `v_min` 0.25m/s 하한인데 실제 중앙값
-0.157m/s, 65구간 중 63구간이 하한 미달. t+90~96s에 6초간 1cm 이동(스톨) 후
-0.33m/s로 급발진 — 정지마찰을 못 이기다 적분항이 쌓여 튄 전형적 증상.
-(무부하에서 5배 과다로 측정된 것과 **반대 방향**이니 부하 상태에서 다시 잡아야 한다.
-이 속도는 엔코더가 아니라 GPS 위치차분이라 wheel_radius 보정과 독립이다.)
+| | 이전 | 이후 |
+|---|---|---|
+| `STATIC_FF` | 35.0 | **40.5** |
+| `VELOCITY_FF_GAIN` | 60.0 | **20.7** (속도항이 3배 과다였다) |
+| `MAX_DRIVE_PWM` | 80 | **111** |
+| `velocity_kp/ki` | 30/24 | **8/4** (급발진 원인이던 적분 와인드업 완화) |
 
-FF가 맞아야 속도가 명령대로 나오고, 그래야 lookahead(속도 비례)도 안정된다.
+결과: 30m 주행 실측 **0.198 → 0.257 m/s (+30%)**.
+
+### 남은 문제 — 명령의 64%
+
+여전히 명령 0.4 에 실제 0.257 이다. **FF 부족이 아니라 다른 원인**이고, 후보는 둘:
+
+  (a) **엔코더 과대측정** — 실제보다 빠르다고 보고하면 PID가 덜 밟는다
+  (b) **경사** — 오르막이면 같은 PWM 으로 덜 나간다
+
+판별법: 주행 중 `encoder_calib` 를 **동시 실행**해 엔코더 속도와 GPS 속도를 맞대면
+(a) 인지 아닌지 바로 갈린다. 같은 왕복 구간을 양방향으로 달리면 (b) 도 분리된다.
+
+⚠ 2026-08-15 23:39 현장 로그(중앙값 0.157m/s, 6초 스톨 후 급발진)는 **이 수정
+이전** 데이터다. 그 로그로 FF 를 논하면 안 된다.
 
 ### 2) 코너 추종 개선
 첫 주행 데이터: 전반부 오차 0.18m → **후반부(급코너) 0.45m**.
@@ -268,7 +282,8 @@ python3 tools/local_path_harness.py <새경로.yaml>   # 기록 직후 현장에
 STEER_CENTER 424 | STEER_MAX_ANGLE 20.0 | STEER_COUNTS_PER_DEG 21.2
 MAX_STEER_PWM 130 | STEER_DEADBAND 16 | STEER_RESUME 24 | STEER_MIN_MOVE 34
 STEER_BOOST_STEP 6 (정지마찰 탈출) | STEER_STALL_PWM 30 / 250ms / 쿨다운 1500ms
-MAX_DRIVE_PWM 80 | STATIC_FF 35 | VELOCITY_FF_GAIN 60 | kp30/ki24/kd0.5  ← 전부 미검증
+MAX_DRIVE_PWM 111 | STATIC_FF 40.5 | VELOCITY_FF_GAIN 20.7 | kp8/ki4/kd0.2
+   ↑ ff_sweep 실측 반영 (2026-08-16, 103샘플/잔차 4.3PWM) — 구식 값 35/60/80 아님
 wheel_radius 0.1327 | counts_per_revolution -290
 PWM 주파수: 구동 488Hz(드라이버 한계), 조향 3.9kHz(소음저감)
 개루프 모드: PWM:x 명령 (FF 식별용), MAX_OPENLOOP_PWM 140
@@ -292,13 +307,14 @@ local_sliding_window: n_back 5, n_forward 20, poly_order 3,
 
 | 항목 | 완성도 | 비고 |
 |---|---|---|
-| 완주(주행) | **약 75%** | FF 미해결이 확정돼 85%에서 하향. 고치는 길은 명확 |
+| 완주(주행) | **약 82%** | FF 식별 완료(+30%). 남은 건 명령 대비 64% 잔차 — 엔코더/경사 판별 |
 | 신호등 인식 | **약 90%** | 파이+Hailo 실동작. 실외 검증만 남음 |
 | 정지선·횡단보도 | **0%** | 모델에 클래스 자체가 없음 |
 | 인지 → 주행 연동 | **0%** | 토픽은 오는데 소비자가 없음 |
 
-**구동 FF가 최우선이다.** 2번(코너 튜닝)과 auto_calib 검증이 여기 물려 있고,
-속도가 명령대로 안 나오면 신호등을 봐도 제때 못 선다.
+**속도 추종 잔차 규명이 최우선이다.** FF 는 잡혔지만 아직 명령의 64% 라, 2번(코너
+튜닝)과 auto_calib 검증이 여기 물려 있다. 다음 수는 ff_sweep 재실행이 아니라
+**주행 중 encoder_calib 동시 실행**(엔코더 과대측정인지 경사인지 판별)이다.
 
 **미결(외부 확인 필요)**: 대회 규칙상 미션 구간을 **GPS 사전기록 경로**로
 통과해도 되는가. 가능하면 정지선 인지 없이도 신호등만으로 미션이 성립하고,

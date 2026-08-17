@@ -27,6 +27,7 @@ setup(
             'local_sliding_window_node = waypoint_follower.local_sliding_window_node:main',
             'global_path_publisher = waypoint_follower.global_path_publisher:main',
             'sim_odom_publisher = waypoint_follower.sim_odom_publisher:main',
+            'sim_vehicle = waypoint_follower.sim_vehicle_node:main',
             'waypoint_recorder = waypoint_follower.waypoint_recorder:main',
             'tracking_monitor = waypoint_follower.tracking_monitor_node:main',
             'resample_waypoints = waypoint_follower.waypoint_resample:main',
