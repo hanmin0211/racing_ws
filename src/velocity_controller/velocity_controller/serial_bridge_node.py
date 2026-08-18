@@ -57,7 +57,15 @@ class SerialBridgeNode(Node):
 
         # ---------- 시리얼 포트 열기 ----------
         try:
-            self.ser = serial.Serial(port, baud, timeout=0.1)
+            # ★ exclusive=True → TIOCEXCL. 다른 프로세스가 이 포트를 여는 것을
+            # **커널이 막는다**. 두 가지를 동시에 해결한다:
+            #  1) ModemManager 가 /dev/ttyACM* 를 모뎀인지 프로브하려고 여는 것.
+            #     여는 순간 DTR 로 아두이노가 리셋되고, 리셋되면 장치가 다시
+            #     나타나 또 프로브당해 무한 리셋 루프가 된다(2026-08-18 현장:
+            #     연결 0.32초 뒤 끊김이 정확히 반복).
+            #  2) serial_bridge 를 실수로 두 개 띄웠을 때의 상호 리셋.
+            # 근본 해결은 udev 의 ID_MM_DEVICE_IGNORE 지만 그건 sudo 가 필요하다.
+            self.ser = serial.Serial(port, baud, timeout=0.1, exclusive=True)
 
             time.sleep(2)
 
@@ -243,7 +251,7 @@ class SerialBridgeNode(Node):
         time.sleep(wait)
         try:
             port = self._resolve_port(self._port_param)
-            ser = serial.Serial(port, self._baud, timeout=0.1)
+            ser = serial.Serial(port, self._baud, timeout=0.1, exclusive=True)
             time.sleep(2.0)          # 아두이노 부트로더 대기
             ser.reset_input_buffer()
             self.ser = ser
@@ -366,7 +374,11 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        # Ctrl-C 시 시그널 핸들러가 이미 컨텍스트를 닫아둔 경우가 있다.
+        # 그때 다시 부르면 RCLError 가 나면서 **정상 종료가 크래시처럼 보인다**
+        # (현장에서 오진하기 쉽다). 이미 닫혔으면 조용히 넘어간다.
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
