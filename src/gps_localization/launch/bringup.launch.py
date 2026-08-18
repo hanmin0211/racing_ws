@@ -179,7 +179,7 @@ def generate_launch_description():
       # 목표 주행속도[m/s]. 직선 순항속도이며 코너는 곡률 감속으로 자동으로
       # 느려진다. 5 km/h = 1.39. 무게중심이 높으면(배터리 뱅크 등) 낮게 시작해
       # 코너 거동을 보고 올릴 것. 먹스·v_max·조향 상한에 함께 전달된다.
-      DeclareLaunchArgument('max_speed', default_value='1.0'),
+      DeclareLaunchArgument('max_speed', default_value='2.8'),
 
       # 1. RTK GPS (ublox_dgnss + nav_sat_fix + NTRIP)
       IncludeLaunchDescription(

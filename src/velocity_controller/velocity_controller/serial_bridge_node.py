@@ -194,12 +194,28 @@ class SerialBridgeNode(Node):
             return port
         if os.path.exists('/dev/arduino'):
             return '/dev/arduino'
-        for p in list_ports.comports():
-            if p.vid == 0x2341 and p.pid == 0x0042:   # Arduino Mega 2560
-                self.get_logger().info(f'Arduino Mega 자동감지: {p.device}')
-                return p.device
-        self.get_logger().warn(
-            'Arduino Mega(2341:0042) 자동감지 실패 → /dev/arduino 로 시도')
+        # ★ VID/PID 스캔을 몇 번 재시도한다.
+        # 아두이노가 막 재열거된 직후엔 comports() 목록에 아직 안 떠서 한 번에
+        # 못 찾고 죽는 일이 있었다(2026-08-18: /dev/arduino 없음으로 폴백 →
+        # 그 링크도 없어 SerialException). 2341:0042 는 확실히 존재하므로
+        # 잠깐 기다렸다 다시 스캔하면 잡힌다.
+        for attempt in range(5):
+            for p in list_ports.comports():
+                if p.vid == 0x2341 and p.pid == 0x0042:   # Arduino Mega 2560
+                    self.get_logger().info(f'Arduino Mega 자동감지: {p.device}')
+                    return p.device
+            time.sleep(1.0)
+            self.get_logger().warn(
+                f'Arduino 자동감지 재시도 {attempt + 1}/5...')
+        # 마지막 폴백: /dev/ttyACM* 중 아무거나(u-blox 도 ACM 이므로 위험하지만
+        # 스캔이 5회 실패했다면 최후의 수단). 없으면 예외로 죽는 게 낫다.
+        import glob
+        acms = sorted(glob.glob('/dev/ttyACM*'))
+        if acms:
+            self.get_logger().error(
+                f'VID/PID 스캔 5회 실패 — {acms[-1]} 로 시도(마지막 수단). '
+                '틀리면 포트를 -p port:=/dev/ttyACMx 로 직접 지정할 것.')
+            return acms[-1]
         return '/dev/arduino'
 
     # ------------------------------------------------------------------
