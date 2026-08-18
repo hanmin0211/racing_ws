@@ -62,7 +62,10 @@ class LongitudinalController(Node):
     # ---- 감속 규칙 ----
     # 2.5 → 6.0: FF 미보정이라 실제 속도가 명령보다 높게 나오므로 감속을 강하게.
     # 예) κ=0.23(R=4.4m) 에서 2.5면 63%, 6.0이면 42%로 줄어든다.
-    self.declare_parameter('curvature_gain', 6.0)   # v = v_max/(1+gain·|κ|)
+    # v = v_max/(1+gain·|κ|). 무게중심이 높으면(배터리 뱅크·기둥) 코너에서
+    # 더 일찍·더 많이 줄여야 기울지 않는다. 6.0 → 9.0 으로 상향.
+    # 급코너(R=2.68m)에서 v_max 1.4 → 0.31 m/s 로 감속(횡가속 0.04 m/s²).
+    self.declare_parameter('curvature_gain', 9.0)
     self.declare_parameter('max_accel', 1.0)        # m/s²
     self.declare_parameter('max_decel', 1.8)        # m/s²
     self.declare_parameter('stop_line_trigger', 19.0)

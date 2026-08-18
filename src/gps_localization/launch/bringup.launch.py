@@ -147,6 +147,7 @@ def generate_launch_description():
   auto_calib = LaunchConfiguration('auto_calib')
   auto_calib_speed = LaunchConfiguration('auto_calib_speed')
   mission = LaunchConfiguration('mission')
+  max_speed = LaunchConfiguration('max_speed')
   # 정지지점은 런치 시점에 파일에서 읽는다(LaunchConfiguration 은 파라미터
   # 배열로 못 넘기므로 여기서 실제 값으로 확정한다).
   stop_pts = load_stop_points(
@@ -175,6 +176,10 @@ def generate_launch_description():
       # 정지지점은 ~/stop_points.yaml 에서 읽는다(STOP_POINTS_FILE 로 변경 가능).
       # 기본 false — 정지지점이 없는데 켜면 차가 엉뚱한 데서 설 수 있다.
       DeclareLaunchArgument('mission', default_value='false'),
+      # 목표 주행속도[m/s]. 직선 순항속도이며 코너는 곡률 감속으로 자동으로
+      # 느려진다. 5 km/h = 1.39. 무게중심이 높으면(배터리 뱅크 등) 낮게 시작해
+      # 코너 거동을 보고 올릴 것. 먹스·v_max·조향 상한에 함께 전달된다.
+      DeclareLaunchArgument('max_speed', default_value='1.0'),
 
       # 1. RTK GPS (ublox_dgnss + nav_sat_fix + NTRIP)
       IncludeLaunchDescription(
@@ -247,7 +252,13 @@ def generate_launch_description():
           PythonLaunchDescriptionSource(
               os.path.join(pp_share, 'launch', 'control.launch.py')),
           condition=IfCondition(control),
-          launch_arguments={'arduino_port': arduino_port}.items(),
+          # ★ max_speed 를 제어 체인에 전달한다. 예전엔 arduino_port 만 넘겨서
+          # v_max·먹스 상한이 항상 기본 1.0 에 걸렸다(2026-08-18 발견).
+          # 목표속도는 여기서 정한다: 5 km/h = 1.39 m/s.
+          launch_arguments={
+              'arduino_port': arduino_port,
+              'max_speed': max_speed,
+          }.items(),
       ),
 
       # 7-b. 신호등 → 정지선거리 (mission:=true 일 때만)
