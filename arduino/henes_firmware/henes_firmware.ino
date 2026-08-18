@@ -218,7 +218,8 @@ const float wheel_circumference = 2 * 3.14159 * wheel_radius;
 // FF 가 제대로 들어간 지금은 PID 가 작은 오차만 다듬으면 된다.
 //   kp=50  → 0.1m/s 오차에 5 PWM
 //   ki=30  → 0.1m/s 오차가 1초 지속되면 3 PWM 추가 (수 초 내 수렴)
-float velocity_kp = 50.0, velocity_ki = 30.0, velocity_kd = 1.0;
+// 완주 실적이 있는 값(2026-08-17 아침). FF 를 되돌렸으므로 게인도 함께 복귀.
+float velocity_kp = 8.0, velocity_ki = 4.0, velocity_kd = 0.2;
 float velocity_error = 0.0, velocity_error_old = 0.0, velocity_error_sum = 0.0;
 int velocity_pwm_output = 0;
 const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
@@ -237,7 +238,11 @@ const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
 //   ⇒ 기울기 ≈ 200~240 PWM/(m/s), 절편 ≈ 30~42
 // 보수적으로 200 / 35 를 쓴다. ±20% 틀려도 PID 가 흡수하는 범위다.
 // 마른 노면에서 ff_sweep 을 다시 돌리면 이 값을 확정할 수 있다.
-const float STATIC_FF = 35.0, VELOCITY_FF_GAIN = 200.0;
+// ★ 2026-08-18: 어제 아침 190m 완주에 성공한 값으로 되돌린다.
+// 200 은 지면 실측 2점으로 역산한 '더 정확한' 값이지만, 출발 시 돌입 PWM 을
+// 43 → 61 로 40% 키워 전원 여유가 없는 이 차에서 보드 리셋을 유발했다.
+// 정확도보다 **도는 것**이 우선이다. 전원 계통을 보강한 뒤 다시 올릴 것.
+const float STATIC_FF = 40.5, VELOCITY_FF_GAIN = 20.7;
 
 // 조향 위치 PID
 float steering_kp = 1.0, steering_ki = 0.0, steering_kd = 0.2;
@@ -369,7 +374,7 @@ void velocity_pid_control() {
   // ★ 적분 클램프. ki 가 4→30 으로 커졌으므로 같은 ±25 를 쓰면 적분 권한이
   // 750 PWM 이 되어 조금만 어긋나도 포화한다. FF 가 맞는 지금은 적분이
   // ±90 PWM 정도만 다듬으면 충분하다 (경사·배터리 새그 보정분).
-  ts = constrain(ts, -3.0, 3.0);
+  ts = constrain(ts, -25.0, 25.0);   // ki=4 복귀에 맞춰 원래 클램프로
   float tout = ff + velocity_kp * velocity_error + velocity_ki * ts + velocity_kd * ed;
   bool sat_p = (tout > MAX_DRIVE_PWM && velocity_error > 0);
   bool sat_n = (tout < -MAX_DRIVE_PWM && velocity_error < 0);
