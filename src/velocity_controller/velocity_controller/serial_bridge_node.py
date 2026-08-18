@@ -65,12 +65,9 @@ class SerialBridgeNode(Node):
             #     연결 0.32초 뒤 끊김이 정확히 반복).
             #  2) serial_bridge 를 실수로 두 개 띄웠을 때의 상호 리셋.
             # 근본 해결은 udev 의 ID_MM_DEVICE_IGNORE 지만 그건 sudo 가 필요하다.
-            self.ser = serial.Serial(port, baud, timeout=0.1, exclusive=True)
-
+            self.ser = self._open_no_reset(port, baud)
             time.sleep(2)
-
             self.ser.reset_input_buffer()
-
             self.get_logger().info(f'시리얼 포트 연결 성공: {port} @ {baud}bps')
         except serial.SerialException as e:
             self.get_logger().error(f'시리얼 포트 연결 실패: {e}')
@@ -146,6 +143,50 @@ class SerialBridgeNode(Node):
         )
 
     # ------------------------------------------------------------------
+    def _open_no_reset(self, port, baud):
+        """DTR 토글 없이 포트를 연다 → 아두이노가 리셋되지 않는다.
+
+        ★ 이게 어제부터의 리셋 루프의 진짜 해법이다.
+        기본 pyserial 은 포트를 열 때 DTR 을 토글하고, 아두이노는 그걸 '리셋'으로
+        받는다. 커널 로그(2026-08-18)에 전기적 에러(-71/-110)는 전혀 없고 깨끗한
+        USB disconnect→재열거만 3.3→4.3→6.3초(재연결 백오프) 간격으로 찍혔다.
+        즉 물리 문제가 아니라, 재연결이 열 때마다 DTR 로 스스로 리셋을 만들어
+        그 리셋을 보고 또 재연결하는 자기유발 루프였다.
+
+        해법: 포트를 열기 전에 termios 로 HUPCL(닫을 때 DTR 내림)을 끄고,
+        연 직후 DTR/RTS 를 유지한다. 표준 방식이며 sudo 불필요.
+        """
+        import termios
+        # 먼저 파일 디스크립터만 열어 HUPCL 을 끈다(열 때/닫을 때 리셋 방지)
+        try:
+            import os
+            fd = os.open(port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+            attrs = termios.tcgetattr(fd)
+            attrs[2] &= ~termios.HUPCL          # c_cflag 에서 HUPCL 제거
+            termios.tcsetattr(fd, termios.TCSANOW, attrs)
+            os.close(fd)
+        except Exception as e:  # noqa: BLE001
+            self.get_logger().warn(f'HUPCL 해제 실패(무시하고 진행): {e}')
+        # dsrdtr=False + 열고 나서 DTR 을 능동적으로 유지
+        ser = serial.Serial()
+        ser.port = port
+        ser.baudrate = baud
+        ser.timeout = 0.1
+        # ★ exclusive 는 끈다. 아두이노와 u-blox 가 같은 USB 허브에 물리면
+        # TIOCEXCL 이 허브 레벨 충돌을 악화시켜 ublox 드라이버가 EBUSY(-16)로
+        # 프로브 실패 → segfault → 허브 전체 재열거를 유발했다(2026-08-18 dmesg).
+        # DTR 억제(HUPCL 해제)만으로 리셋은 막히고, 중복 노드는 ros_cleanup 로 막는다.
+        ser.exclusive = False
+        ser.dsrdtr = False
+        ser.rtscts = False
+        ser.open()
+        try:
+            ser.dtr = True       # 리셋 없이 통신 유지
+            ser.rts = True
+        except Exception:  # noqa: BLE001
+            pass
+        return ser
+
     def _resolve_port(self, port):
         """포트 결정: 'auto'면 /dev/arduino 우선, 없으면 Arduino Mega(2341:0042)를
         스캔해 찾는다. 특정 포트를 지정하면 그대로 사용(udev 없이도 동작)."""
@@ -251,7 +292,7 @@ class SerialBridgeNode(Node):
         time.sleep(wait)
         try:
             port = self._resolve_port(self._port_param)
-            ser = serial.Serial(port, self._baud, timeout=0.1, exclusive=True)
+            ser = self._open_no_reset(port, self._baud)
             time.sleep(2.0)          # 아두이노 부트로더 대기
             ser.reset_input_buffer()
             self.ser = ser
