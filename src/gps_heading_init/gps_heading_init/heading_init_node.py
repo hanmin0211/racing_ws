@@ -91,6 +91,8 @@ class HeadingInitNode(Node):
     # 직진성 평가를 시작할 최소 현 길이[m]. 이보다 짧으면 현 방향 자체가
     # 노이즈라서 비교가 무의미하다(위 fix_callback 주석 참고).
     self.declare_parameter('min_chord_for_dev', 2.0)
+    # 직진성 평가 시 최근 진행방향을 재는 구간 길이[m]. 길수록 GPS 튐값에 강하다.
+    self.declare_parameter('seg_window_m', 1.5)
     # 실패 후 재시작: 차량이 이 시간만큼 멈춰 있어야 새 시작점을 잡는다.
     self.declare_parameter('restart_settle_sec', 3.0)
     self.declare_parameter('restart_settle_radius', 0.5)   # 이보다 움직이면 '이동 중'
@@ -119,6 +121,7 @@ class HeadingInitNode(Node):
         float(self.get_parameter('max_deviation_deg').value))
     self.min_chord_for_dev = float(
         self.get_parameter('min_chord_for_dev').value)
+    self.seg_window = float(self.get_parameter('seg_window_m').value)
     self.settle_sec = float(self.get_parameter('restart_settle_sec').value)
     self.settle_radius = float(self.get_parameter('restart_settle_radius').value)
     self.settle_timeout = float(self.get_parameter('restart_settle_timeout').value)
@@ -301,24 +304,29 @@ class HeadingInitNode(Node):
     # 캘리브 중 곡선으로 가거나 후진하면 그 직선이 실제 진행방향과 달라져
     # yaw_offset이 통째로 틀어진다(전 구간 경로 이탈로 이어짐).
     # 최근 구간의 진행방향과 전체 직선방향이 크게 다르면 캘리브를 거부한다.
-    if self.prev_e is not None:
-      seg_e, seg_n = east - self.prev_e, north - self.prev_n
-      if math.hypot(seg_e, seg_n) > 0.3:      # 유의미하게 움직였을 때만 평가
-        # ★ 현(시작점→현재점)이 짧으면 그 방향은 의미가 없다.
-        # 출발 직후엔 현이 0.3~0.5m 뿐이라 GPS 노이즈(2cm)와 출발 시 차체
-        # 흔들림·미세 후진만으로도 방향이 수십 도 튄다. 그걸 진행방향과
-        # 비교하면 멀쩡한 직진이 77° 편차로 거부된다(2026-08-17 현장).
-        # 현이 min_chord_m 이상 자란 뒤부터 평가한다.
-        if dist >= self.min_chord_for_dev:
-          seg_course = math.atan2(seg_n, seg_e)
-          chord_course = math.atan2(north, east)
-          dev = abs(normalize_angle(seg_course - chord_course))
-          if dev > getattr(self, 'max_dev', 0.0):
-            self.max_dev = dev
-            self.max_dev_at = dist      # 어디서 최악이었는지 (진단용)
-        self.prev_e, self.prev_n = east, north
-    else:
-      self.prev_e, self.prev_n = east, north
+    # ★ 직진성 평가는 '최근 구간 방향 vs 전체 현 방향' 으로 한다.
+    #
+    # 예전엔 최근 구간을 '직전 GPS 점 ~ 현재 점'(약 0.3m)으로 잡았는데,
+    # 그 구간이 너무 짧아 **GPS 한 점만 튀어도 방향이 90° 넘게 꺾여** 멀쩡한
+    # 직진이 거부됐다(2026-08-18 현장: 실제 궤적은 편차 1~2° 인데 '97°' 로 거부).
+    # v=1.5m/s 로 빠르면 5Hz 샘플 간격이 0.3m 라 단일 튐값에 그대로 노출된다.
+    #
+    # 대책: 최근 seg_window_m(기본 1.5m) 전의 점과 비교해 구간을 길게 잡는다.
+    # 구간이 길수록 점 하나의 튐이 방향에 주는 영향이 작아진다.
+    if dist >= self.min_chord_for_dev:
+      # track 뒤에서부터 현재로부터 seg_window_m 이상 떨어진 점을 찾는다
+      ref = None
+      for (pe, pn) in reversed(self.track[:-1]):
+        if math.hypot(east - pe, north - pn) >= self.seg_window:
+          ref = (pe, pn)
+          break
+      if ref is not None:
+        seg_course = math.atan2(north - ref[1], east - ref[0])
+        chord_course = math.atan2(north, east)
+        dev = abs(normalize_angle(seg_course - chord_course))
+        if dev > getattr(self, 'max_dev', 0.0):
+          self.max_dev = dev
+          self.max_dev_at = dist
 
     if dist >= self.calib_distance:
       if self.imu_yaw is None:
