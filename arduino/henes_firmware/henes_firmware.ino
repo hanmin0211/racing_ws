@@ -104,6 +104,10 @@ float steerADCToAngle(int adc) {
 // breakaway(정지마찰 뜯기)'에 부족했다(움직이는 중엔 90으로 충분히 잘 감).
 // 130으로 상향 — 스톨가드(PWM>30이 250ms간 무이동 시 컷 + 1.5s 쿨다운)가 보호한다.
 #define MAX_STEER_PWM   130
+// 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
+// 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
+#define STEER_SOFT_MS   2500UL
+#define STEER_SOFT_MIN  25       // 너무 낮으면 아예 안 움직이므로 하한
 
 // 조향 위치제어 파라미터 (자율주행용).
 // pure_pursuit가 20Hz로 내는 연속 목표각(ROS단에서 90°/s 슬루제한)을 매끄럽게 추종.
@@ -423,7 +427,23 @@ void steering_pid_control() {
     }
     pwm += (pwm > 0) ? breakaway_boost : -breakaway_boost;
   }
-  steering_pwm_output = constrain(pwm, -MAX_STEER_PWM, MAX_STEER_PWM);
+  // ★ 부팅 직후 조향 소프트스타트.
+  //
+  // 부팅 시 목표각은 0(중앙)이다. 바퀴가 중앙에서 크게 벗어나 있으면 첫 사이클부터
+  // 최대 PWM(130)이 걸리고, 그 전류 급증에 보드가 리셋된다. 리셋되면 다시 부팅해
+  // 또 슬램 → **바퀴가 중앙에 닿기 전에 영원히 리셋을 반복하는 교착**이 된다.
+  // 2026-08-18 현장: 모터가 한 번 돈 뒤부터 300초간 41회 끊김, 모터를 멈춰도
+  // 회복되지 않았다. 손으로 바퀴를 중앙에 맞춰야만 풀렸다.
+  //
+  // 부팅 후 STEER_SOFT_MS 동안 상한을 0→MAX 로 선형 증가시켜 돌입 전류를 없앤다.
+  // 조향 속도만 잠깐 느려질 뿐 추종 성능에는 영향이 없다(2초 후 정상).
+  int lim = MAX_STEER_PWM;
+  unsigned long up = millis();
+  if (up < STEER_SOFT_MS) {
+    lim = (int)((long)MAX_STEER_PWM * up / STEER_SOFT_MS);
+    if (lim < STEER_SOFT_MIN) lim = STEER_SOFT_MIN;
+  }
+  steering_pwm_output = constrain(pwm, -lim, lim);
   steering_error_old = steering_error;
 }
 
