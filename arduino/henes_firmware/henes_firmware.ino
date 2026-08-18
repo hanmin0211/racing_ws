@@ -154,7 +154,9 @@ float steerADCToAngle(int adc) {
 #define TEL_INTERVAL_MS    50      // 텔레메트리 주기 (20Hz, serial_bridge STATUS_10ms)
 
 // 소프트 스타트/브레이크 (가속도 제한, m/s^2)
-const float ACCEL_LIMIT = 0.5;
+// ★ 하중이 무거워(배터리뱅크+노트북+철근기둥) 급가속 시 전류가 크게 튄다.
+// 0.5(원래)와 1.2(과격) 사이 0.8 로 절충: 직선 가속은 빨라지되 돌입전류는 억제.
+const float ACCEL_LIMIT = 0.8;
 const float BRAKE_LIMIT = 0.8;
 const float WATCHDOG_BRAKE_LIMIT = 2.5;
 
