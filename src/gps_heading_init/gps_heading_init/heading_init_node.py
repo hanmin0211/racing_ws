@@ -130,6 +130,14 @@ class HeadingInitNode(Node):
     self.declare_parameter('max_calib_retries', 3)
     self.max_calib_retries = int(self.get_parameter('max_calib_retries').value)
     self.calib_fail_count = 0
+    # ★ 전방 벽/커브 보호: 재시도(자동직진)는 원래 시작점 이 반경 안으로 차를
+    # 되돌려야만 다시 출발한다. 실패 지점(10m 앞)에서 또 전진하면 커브·벽으로
+    # 돌진하므로, 사람이 차를 시작점으로 당겨올 때까지 출발을 보류한다.
+    self.declare_parameter('retry_start_radius', 2.0)
+    self.retry_start_radius = float(self.get_parameter('retry_start_radius').value)
+    self.origin_lat = None       # 최초 시작점(재시도 복귀 기준)
+    self.origin_lon = None
+    self._last_reposition_log = 0.0
     self._dev_run_start = None    # 편차 구간 시작 dist
     self.max_dev_run = 0.0        # 가장 길게 지속된 편차 구간[m]
     self.min_chord_for_dev = float(
@@ -291,9 +299,27 @@ class HeadingInitNode(Node):
     if self.lat0 is None:
       if self.rearming and not self._settled(msg):
         return
+      # ★ 재시도(자동직진)면 원점 근처로 되돌아왔을 때만 새 시작점을 잡는다.
+      # 실패 지점(10m 앞)에서 그대로 출발하면 전방 커브·벽으로 돌진하기 때문.
+      if (self.auto_drive and self.calib_fail_count > 0
+              and self.origin_lat is not None):
+        d = math.hypot(
+            (msg.longitude - self.origin_lon) * M_PER_DEG
+            * math.cos(math.radians(self.origin_lat)),
+            (msg.latitude - self.origin_lat) * M_PER_DEG)
+        if d > self.retry_start_radius:
+          t = self.get_clock().now().nanoseconds * 1e-9
+          if t - self._last_reposition_log > 2.0:
+            self._last_reposition_log = t
+            self.get_logger().warn(
+                f'↩ 차를 시작점으로 되돌리세요 (현재 {d:.1f}m 앞 — 전방 벽/커브 '
+                f'보호). {self.retry_start_radius:.0f}m 안으로 오면 자동 재출발.')
+          return
       self.rearming = False
       self._settle_lat = None
       self.lat0, self.lon0 = msg.latitude, msg.longitude
+      if self.origin_lat is None:       # 최초 시작점을 복귀 기준으로 저장
+        self.origin_lat, self.origin_lon = msg.latitude, msg.longitude
       self.cos_lat0 = math.cos(math.radians(self.lat0))
       self.prev_e = self.prev_n = None
       self.max_dev = 0.0
@@ -346,6 +372,12 @@ class HeadingInitNode(Node):
           if self._dev_run_start is None:
             self._dev_run_start = dist
           self.max_dev_run = max(self.max_dev_run, dist - self._dev_run_start)
+          # ★ 조기 감지(early abort): 지속편차가 확인되는 즉시 중단한다.
+          # 10m 끝까지 가서 판정하면 벽/커브 코앞(9m)에서 서게 되지만, 여기서
+          # 잡으면 ~3m 에서 멈춘다 — 벽에서 멀고 되돌리기도 쉽다.
+          if self.max_dev_run > self.dev_sustain_m:
+            self._reject_and_retry(dist)
+            return
         else:
           self._dev_run_start = None
 
@@ -354,45 +386,7 @@ class HeadingInitNode(Node):
         self.get_logger().warn('IMU yaw 미수신 — 헤딩 계산 보류.')
         return
       max_dev = getattr(self, 'max_dev', 0.0)
-      # ★ 거부 판정은 '지속 편차'로 한다(순간 튐 관용). peak(max_dev)는 로그용.
-      if self.max_dev_run > self.dev_sustain_m:
-        self.calib_fail_count += 1
-        self.get_logger().error(
-            f'❌ 직진이 아닙니다 (편차 {math.degrees(self.max_deviation):.0f}° 초과가 '
-            f'{self.max_dev_run:.1f}m 지속 > {self.dev_sustain_m:.1f}m; '
-            f'peak {math.degrees(max_dev):.0f}°). 헤딩 캘리브 무효.')
-        # 처음부터 다시. 단, 차를 되돌리는 동안은 시작점을 잡지 않는다(_settled).
-        self.lat0 = None
-        self.prev_e = self.prev_n = None
-        self.max_dev = 0.0
-        self.max_dev_at = 0.0
-        self.max_dev_run = 0.0
-        self._dev_run_start = None
-        self.drive_yaw0 = None      # 재시도 시 기준 헤딩도 다시 잡는다
-        self._last_log_m = -1
-        self.rearming = True
-        self._settle_lat = None
-        self._last_settle_log = 0.0
-        if self.auto_drive:
-          if self.calib_fail_count < self.max_calib_retries:
-            # ★ 자동 재시도: 후진하지 않는다. 제동 후 차가 멈추면(_settled) 그
-            # 자리를 새 시작점으로 잡아 다시 앞으로 10m 간다. drive_t0=None 으로
-            # 카운트다운을 재무장한다. 공간이 부족하면 제동 대기 중 사람이
-            # 차를 뒤로 당겨두면 그 위치에서 재시작한다(설정 불필요).
-            self.drive_t0 = None
-            self.get_logger().warn(
-                f'자동 재시도 {self.calib_fail_count}/{self.max_calib_retries} — '
-                f'정지 후 다시 앞으로 직진한다(후진 안 함). 공간 부족하면 제동 중 '
-                f'차를 뒤로 당겨두세요.')
-            self._stop_driving(f'재시도 {self.calib_fail_count}')
-          else:
-            # 연속 실패 = 일시적 방해가 아니라 계통 문제(STEER_CENTER 등) 의심.
-            self.drive_aborted = True
-            self.get_logger().error(
-                f'{self.calib_fail_count}회 연속 실패 — STEER_CENTER(424) 어긋남 등 '
-                f'기계 문제 의심. 자동 재주행 중단. 수동으로 시도할 것.')
-            self._stop_driving('직진성 검증 연속 실패')
-        return
+      # (지속편차 거부는 위 조기 감지에서 이미 처리됐다. 여기 도달했으면 직진 성공.)
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
       # max_dev를 성공 시에도 남긴다: 자동 직진에서 이 값이 매번 한쪽으로
@@ -431,6 +425,43 @@ class HeadingInitNode(Node):
       if int(dist) != getattr(self, '_last_log_m', -1):
         self._last_log_m = int(dist)
         self.get_logger().info(f'직진 중... {dist:.1f}/{self.calib_distance:.0f}m')
+
+  def _reject_and_retry(self, dist):
+    """직진성 실패 처리 + 자동 재시도. 조기 감지·종점 어디서 불려도 동일.
+
+    후진하지 않는다. 제동·정지 후 원점 근처로 되돌아오면(fix_cb 의 원점 게이트)
+    다시 앞으로 간다. max_calib_retries 를 다 쓰면 계통 문제로 보고 중단한다.
+    """
+    max_dev = getattr(self, 'max_dev', 0.0)
+    self.calib_fail_count += 1
+    self.get_logger().error(
+        f'❌ 직진이 아닙니다 (편차 {math.degrees(self.max_deviation):.0f}° 초과가 '
+        f'{self.max_dev_run:.1f}m 지속 > {self.dev_sustain_m:.1f}m; '
+        f'peak {math.degrees(max_dev):.0f}° @ {dist:.1f}m). 헤딩 캘리브 무효.')
+    self.lat0 = None
+    self.prev_e = self.prev_n = None
+    self.max_dev = 0.0
+    self.max_dev_at = 0.0
+    self.max_dev_run = 0.0
+    self._dev_run_start = None
+    self.drive_yaw0 = None
+    self._last_log_m = -1
+    self.rearming = True
+    self._settle_lat = None
+    self._last_settle_log = 0.0
+    if self.auto_drive:
+      if self.calib_fail_count < self.max_calib_retries:
+        self.drive_t0 = None       # 카운트다운 재무장 (원점 복귀 후 재출발)
+        self.get_logger().warn(
+            f'자동 재시도 {self.calib_fail_count}/{self.max_calib_retries} — '
+            f'차를 시작점으로 되돌리면 자동 재출발(후진 안 함).')
+        self._stop_driving(f'재시도 {self.calib_fail_count}')
+      else:
+        self.drive_aborted = True
+        self.get_logger().error(
+            f'{self.calib_fail_count}회 연속 실패 — STEER_CENTER(424) 어긋남 등 '
+            f'기계 문제 의심. 자동 재주행 중단. 수동으로 시도할 것.')
+        self._stop_driving('직진성 검증 연속 실패')
 
   def _stop_driving(self, reason):
     """구동을 멈춘다. 1초간 0을 쏴서 세운 뒤 토픽을 놓는다.
