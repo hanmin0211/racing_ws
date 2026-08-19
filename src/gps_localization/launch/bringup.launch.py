@@ -148,6 +148,7 @@ def generate_launch_description():
   auto_calib_speed = LaunchConfiguration('auto_calib_speed')
   mission = LaunchConfiguration('mission')
   max_speed = LaunchConfiguration('max_speed')
+  lidar = LaunchConfiguration('lidar')
   # 정지지점은 런치 시점에 파일에서 읽는다(LaunchConfiguration 은 파라미터
   # 배열로 못 넘기므로 여기서 실제 값으로 확정한다).
   stop_pts = load_stop_points(
@@ -180,6 +181,13 @@ def generate_launch_description():
       # 느려진다. 5 km/h = 1.39. 무게중심이 높으면(배터리 뱅크 등) 낮게 시작해
       # 코너 거동을 보고 올릴 것. 먹스·v_max·조향 상한에 함께 전달된다.
       DeclareLaunchArgument('max_speed', default_value='2.8'),
+      # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
+      # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
+      #   ros2 launch sllidar_ros2 sllidar_a1_launch.py \
+      #       serial_port:=/dev/ttyUSB0 serial_baudrate:=256000
+      # 회피 결과는 /obstacle_distance(정지)+/lidar/avoid_steer(조향 override)로
+      # 나가 먹스가 AUTO 중에 반영한다. enable_plot 은 헤드리스라 기본 false.
+      DeclareLaunchArgument('lidar', default_value='false'),
 
       # 1. RTK GPS (ublox_dgnss + nav_sat_fix + NTRIP)
       IncludeLaunchDescription(
@@ -259,6 +267,18 @@ def generate_launch_description():
               'arduino_port': arduino_port,
               'max_speed': max_speed,
           }.items(),
+      ),
+
+      # 7-c. 라이다 장애물 회피 (lidar:=true 일 때만)
+      # /scan → DBSCAN+트래킹+FollowGap → /obstacle_distance + /lidar/avoid_steer.
+      # 종방향이 obstacle_distance 로 감속/정지, 먹스가 avoid_steer 로 조향 회피.
+      Node(
+          package='lidar_clustering',
+          executable='cluster_plot_node',
+          name='lidar_clustering',
+          output='screen',
+          condition=IfCondition(lidar),
+          parameters=[{'enable_plot': False}],
       ),
 
       # 7-b. 신호등 → 정지선거리 (mission:=true 일 때만)

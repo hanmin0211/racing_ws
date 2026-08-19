@@ -63,6 +63,13 @@ class VehicleCmdMux(Node):
     self.steer_deg = 0.0
     self.speed_time = None
     self.steer_time = None
+    # ★ 라이다 회피 조향 override (2026-08-19). AUTO 중 라이다가 유효한 회피각을
+    # 주면(NaN 아님) GPS 경로 조향 대신 그 각으로 장애물을 피한다. 속도는 종방향이
+    # /obstacle_distance 로 이미 안전하게 낮춘다. NaN 이면 평소대로 GPS 조향.
+    self.avoid_steer = float('nan')
+    self.avoid_time = None
+    # 라이다 무신호 0.3s 면 회피각을 버리고 GPS 조향으로 복귀(옛 각을 물고 있지 않게).
+    self.avoid_timeout = 0.3
     self.teleop = None
     self.teleop_time = None
     self.estop = False
@@ -75,6 +82,7 @@ class VehicleCmdMux(Node):
     self.create_subscription(Float64, '/steering_cmd', self.steer_cb, 10)
     self.create_subscription(Twist, '/teleop/cmd_vel', self.teleop_cb, 10)
     self.create_subscription(Bool, '/e_stop', self.estop_cb, 10)
+    self.create_subscription(Float64, '/lidar/avoid_steer', self.avoid_cb, 10)
     # heading_init 은 계산 후 종료하므로 latched(TRANSIENT_LOCAL)로 발행한다.
     # 늦게 뜬 먹스도 과거 값을 받아야 하므로 같은 QoS 로 구독한다.
     latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -116,6 +124,10 @@ class VehicleCmdMux(Node):
       self.get_logger().warn(f'E-STOP {"작동" if msg.data else "해제"}')
     self.estop = bool(msg.data)
 
+  def avoid_cb(self, msg):
+    self.avoid_steer = float(msg.data)   # NaN = 회피 없음
+    self.avoid_time = self.now()
+
   def fresh(self, t, timeout):
     return t is not None and (self.now() - t) <= timeout
 
@@ -133,6 +145,11 @@ class VehicleCmdMux(Node):
     elif self.fresh(self.speed_time, self.input_timeout) and \
             self.fresh(self.steer_time, self.input_timeout):
       v, s, mode = self.target_speed, self.steer_deg, 'AUTO'
+      # 라이다 회피: 유효한 회피각(NaN 아님)이 신선하면 GPS 조향을 덮어쓴다.
+      # 속도(v)는 종방향이 /obstacle_distance 로 이미 낮췄으므로 그대로 둔다.
+      if self.fresh(self.avoid_time, self.avoid_timeout) and \
+              not math.isnan(self.avoid_steer):
+        s, mode = self.avoid_steer, 'AVOID(라이다)'
     else:
       # 자율 입력 중 하나라도 끊기면 정지(조향은 유지하지 않고 직진으로)
       mode = 'STOP(입력끊김)'

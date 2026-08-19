@@ -116,6 +116,12 @@ class SerialBridgeNode(Node):
         # '장애물 0m'로 오인해 급정지한다 → 미검출은 이 값(=없음)으로 변환.
         self.declare_parameter('sonar_max_range', 2.0)
         self.sonar_max = float(self.get_parameter('sonar_max_range').value)
+        # ★ 2026-08-19: 소나는 장애물 회피 센서가 아니다(라이다가 담당). 소나의
+        # /obstacle_distance 발행은 기본 OFF — 켜면 라이다와 충돌하고, 과거엔
+        # trigger>range 불일치로 빈 트랙을 상시 감속시켰다(랩 10분 버그). 소나로만
+        # 근접정지를 쓰고 싶을 때만 publish_sonar_obstacle:=true.
+        self.publish_sonar_obstacle = bool(
+            self.declare_parameter('publish_sonar_obstacle', False).value)
 
         # ---------- 마지막으로 /cmd_vel 을 받은 시각 (워치독 판단용) ----------
         self.last_cmd_time = self.get_clock().now()
@@ -375,12 +381,13 @@ class SerialBridgeNode(Node):
                     # = 0.3 m/s(1.08km/h)로 전 구간이 묶여 190m 를 10분에 기었다.
                     # '없음'은 트리거보다 확실히 큰 CLEAR 로 발행해야 감속이 안 걸린다.
                     # 실제 반향(d>0.01)은 그대로 써서 진짜 장애물 감속은 유지한다.
-                    CLEAR = 999.0
-                    ds = []
-                    for s in (s1, s2, s3):
-                        d = float(s)
-                        ds.append(CLEAR if d <= 0.01 else d)
-                    self.obstacle_pub.publish(Float64(data=min(ds)))
+                    if self.publish_sonar_obstacle:
+                        CLEAR = 999.0
+                        ds = []
+                        for s in (s1, s2, s3):
+                            d = float(s)
+                            ds.append(CLEAR if d <= 0.01 else d)
+                        self.obstacle_pub.publish(Float64(data=min(ds)))
             elif line.startswith('STEER:'):
                 adc = int(line.split('ADC=')[1].split()[0])
                 self.steer_adc_pub.publish(Int32(data=adc))
