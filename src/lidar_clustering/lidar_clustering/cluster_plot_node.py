@@ -192,22 +192,26 @@ class ClusterPlotNode(Node):
 
         gap_decision = self.follow_gap_planner.plan(msg)
 
+        # ★ 제어팀 통합: FollowGap 결정을 **가장 먼저** 발행한다.
+        # follow_gap 은 원본 msg 로 독립 계산되므로 트래커 상태와 무관하다.
+        # RPLidar A1 은 회전마다 점 개수가 달라(정상 특성) 아래 preprocessor 가
+        # scan_size_changed 로 조기 return 하는데, 발행이 그 뒤에 있으면 회피/정지가
+        # 전혀 안 나간다(2026-08-19 실측: 매 프레임 리셋되어 토픽 0개). 그래서 앞으로.
+        self._publish_decision(gap_decision)
+
         result = self.preprocessor.process(msg)
 
         if result.scan_size_changed:
             self.tracker.reset()
             self.get_logger().warning(
-                'LaserScan size changed. Tracker was reset.'
-            )
+                'LaserScan size changed. Tracker was reset.',
+                throttle_duration_sec=5.0)
             return
 
         current_points = result.foreground_points
         clusters = self.clusterer.cluster(current_points)
         tracked_clusters = self.tracker.update(clusters)
         tracked_clusters = add_obstacle_features(tracked_clusters)
-
-        # ★ 제어팀 통합: 결정을 ROS 로 발행한다 (매 프레임).
-        self._publish_decision(gap_decision)
 
         if gap_decision.mode == 'NO_SCAN':
             graph_status = 'NO SCAN | STOP'
