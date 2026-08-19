@@ -20,9 +20,9 @@ local_pure_pursuit:
     # ※ 18°의 최소 회전반경 = 2.42m (축거 0.785m) → 경로 최소 반경 2.8m 이상 권장
     max_steering_deg: 18.0
     # ---- lookahead (속도비례) ----
-    k_ld: 0.6
+    k_ld: 0.8
     # 1.0 → 1.8: 짧은 lookahead 는 조향이 흔들리고 경로를 물결치듯 따라간다.
-    min_lookahead: 1.8
+    min_lookahead: 2.3
     max_lookahead: 4.0
     # ---- 속도 ----
     target_speed: 0.5                # FF 미보정이라 실제는 이보다 빠르게 나온다
@@ -38,4 +38,4 @@ local_pure_pursuit:
     path_timeout: 0.5                # 초; 이보다 오래 경로 없으면 정지
     # ---- 조향 슬루레이트 (부드러운 sweep / 조향모터 보호) ----
     # 90 → 60: 급조향 억제(조향모터 부하·오버슈트 감소)
-    max_steer_rate_deg: 60.0         # 도/초
+    max_steer_rate_deg: 45.0         # 60→45: 조향을 더 부드럽게(지그재그 억제)
