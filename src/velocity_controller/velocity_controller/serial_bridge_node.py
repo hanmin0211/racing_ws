@@ -367,11 +367,19 @@ class SerialBridgeNode(Node):
                     self.speed_pub.publish(Float64(data=float(vel)))
                     self.enc_pub.publish(Int32(data=int(enc1)))
                     self.drive_pwm_pub.publish(Int32(data=int(pwm)))
-                    # 미검출(0.00)은 '장애물 없음'이므로 최대거리로 치환한 뒤 최솟값.
+                    # 미검출(0.00) = '장애물 없음'.
+                    # ★ 2026-08-19 버그 수정 (랩 10분의 주범):
+                    # 이걸 sonar_max(2.0m)로 치환하면 longitudinal 의
+                    # obstacle_trigger(4.0m)보다 작아, 빈 트랙인데도 '2m 앞 장애물'로
+                    # 오인돼 장애물 감속이 상시 걸렸다. v_obs = 0.8*(2.0-0.8)/(4.0-0.8)
+                    # = 0.3 m/s(1.08km/h)로 전 구간이 묶여 190m 를 10분에 기었다.
+                    # '없음'은 트리거보다 확실히 큰 CLEAR 로 발행해야 감속이 안 걸린다.
+                    # 실제 반향(d>0.01)은 그대로 써서 진짜 장애물 감속은 유지한다.
+                    CLEAR = 999.0
                     ds = []
                     for s in (s1, s2, s3):
                         d = float(s)
-                        ds.append(self.sonar_max if d <= 0.01 else d)
+                        ds.append(CLEAR if d <= 0.01 else d)
                     self.obstacle_pub.publish(Float64(data=min(ds)))
             elif line.startswith('STEER:'):
                 adc = int(line.split('ADC=')[1].split()[0])
