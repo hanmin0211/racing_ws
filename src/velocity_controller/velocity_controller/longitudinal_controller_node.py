@@ -67,7 +67,7 @@ class LongitudinalController(Node):
     # 늘렸다. 6.0 이면 2분21초로 빨라지면서도 급코너(R2.68m) 0.56 m/s →
     # 횡가속 0.12 m/s²(0.3g의 1/25)라 배터리 뱅크 실어도 안전하다.
     # (물리 최대 v_max 1.8 기준, tracking_sim 으로 전 속도 완주·조향포화 0% 확인)
-    self.declare_parameter('curvature_gain', 8.0)
+    self.declare_parameter('curvature_gain', 6.0)
     self.declare_parameter('max_accel', 1.0)        # m/s²
     self.declare_parameter('max_decel', 1.8)        # m/s²
     self.declare_parameter('stop_line_trigger', 19.0)

@@ -225,7 +225,9 @@ const float wheel_circumference = 2 * 3.14159 * wheel_radius;
 //   kp=50  → 0.1m/s 오차에 5 PWM
 //   ki=30  → 0.1m/s 오차가 1초 지속되면 3 PWM 추가 (수 초 내 수렴)
 // 완주 실적이 있는 값(2026-08-17 아침). FF 를 되돌렸으므로 게인도 함께 복귀.
-float velocity_kp = 8.0, velocity_ki = 4.0, velocity_kd = 0.2;
+// FF 가 무거운 하중을 감당하므로 PID 는 오차만 다듬는다. 플랜트 슬로프(95)에
+// 맞춰 kp 상향. ki 는 경사·마찰 변동 보정용.
+float velocity_kp = 30.0, velocity_ki = 15.0, velocity_kd = 0.5;
 float velocity_error = 0.0, velocity_error_old = 0.0, velocity_error_sum = 0.0;
 int velocity_pwm_output = 0;
 const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
@@ -248,7 +250,13 @@ const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
 // 200 은 지면 실측 2점으로 역산한 '더 정확한' 값이지만, 출발 시 돌입 PWM 을
 // 43 → 61 로 40% 키워 전원 여유가 없는 이 차에서 보드 리셋을 유발했다.
 // 정확도보다 **도는 것**이 우선이다. 전원 계통을 보강한 뒤 다시 올릴 것.
-const float STATIC_FF = 40.5, VELOCITY_FF_GAIN = 20.7;
+// ★ 2026-08-18: 무거운 하중(배터리뱅크+노트북+철근기둥)에 맞춰 FF 대폭 상향.
+// 이전 40.5/20.7 은 2.8 m/s 명령에 FF 가 98 PWM 밖에 안 내보내, 무거운 차가
+// 필요로 하는 ~250 PWM 에 한참 못 미쳐 실제 속도가 2 km/h 에 머물렀다.
+// 지상 실측(PWM 111→0.33, 150→0.74)의 역관계 PWM=80+95*v 를 FF 로 그대로.
+// (예전 200 상향 후 리셋은 USB 버스충돌이었고 FF 문제가 아니었다 — 버스분리로
+//  해결됨. 이제 제대로 올려도 된다.)
+const float STATIC_FF = 80.0, VELOCITY_FF_GAIN = 95.0;
 
 // 조향 위치 PID
 float steering_kp = 1.0, steering_ki = 0.0, steering_kd = 0.2;
@@ -380,7 +388,7 @@ void velocity_pid_control() {
   // ★ 적분 클램프. ki 가 4→30 으로 커졌으므로 같은 ±25 를 쓰면 적분 권한이
   // 750 PWM 이 되어 조금만 어긋나도 포화한다. FF 가 맞는 지금은 적분이
   // ±90 PWM 정도만 다듬으면 충분하다 (경사·배터리 새그 보정분).
-  ts = constrain(ts, -25.0, 25.0);   // ki=4 복귀에 맞춰 원래 클램프로
+  ts = constrain(ts, -8.0, 8.0);   // ki=15 → 적분권한 ±120 PWM (FF 오차 보정)   // ki=4 복귀에 맞춰 원래 클램프로
   float tout = ff + velocity_kp * velocity_error + velocity_ki * ts + velocity_kd * ed;
   bool sat_p = (tout > MAX_DRIVE_PWM && velocity_error > 0);
   bool sat_n = (tout < -MAX_DRIVE_PWM && velocity_error < 0);
