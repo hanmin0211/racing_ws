@@ -438,6 +438,20 @@ class HeadingInitNode(Node):
         f'❌ 직진이 아닙니다 (편차 {math.degrees(self.max_deviation):.0f}° 초과가 '
         f'{self.max_dev_run:.1f}m 지속 > {self.dev_sustain_m:.1f}m; '
         f'peak {math.degrees(max_dev):.0f}° @ {dist:.1f}m). 헤딩 캘리브 무효.')
+    # ★ 적응형 조향 트림 (자동직진 '무조건 되게'의 핵심): 이번에 휜 곡률에서
+    # 필요한 조향 보정을 역산해, 다음 시도에서 미리 상쇄한다. STEER_CENTER 가
+    # 심하게 어긋나 폐루프(±5°)가 포화되는 경우에도, 재시도마다 트림이 쌓여
+    # 곧아진다(수렴). 절반씩(0.6) 반영해 오버슈트를 막는다.
+    if self.auto_drive:
+      bias = self._steer_bias()
+      if bias is not None:
+        _, delta_deg, _ = bias    # 좌로 휘면 δ>0 → 우로(음수) 트림
+        old = self.auto_steer_bias
+        self.auto_steer_bias = max(-8.0, min(8.0, old - 0.6 * delta_deg))
+        if abs(self.auto_steer_bias - old) > 0.05:
+          self.get_logger().warn(
+              f'적응형 조향 트림: {self.auto_steer_bias - old:+.1f}° 반영 → '
+              f'누적 {self.auto_steer_bias:+.1f}° (다음 시도 더 곧게 간다)')
     self.lat0 = None
     self.prev_e = self.prev_n = None
     self.max_dev = 0.0
