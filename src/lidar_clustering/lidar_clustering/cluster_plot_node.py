@@ -69,19 +69,27 @@ class ClusterPlotNode(Node):
             velocity_smoothing_alpha=0.35,
         )
 
+        # ★ 대회 회피 미션(2026)에 맞춰 ROS 파라미터화 — 실트랙에서 리빌드 없이 튜닝.
+        # 장애물: 이삿짐박스 900×500×600mm, 종방향 2.5m 간격, 좌우 슬라롬.
+        #   yaw_offset_deg      : 라이다 0°가 향하는 방향 보정(마운트 따라. 180=후방).
+        #   obstacle_trigger    : 이 거리 안 장애물에 반응(2.5m 간격이라 3.0 이하 권장).
+        #   planning_lookahead  : 갭 계획 전방거리(2.5m 간격이면 2.0~2.5 로 근접장애물 집중).
+        #   track_width         : 도로 폭(대회 도로 ~2.7m). 이 밖 점은 무시.
+        #   vehicle_width       : 차폭 0.775. safety_margin: 여유.
+        gp = lambda n, d: float(self.declare_parameter(n, d).value)
         self.follow_gap_planner = FollowGapPlanner(
-            yaw_offset_deg=180.0,
-            front_fov_deg=180.0,
-            min_range=0.30,
-            max_range=8.0,
-            track_width=3.0,
-            planning_lookahead=3.0,
-            obstacle_trigger_distance=3.0,
-            vehicle_width=0.775,
-            safety_margin=0.20,
-            straight_deadband_deg=5.0,
-            min_gap_width_deg=3.0,
-            side_score_margin=0.20,
+            yaw_offset_deg=gp('fg_yaw_offset_deg', 180.0),
+            front_fov_deg=gp('fg_front_fov_deg', 180.0),
+            min_range=gp('fg_min_range', 0.30),
+            max_range=gp('fg_max_range', 8.0),
+            track_width=gp('fg_track_width', 2.7),
+            planning_lookahead=gp('fg_planning_lookahead', 2.2),
+            obstacle_trigger_distance=gp('fg_obstacle_trigger', 3.0),
+            vehicle_width=gp('fg_vehicle_width', 0.775),
+            safety_margin=gp('fg_safety_margin', 0.25),
+            straight_deadband_deg=gp('fg_straight_deadband_deg', 5.0),
+            min_gap_width_deg=gp('fg_min_gap_width_deg', 3.0),
+            side_score_margin=gp('fg_side_score_margin', 0.20),
         )
 
         # 헤드리스 기본. 그래프가 필요할 때만(디버깅) enable_plot:=true.
