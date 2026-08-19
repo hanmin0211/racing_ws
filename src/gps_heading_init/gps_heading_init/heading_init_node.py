@@ -119,6 +119,19 @@ class HeadingInitNode(Node):
     self.invert_imu_yaw = bool(self.get_parameter('invert_imu_yaw').value)
     self.max_deviation = math.radians(
         float(self.get_parameter('max_deviation_deg').value))
+    # ★ 2026-08-19 대회 강건화 (발 부딪힘 등 일시적 방해 대응)
+    # ① 편차가 이 거리 이상 '지속'돼야 거부한다. 순간 튐(발에 툭/조향 걸림)은
+    #    곧 회복되면 시작→끝 직선 헤딩이 여전히 유효하므로 통과시킨다. 진짜
+    #    곡선 주행만 지속 편차로 걸린다. (peak 만 보던 옛 방식은 0.3m 튐도 거부)
+    self.declare_parameter('dev_sustain_m', 1.5)
+    self.dev_sustain_m = float(self.get_parameter('dev_sustain_m').value)
+    # ② 자동직진 실패 시 자동 재시도 횟수. 한 번 삐끗해도 되돌아와 다시 시도한다.
+    #    이 횟수를 다 쓰면(연속 실패=기계 문제 의심) 그때 포기한다.
+    self.declare_parameter('max_calib_retries', 3)
+    self.max_calib_retries = int(self.get_parameter('max_calib_retries').value)
+    self.calib_fail_count = 0
+    self._dev_run_start = None    # 편차 구간 시작 dist
+    self.max_dev_run = 0.0        # 가장 길게 지속된 편차 구간[m]
     self.min_chord_for_dev = float(
         self.get_parameter('min_chord_for_dev').value)
     self.seg_window = float(self.get_parameter('seg_window_m').value)
@@ -327,36 +340,58 @@ class HeadingInitNode(Node):
         if dev > getattr(self, 'max_dev', 0.0):
           self.max_dev = dev
           self.max_dev_at = dist
+        # ★ 지속편차: 편차가 임계 초과인 '연속 구간'의 길이를 추적한다.
+        # 순간 튐은 짧게 끝나고(곧 회복), 진짜 곡선은 길게 이어진다.
+        if dev > self.max_deviation:
+          if self._dev_run_start is None:
+            self._dev_run_start = dist
+          self.max_dev_run = max(self.max_dev_run, dist - self._dev_run_start)
+        else:
+          self._dev_run_start = None
 
     if dist >= self.calib_distance:
       if self.imu_yaw is None:
         self.get_logger().warn('IMU yaw 미수신 — 헤딩 계산 보류.')
         return
       max_dev = getattr(self, 'max_dev', 0.0)
-      if max_dev > self.max_deviation:
+      # ★ 거부 판정은 '지속 편차'로 한다(순간 튐 관용). peak(max_dev)는 로그용.
+      if self.max_dev_run > self.dev_sustain_m:
+        self.calib_fail_count += 1
         self.get_logger().error(
-            f'❌ 직진이 아닙니다 (최대 편차 {math.degrees(max_dev):.0f}° @ '
-            f'{getattr(self, "max_dev_at", 0.0):.1f}m 지점 > '
-            f'{math.degrees(self.max_deviation):.0f}°). 헤딩 캘리브 무효 — '
-            f'차량을 되돌려 **곧게** 다시 {self.calib_distance:.0f}m 직진하세요.')
+            f'❌ 직진이 아닙니다 (편차 {math.degrees(self.max_deviation):.0f}° 초과가 '
+            f'{self.max_dev_run:.1f}m 지속 > {self.dev_sustain_m:.1f}m; '
+            f'peak {math.degrees(max_dev):.0f}°). 헤딩 캘리브 무효.')
         # 처음부터 다시. 단, 차를 되돌리는 동안은 시작점을 잡지 않는다(_settled).
         self.lat0 = None
         self.prev_e = self.prev_n = None
         self.max_dev = 0.0
         self.max_dev_at = 0.0
+        self.max_dev_run = 0.0
+        self._dev_run_start = None
         self.drive_yaw0 = None      # 재시도 시 기준 헤딩도 다시 잡는다
         self._last_log_m = -1
         self.rearming = True
         self._settle_lat = None
         self._last_settle_log = 0.0
         if self.auto_drive:
-          # 조향 0인데도 휘었다면 기계 쪽 문제(STEER_CENTER 어긋남 등)일 수 있다.
-          # 같은 조건으로 또 10m를 자동 전진하면 공간만 까먹으므로 재주행 안 함.
-          self.drive_aborted = True
-          self.get_logger().error(
-              '자동 직진이었는데도 휘었다 — STEER_CENTER(424) 어긋남 의심. '
-              '자동 재주행하지 않는다. 수동으로 다시 시도할 것.')
-          self._stop_driving('직진성 검증 실패')
+          if self.calib_fail_count < self.max_calib_retries:
+            # ★ 자동 재시도: 후진하지 않는다. 제동 후 차가 멈추면(_settled) 그
+            # 자리를 새 시작점으로 잡아 다시 앞으로 10m 간다. drive_t0=None 으로
+            # 카운트다운을 재무장한다. 공간이 부족하면 제동 대기 중 사람이
+            # 차를 뒤로 당겨두면 그 위치에서 재시작한다(설정 불필요).
+            self.drive_t0 = None
+            self.get_logger().warn(
+                f'자동 재시도 {self.calib_fail_count}/{self.max_calib_retries} — '
+                f'정지 후 다시 앞으로 직진한다(후진 안 함). 공간 부족하면 제동 중 '
+                f'차를 뒤로 당겨두세요.')
+            self._stop_driving(f'재시도 {self.calib_fail_count}')
+          else:
+            # 연속 실패 = 일시적 방해가 아니라 계통 문제(STEER_CENTER 등) 의심.
+            self.drive_aborted = True
+            self.get_logger().error(
+                f'{self.calib_fail_count}회 연속 실패 — STEER_CENTER(424) 어긋남 등 '
+                f'기계 문제 의심. 자동 재주행 중단. 수동으로 시도할 것.')
+            self._stop_driving('직진성 검증 연속 실패')
         return
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
