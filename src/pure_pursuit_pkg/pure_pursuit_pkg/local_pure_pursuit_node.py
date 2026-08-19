@@ -135,9 +135,14 @@ class LocalPurePursuit(Node):
       self.cmd_pub.publish(cmd)
     if reason:
       # 완주는 정상 종료다 — WARN 으로 찍으면 현장에서 고장으로 오인한다.
-      log = (self.get_logger().info if reason.startswith('🏁')
-             else self.get_logger().warn)
-      log(f'정지: {reason}', throttle_duration_sec=5.0)
+      # ★ 2026-08-19 크래시 수정: info/warn 을 같은 줄에서 호출하면 rclpy 가
+      # 'Logger severity cannot be changed between calls' 로 죽는다(throttle 은
+      # 호출 위치로 캐싱하는데 같은 위치에서 심각도가 바뀌므로). 완주 때 실제로
+      # 노드가 죽었다. 심각도별로 호출 위치(줄)를 분리한다.
+      if reason.startswith('🏁'):
+        self.get_logger().info(f'정지: {reason}', throttle_duration_sec=5.0)
+      else:
+        self.get_logger().warn(f'정지: {reason}', throttle_duration_sec=5.0)
 
   def find_lookahead(self, ld_target):
     """/local_path(차량기준) 위에서 차량으로부터 호길이 ld_target 인 점을 찾는다."""
