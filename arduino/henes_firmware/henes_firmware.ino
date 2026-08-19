@@ -135,7 +135,17 @@ float steerADCToAngle(int adc) {
 // 구동 스톨: PWM 높은데 안 움직임이 지속되면 컷
 #define DRIVE_STALL_PWM    55     // 이 이상 PWM인데
 #define DRIVE_STALL_SPEED  0.05   // 속도가 이 이하로 (m/s)
-#define DRIVE_STALL_MS     300    // 이 시간 지속되면 스톨
+// ★ 2026-08-19: 300 → 700. FF 상향(80/95) 후 출발 즉시 PWM 이 80+ 로 55 를
+//   넘는데, 무거운 차(배터리뱅크+철근기둥)가 정지마찰을 이기고 0.05 m/s 에
+//   도달하기까지 300ms 로는 부족해 '출발 = 스톨'로 오인, 매 출발마다 컷됐다.
+//   (기존 FF 20.7 은 출발 시 PWM 이 55 아래라 이 조건에 안 걸렸었다)
+#define DRIVE_STALL_MS     700    // 이 시간 지속되면 스톨
+// 구동 스톨 컷 유지시간. 조향 스톨과 같은 이유로 쿨다운 재시도를 둔다:
+// 옛 구동 로직은 '목표속도<0.05'가 되어야만 래치가 풀려, 자율주행이 계속
+// 목표를 주면(예 2.8) 한 번 오인 컷되면 영영 안 풀려 차가 멈춘 채 방치됐다.
+// 쿨다운 재시도면 일시적 걸림·출발지연은 스스로 회복하고, 진짜 스톨이면
+// 컷/재시도를 반복하며 모터를 보호한다.
+#define DRIVE_STALL_COOLDOWN_MS 2000
 
 // 조향 스톨: PWM 높은데 ADC가 목표로 안 감
 #define STEER_STALL_PWM    30    // 이 이상 PWM인데 (실측: PWM 38~49에서도 스톨 발생.
@@ -203,6 +213,7 @@ bool watchdog_tripped = true;
 
 // 스톨 상태
 unsigned long drive_stall_ms = 0, steer_stall_ms = 0, steer_cut_ms = 0;
+unsigned long drive_cut_ms = 0;   // 구동 스톨 컷 유지시간(쿨다운 재시도용)
 bool drive_stalled = false, steer_stalled = false;
 int prev_sensorValue = STEER_CENTER;
 
@@ -480,9 +491,17 @@ void safety_guard() {
   if (drive_stalled) {
     velocity_pwm_output = 0;             // 컷
     velocity_error_sum = 0;
-    // 목표가 0(폐루프) 또는 개루프 지령 0이면 해제
-    if (fabs(target_velocity) < 0.05 && openloop_target_pwm == 0)
+    drive_cut_ms += CONTROL_DT_MS;
+    // 해제 조건 ①목표가 0이면 즉시(정상 정지) ②쿨다운 경과 시 재시도
+    //          (출발지연·일시적 걸림을 스스로 회복. 진짜 스톨이면 재트립).
+    if ((fabs(target_velocity) < 0.05 && openloop_target_pwm == 0) ||
+        drive_cut_ms >= DRIVE_STALL_COOLDOWN_MS) {
       drive_stalled = false;
+      drive_cut_ms = 0;
+      drive_stall_ms = 0;
+    }
+  } else {
+    drive_cut_ms = 0;
   }
 
   // --- 조향 스톨: PWM 높은데 ADC 안 변하고 오차 큼 ---
