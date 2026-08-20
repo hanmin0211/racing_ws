@@ -1,0 +1,80 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Color: 80; 80; 80
+      Cell Size: 5
+      Plane Cell Count: 40
+      Reference Frame: map
+    - Class: rviz_default_plugins/Path
+      Name: GlobalPath(맵)
+      Enabled: true
+      Topic:
+        Value: /global_path
+        Depth: 1
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+      Color: 130; 130; 150
+      Line Style: Lines
+    - Class: rviz_default_plugins/Path
+      Name: SimTrail(궤적)
+      Enabled: true
+      Topic:
+        Value: /sim_trail
+        Depth: 1
+        Durability Policy: Transient Local
+        Reliability Policy: Reliable
+      Color: 55; 225; 255
+      Line Style: Lines
+    - Class: rviz_default_plugins/Path
+      Name: LocalPath(전방)
+      Enabled: true
+      Topic:
+        Value: /local_path
+        Depth: 5
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+      Color: 50; 230; 120
+      Line Style: Lines
+    - Class: rviz_default_plugins/Odometry
+      Name: Vehicle(차)
+      Enabled: true
+      Topic:
+        Value: /odometry/filtered
+        Depth: 10
+        Durability Policy: Volatile
+        Reliability Policy: Reliable
+      Keep: 1
+      Shaft Length: 0.6
+      Shaft Radius: 0.08
+      Head Length: 0.3
+      Head Radius: 0.16
+      Color: 255; 170; 30
+      Covariance:
+        Value: false
+  Global Options:
+    Fixed Frame: map
+    Background Color: 30; 33; 40
+    Frame Rate: 30
+  Fixed Frame: map
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 90
+      Yaw: 3.14
+      Pitch: 1.4
+      Focal Point:
+        X: -20
+        Y: 95
+        Z: 0
+Window Geometry:
+  Height: 800
+  Width: 1200
