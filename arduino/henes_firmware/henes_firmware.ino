@@ -14,7 +14,8 @@
 //   - 스톨 일부러 유발(바퀴/조향 막기)해서 가드가 실제로 컷하는지 확인 후 실주행.
 // =============================================================================
 
-#include <SPI.h>
+// ★ 2026-08-20: SPI 제거. 엔코더를 SPI 카운터(LS7366R)가 아니라 아두이노 인터럽트로
+//   직접 세는 방식으로 전환했다(사유는 아래 ENC 핀 정의 주석 참고).
 #include <NewPing.h>
 
 // ============================ 1. 핀 정의 (검증된 배선) =========================
@@ -31,8 +32,20 @@
 // ★ 2026-08-20: ms2405 v2.0 보드는 조향 포텐셔미터를 A8 로 보낸다(amap 은 A15 였음).
 // ADC 스캔(adc_scan.ino)으로 확인: 바퀴를 돌리면 A8 만 0~612 로 크게 변했다.
 #define Steering_Sensor A8    // 조향 포텐셔미터 (ms2405 보드 기준)
-#define ENC1_ADD 22           // 엔코더 SPI CS
-#define ENC2_ADD 23
+// ★ 2026-08-20: 엔코더 = A/B 직교펄스 **인터럽트 직결** (옛 SPI 카운터 방식 폐기).
+//   경위: ms2405 교체 후 ENC1 이 0 고정 → SPI CS 후보 29핀 전수 스캔 전부 0x00 무응답,
+//   A/B 펄스 스캔도 전 핀 무전이. amap 보드에 LS7366R 카운터가 내장돼 있었고 ms2405 엔
+//   없는 것으로 판단(엔코더 케이블은 4선 = 5V/GND/A/B 로 확인됨).
+//   ⇒ 카운터 칩 없이 아두이노가 직접 4체배 디코딩한다.
+//
+// 배선(ATmega2560 외부인터럽트 핀만 사용 가능: 2,3,18,19,20,21 — 2·3 은 구동모터가 씀):
+//   엔코더1(전륜, 속도계산에 사용): A→D18, B→D19
+//   엔코더2(후륜, 현재 미사용)    : A→D20, B→D21
+//   5V→아두이노 5V, GND→아두이노 GND
+#define ENC1_A 18
+#define ENC1_B 19
+#define ENC2_A 20
+#define ENC2_B 21
 #define SONAR_NUM 3
 #define MAX_DISTANCE 200
 
@@ -233,6 +246,14 @@ int prev_sensorValue = STEER_CENTER;
 //   (RTK 8.844m vs 엔코더 환산 8.664m, 3076counts, 직진편차 0.24m).
 //   0.13 은 공칭 추정값이었고 실제 유효 구름반경이 조금 더 컸다.
 //   ※ 재검증: encoder_calib 다시 돌려 보정계수가 1.00±0.02 면 통과.
+// ★★ 2026-08-20 경고: counts_per_revolution(-290)은 **옛 SPI 카운터(LS7366R) 기준**이다.
+//   엔코더를 인터럽트 4체배 직결로 바꿨으므로 체배수·부호가 달라질 수 있다.
+//   이 값이 틀리면 속도가 통째로 어긋나 FF/PID/스톨가드가 전부 무너진다.
+//   ⇒ 배선 후 **반드시 재측정**할 것:
+//     ① 바퀴를 손으로 정확히 1바퀴 굴려 ENC1 증가량 확인 → 절댓값 확정
+//     ② 전진 명령(PWM:60)에 ENC1 이 **증가**해야 정상. 감소하면 부호를 뒤집는다
+//        (배선 A/B 를 바꾸거나 이 상수의 부호를 반전).
+//     ③ 그다음 tools/encoder_calib 로 RTK 대조 보정.
 const float wheel_radius = 0.1327;
 const int counts_per_revolution = -290;
 const float wheel_circumference = 2 * 3.14159 * wheel_radius;
@@ -352,28 +373,45 @@ int readVccMv() {
   return (int)(1125300L / raw);   // 1.1V * 1023 * 1000 / raw
 }
 
-// ============================ 6. 엔코더 =====================================
+// ============================ 6. 엔코더 (인터럽트 4체배 직교 디코딩) ==========
+// 옛 SPI 카운터(LS7366R) 방식은 카운터 칩이 없어 폐기했다(핀 정의 주석 참고).
+// 외부 함수 인터페이스(initEncoders / readEncoder / clearEncoderCount)는 그대로 유지해
+// 호출부는 손대지 않는다.
+//
+// 4체배 디코딩 원리 — 정방향 시퀀스는 (A,B): 00 → 10 → 11 → 01 → 반복.
+//   · A 가 변하는 순간엔 항상 A!=B  (00→10, 11→01)
+//   · B 가 변하는 순간엔 항상 A==B  (10→11, 01→00)
+// 역방향이면 각각 반대가 되므로, 위 조건으로 ±1 을 정한다. A/B 양쪽 CHANGE 를 잡아
+// 한 주기에 4틱 → 분해능 4체배.
+volatile long enc1_ticks = 0, enc2_ticks = 0;
+
+void isrEnc1A() { enc1_ticks += (digitalRead(ENC1_A) != digitalRead(ENC1_B)) ? 1 : -1; }
+void isrEnc1B() { enc1_ticks += (digitalRead(ENC1_A) == digitalRead(ENC1_B)) ? 1 : -1; }
+void isrEnc2A() { enc2_ticks += (digitalRead(ENC2_A) != digitalRead(ENC2_B)) ? 1 : -1; }
+void isrEnc2B() { enc2_ticks += (digitalRead(ENC2_A) == digitalRead(ENC2_B)) ? 1 : -1; }
+
 void initEncoders() {
-  pinMode(ENC1_ADD, OUTPUT); pinMode(ENC2_ADD, OUTPUT);
-  digitalWrite(ENC1_ADD, HIGH); digitalWrite(ENC2_ADD, HIGH);
-  SPI.begin();
-  digitalWrite(ENC1_ADD, LOW); SPI.transfer(0x88); SPI.transfer(0x03); digitalWrite(ENC1_ADD, HIGH);
-  digitalWrite(ENC2_ADD, LOW); SPI.transfer(0x88); SPI.transfer(0x03); digitalWrite(ENC2_ADD, HIGH);
+  // 오픈컬렉터 출력 엔코더도 읽히도록 풀업. (푸시풀이면 풀업이 있어도 무해)
+  pinMode(ENC1_A, INPUT_PULLUP); pinMode(ENC1_B, INPUT_PULLUP);
+  pinMode(ENC2_A, INPUT_PULLUP); pinMode(ENC2_B, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENC1_A), isrEnc1A, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC1_B), isrEnc1B, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC2_A), isrEnc2A, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC2_B), isrEnc2B, CHANGE);
 }
+// long(4바이트) 읽기는 원자적이지 않다. ISR 이 도중에 끼어들면 상위/하위 바이트가
+// 섞인 엉터리 값이 나오므로 반드시 인터럽트를 막고 읽는다(SREG 복원 방식이라
+// 인터럽트가 꺼진 문맥에서 불려도 안전).
 long readEncoder(int no) {
-  unsigned int c1, c2, c3, c4;
-  digitalWrite(ENC1_ADD + no - 1, LOW);
-  SPI.transfer(0x60);
-  c1 = SPI.transfer(0x00); c2 = SPI.transfer(0x00); c3 = SPI.transfer(0x00); c4 = SPI.transfer(0x00);
-  digitalWrite(ENC1_ADD + no - 1, HIGH);
-  return ((long)c1 << 24) + ((long)c2 << 16) + ((long)c3 << 8) + (long)c4;
+  uint8_t s = SREG; cli();
+  long v = (no == 1) ? enc1_ticks : enc2_ticks;
+  SREG = s;
+  return v;
 }
 void clearEncoderCount(int no) {
-  digitalWrite(ENC1_ADD + no - 1, LOW);
-  SPI.transfer(0x98); SPI.transfer(0x00); SPI.transfer(0x00); SPI.transfer(0x00); SPI.transfer(0x00);
-  digitalWrite(ENC1_ADD + no - 1, HIGH);
-  delayMicroseconds(100);
-  digitalWrite(ENC1_ADD + no - 1, LOW); SPI.transfer(0xE0); digitalWrite(ENC1_ADD + no - 1, HIGH);
+  uint8_t s = SREG; cli();
+  if (no == 1) enc1_ticks = 0; else enc2_ticks = 0;
+  SREG = s;
 }
 
 // ============================ 7. 속도 계산 (10ms 이동평균) ====================
