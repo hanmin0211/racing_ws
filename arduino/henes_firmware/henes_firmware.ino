@@ -36,17 +36,18 @@
 #define SONAR_NUM 3
 #define MAX_DISTANCE 200
 
-// ============================ 2. 조향 캘리브 (실측 2026-08-13) =================
-// 좌측끝=0, 우측끝=949, 최대타각 30° (좌+/우−).
-// 직진(중앙): 459 → **424로 갱신** (2026-08-13 재실측). 바퀴를 손으로 물리적
-// 직진에 맞춘 뒤 읽은 ADC가 424(±1)였다. 459는 실제 직진보다 우측으로 치우쳐
-// 있어 "0° 명령인데 좌로 살짝 틀어져 보이는" 증상의 원인이었다.
-// ※ 최대타각 20° 기준: 좌측 424counts/20° = 21.2/도, 우측 525counts/20° = 26.3/도로
-//   비대칭이지만, steerAngleToADC가 좌/우를 각각 스케일하므로 각도는 정확하다.
-//   (데드밴드 16counts = 좌 0.75° / 우 0.61° — 분해능은 충분)
-#define STEER_CENTER    424
-#define STEER_LEFT_MAX    0
-#define STEER_RIGHT_MAX 949
+// ============================ 2. 조향 캘리브 (★A8 실측 2026-08-20) ============
+// ★ ms2405 보드(센서 A8) 재캘리브. amap(A15) 시절 값(center424/L0/R949)은 폐기.
+// 손으로 각 위치 잡고 /steering_adc 60샘플 측정:
+//   완전 왼쪽끝 = 627 (high rail),  완전 오른쪽끝 = 0 (low rail),  직진(중앙) = 282
+//   → 총 가동범위 627카운트. 부호규약(좌+ → ADC↑)과 일치: 왼쪽=고ADC, 오른쪽=저ADC.
+// ※ LEFT_MAX/RIGHT_MAX 는 '측면 이름'이 아니라 constrain·엔드스톱의 수치 하한/상한이다.
+//   A8 에선 저ADC rail(0)=물리 오른쪽, 고ADC rail(627)=물리 왼쪽. 이름은 레거시라 헷갈리지만
+//   로직(steerAngleToADC 클램프, at_left/right_limit)은 수치 min/max 로만 동작해 그대로 옳다.
+// ※ 중앙 282 는 좌우 중점(313)과 다른 비대칭(링키지 기하). 얼추중앙(220) 아닌 직진 정밀측정값.
+#define STEER_CENTER    282
+#define STEER_LEFT_MAX    0    // 저ADC rail = 물리 오른쪽 끝(실측 0)
+#define STEER_RIGHT_MAX 627    // 고ADC rail = 물리 왼쪽 끝(실측 627)
 // 최대 타각: 30°는 가정값이었고, 2026-08-13 실측 결과 **20°**. (가정대로 두면
 // pure pursuit가 20° 명령해도 실제로는 13°만 꺾여 코너마다 밖으로 밀린다.)
 #define STEER_MAX_ANGLE  20.0
@@ -70,9 +71,14 @@
 //     · 실제가 21.2면 → 정확
 //     · 실제가 26.25면 → 명령보다 덜 꺾임(언더스티어) = 안전한 방향의 오차
 //     (큰 값을 쓰면 반대로 오버스티어가 되어 위험하다)
-//   실사용 18°면 ADC 42~806으로 양쪽 포화(0/949)에서 충분히 떨어진다.
 //   ※ 반대쪽 최대타각을 실측하면 이 값만 고치면 된다.
-#define STEER_COUNTS_PER_DEG  21.2
+// ★ A8 재산정(2026-08-20): center282, 좌rail627, 우rail0.
+//   좌반 (627-282)/20°=17.25, 우반 (282-0)/20°=14.1 (counts/도). 비대칭이라 단일값은
+//   보수적으로 **작은 14.1** 채택(오버스티어 회피). 결과:
+//     · 우측 -20° 명령 → ADC 0 (정확)
+//     · 좌측 +20° 명령 → ADC 564 (실제 ~16.3°, 언더스티어=안전측)
+//   실트랙에서 코너를 밖으로 밀면 15.7(평균)까지 올릴 것.
+#define STEER_COUNTS_PER_DEG  14.1
 
 int steerAngleToADC(float ang) {
   if (ang >  STEER_MAX_ANGLE) ang =  STEER_MAX_ANGLE;
@@ -112,7 +118,7 @@ float steerADCToAngle(int adc) {
 #define MAX_STEER_PWM   130
 // ★ 진단 스위치. 1 = 조향모터 OFF(손으로 돌려 센서 ADC 측정). 측정 끝나면 0 으로.
 //   플래시 확인용도 겸함: 이 펌웨어가 들어가면 조향모터가 안 버틴다(손으로 돌아감).
-#define STEER_MOTOR_TEST 1
+#define STEER_MOTOR_TEST 0
 // 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
 // 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
 #define STEER_SOFT_MS   2500UL
@@ -305,15 +311,21 @@ void rear_motor_control(int pwm) {
 void steer_motor_control(int pwm) {
   if (STEER_MOTOR_TEST) pwm = 0;   // ★ 진단모드: 조향모터 끄고 손으로 돌려 센서만 읽음
   pwm = constrain(pwm, -MAX_STEER_PWM, MAX_STEER_PWM);
-  // pwm>0 = 우측(ADC↑ 방향)으로 민다.
-  // ★ 2026-08-20: ms2405 v2.0 보드로 교체 후 조향 모터가 반대로 돌아 왼쪽 끝(ADC
-  // ~110)으로 밀려 스톨했다(폐루프 불안정). MOTOR3_ENA/ENB 를 스왑해 방향을 뒤집는다.
-  // 이러면 pwm>0 → ADC↑ 가 다시 성립해 폐루프도 엔드스톱 로직도 그대로 맞는다.
+  // pwm>0 = ADC↑ 방향(=A8 기준 물리 왼쪽)으로 민다.
+  // ★ 2026-08-20 A8 실측으로 극성 확정. 경위:
+  //   ① A15 시절 "왼쪽 폭주" 증상을 보고 ENA/ENB 를 스왑했었다(HIGH/LOW ↔ LOW/HIGH).
+  //   ② A8 재캘리브(center282) 후 실측: +5°(목표 ADC352) 명령에 PWM +111~130 이
+  //      나갔는데 ADC 가 278 → **0 으로 폭주**(반대 rail). 즉 스왑 상태가 과반전이었다.
+  //      (스톨가드가 0.8s 에 컷 → 모터 보호는 정상 동작 확인)
+  //   ③ 그래서 ①의 스왑을 **원복**한다: pwm>0 → ENA=LOW, ENB=HIGH.
+  //   이제 pwm>0 → ADC↑ 가 성립해 폐루프·엔드스톱 로직이 모두 맞는다.
+  // ※ 변수명 at_right/left_limit 은 레거시(A15 시절 이름). A8 에선 고ADC rail 이
+  //   물리 왼쪽이지만, 로직은 수치 상/하한으로만 동작하므로 그대로 옳다.
   bool at_right_limit = (sensorValue >= STEER_AD_MAX);
   bool at_left_limit  = (sensorValue <= STEER_AD_MIN);
   if ((pwm > 0 && at_right_limit) || (pwm < 0 && at_left_limit)) pwm = 0;  // 엔드스톱 컷
-  if (pwm > 0)      { digitalWrite(MOTOR3_ENA, HIGH); digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, pwm); }
-  else if (pwm < 0) { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, HIGH); analogWrite(MOTOR3_PWM, -pwm); }
+  if (pwm > 0)      { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, HIGH); analogWrite(MOTOR3_PWM, pwm); }
+  else if (pwm < 0) { digitalWrite(MOTOR3_ENA, HIGH); digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, -pwm); }
   else              { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, 0); }
 }
 void all_motors_off() { front_motor_control(0); rear_motor_control(0); steer_motor_control(0); }
