@@ -28,7 +28,9 @@
 #define MOTOR3_ENA 9
 #define MOTOR3_ENB 10
 
-#define Steering_Sensor A15   // 조향 포텐셔미터
+// ★ 2026-08-20: ms2405 v2.0 보드는 조향 포텐셔미터를 A8 로 보낸다(amap 은 A15 였음).
+// ADC 스캔(adc_scan.ino)으로 확인: 바퀴를 돌리면 A8 만 0~612 로 크게 변했다.
+#define Steering_Sensor A8    // 조향 포텐셔미터 (ms2405 보드 기준)
 #define ENC1_ADD 22           // 엔코더 SPI CS
 #define ENC2_ADD 23
 #define SONAR_NUM 3
@@ -108,6 +110,9 @@ float steerADCToAngle(int adc) {
 // breakaway(정지마찰 뜯기)'에 부족했다(움직이는 중엔 90으로 충분히 잘 감).
 // 130으로 상향 — 스톨가드(PWM>30이 250ms간 무이동 시 컷 + 1.5s 쿨다운)가 보호한다.
 #define MAX_STEER_PWM   130
+// ★ 진단 스위치. 1 = 조향모터 OFF(손으로 돌려 센서 ADC 측정). 측정 끝나면 0 으로.
+//   플래시 확인용도 겸함: 이 펌웨어가 들어가면 조향모터가 안 버틴다(손으로 돌아감).
+#define STEER_MOTOR_TEST 1
 // 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
 // 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
 #define STEER_SOFT_MS   2500UL
@@ -298,13 +303,17 @@ void rear_motor_control(int pwm) {
 }
 // 조향 모터: ★엔드스톱 하드컷 (센서가 안전범위 밖이면 그 방향으로 더 안 밀음)
 void steer_motor_control(int pwm) {
+  if (STEER_MOTOR_TEST) pwm = 0;   // ★ 진단모드: 조향모터 끄고 손으로 돌려 센서만 읽음
   pwm = constrain(pwm, -MAX_STEER_PWM, MAX_STEER_PWM);
-  // pwm>0 = 우측(ADC↑ 방향)으로 민다고 가정. 실차에서 방향 반대면 부호만 뒤집기.
+  // pwm>0 = 우측(ADC↑ 방향)으로 민다.
+  // ★ 2026-08-20: ms2405 v2.0 보드로 교체 후 조향 모터가 반대로 돌아 왼쪽 끝(ADC
+  // ~110)으로 밀려 스톨했다(폐루프 불안정). MOTOR3_ENA/ENB 를 스왑해 방향을 뒤집는다.
+  // 이러면 pwm>0 → ADC↑ 가 다시 성립해 폐루프도 엔드스톱 로직도 그대로 맞는다.
   bool at_right_limit = (sensorValue >= STEER_AD_MAX);
   bool at_left_limit  = (sensorValue <= STEER_AD_MIN);
   if ((pwm > 0 && at_right_limit) || (pwm < 0 && at_left_limit)) pwm = 0;  // 엔드스톱 컷
-  if (pwm > 0)      { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, HIGH); analogWrite(MOTOR3_PWM, pwm); }
-  else if (pwm < 0) { digitalWrite(MOTOR3_ENA, HIGH); digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, -pwm); }
+  if (pwm > 0)      { digitalWrite(MOTOR3_ENA, HIGH); digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, pwm); }
+  else if (pwm < 0) { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, HIGH); analogWrite(MOTOR3_PWM, -pwm); }
   else              { digitalWrite(MOTOR3_ENA, LOW);  digitalWrite(MOTOR3_ENB, LOW);  analogWrite(MOTOR3_PWM, 0); }
 }
 void all_motors_off() { front_motor_control(0); rear_motor_control(0); steer_motor_control(0); }
