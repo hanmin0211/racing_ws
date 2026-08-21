@@ -132,6 +132,20 @@ float steerADCToAngle(int adc) {
 // ★ 진단 스위치. 1 = 조향모터 OFF(손으로 돌려 센서 ADC 측정). 측정 끝나면 0 으로.
 //   플래시 확인용도 겸함: 이 펌웨어가 들어가면 조향모터가 안 버틴다(손으로 돌아감).
 #define STEER_MOTOR_TEST 0
+// ★★ 엔코더 없음 모드 (2026-08-22).
+//   ms2405 에는 amap 에 있던 SPI 카운터 IC 가 없어 엔코더 신호가 아두이노에 오지 않는다
+//   (SPI 라인 전기 진단: D50~53·D22/23 이 '아무것도 안 물린 기준핀'과 동일).
+//   엔코더가 0 이면 (a) 속도 PID 가 오차를 못 줄여 PWM 을 255 까지 밀어올리고
+//   (b) 구동 스톨가드가 '정상 주행'을 스톨로 오인해 700ms 마다 컷한다 — 주행 불가.
+//
+//   1 로 두면: 속도 PID 를 우회해 **FF 개루프**(PWM = STATIC_FF + GAIN*v)로 달리고,
+//              구동 스톨가드를 끈다. 조향은 A8 피드백이 살아있으므로 그대로 폐루프.
+//   ⇒ 속도 정밀도는 떨어지지만(경사·부하에 따라 편차) **웨이포인트 완주는 가능**하다.
+//
+//   ★ 엔코더 A/B 를 D18/D19 에 직결하면 **이 값을 0 으로 되돌릴 것**. 그러면 원래의
+//     속도 폐루프·스톨보호가 전부 복귀한다(ROS 쪽은 고칠 것 없음 — VEL: 인터페이스 동일).
+//   ⚠ 이 모드에서는 구동 스톨 보호가 없다. 바퀴가 걸려도 못 자르니 장시간 무인 주행 금지.
+#define NO_ENCODER 1
 // 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
 // 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
 #define STEER_SOFT_MS   2500UL
@@ -448,6 +462,21 @@ void velocity_pid_control() {
     commanded_velocity = 0.0;
     return;
   }
+#if NO_ENCODER
+  // ★ 엔코더 없음: 속도 피드백이 없으므로 PID 를 쓸 수 없다(속도가 늘 0 으로 읽혀
+  //   오차가 안 줄고 PWM 이 255 로 포화한다). FF 만으로 개루프 주행한다.
+  //   FF 는 지상 실측 역관계(PWM = 80 + 95*v)라 목표속도 근처는 나온다.
+  {
+    float ffo = 0.0;
+    if (commanded_velocity > 0.02)       ffo =  STATIC_FF + VELOCITY_FF_GAIN * commanded_velocity;
+    else if (commanded_velocity < -0.02) ffo = -STATIC_FF + VELOCITY_FF_GAIN * commanded_velocity;
+    velocity_pwm_output = constrain((int)ffo, -MAX_DRIVE_PWM, MAX_DRIVE_PWM);
+    if (fabs(target_velocity) < 0.05 && fabs(commanded_velocity) < 0.05)
+      velocity_pwm_output = 0;
+    velocity_error = 0.0; velocity_error_sum = 0.0; velocity_error_old = 0.0;
+    return;
+  }
+#endif
   velocity_error = commanded_velocity - current_velocity;
   float ed = (velocity_error - velocity_error_old) / VELOCITY_DT;
   float ff = 0.0;
@@ -539,7 +568,11 @@ void steering_pid_control() {
 // ============================ 10. ★ 안전가드 (스톨 감지) ======================
 void safety_guard() {
   // --- 구동 스톨: PWM 높은데 안 움직이고 목표는 있음 ---
-  if (abs(velocity_pwm_output) > DRIVE_STALL_PWM &&
+  // ★ NO_ENCODER 모드에서는 이 판정을 건너뛴다. 속도가 늘 0 으로 읽혀 잘 달리는
+  //   중에도 700ms 마다 오인 컷되기 때문(실측 확인). 대신 진짜 스톨 보호도 사라지므로
+  //   엔코더 직결 후 NO_ENCODER 0 으로 되돌릴 것.
+  if (!NO_ENCODER &&
+      abs(velocity_pwm_output) > DRIVE_STALL_PWM &&
       fabs(current_velocity) < DRIVE_STALL_SPEED &&
       (fabs(target_velocity) > 0.05 || openloop_target_pwm != 0)) {
     drive_stall_ms += CONTROL_DT_MS;
