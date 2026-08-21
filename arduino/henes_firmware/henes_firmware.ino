@@ -14,8 +14,10 @@
 //   - 스톨 일부러 유발(바퀴/조향 막기)해서 가드가 실제로 컷하는지 확인 후 실주행.
 // =============================================================================
 
-// ★ 2026-08-20: SPI 제거. 엔코더를 SPI 카운터(LS7366R)가 아니라 아두이노 인터럽트로
-//   직접 세는 방식으로 전환했다(사유는 아래 ENC 핀 정의 주석 참고).
+// ★ 2026-08-22: SPI 카운터 방식으로 복귀. 보드를 amap 계열로 교체하니 **LS7366R 카운터가
+//   D22/D23 에서 응답**했다(MDR0 write/read-back 0x03·0x01 왕복 확인).
+//   (ms2405 계열 2개에는 이 칩이 없어 인터럽트 직결 방식을 썼었다 — 커밋 4331b7e)
+#include <SPI.h>
 #include <NewPing.h>
 
 // ============================ 1. 핀 정의 (검증된 배선) =========================
@@ -31,7 +33,10 @@
 
 // ★ 2026-08-20: ms2405 v2.0 보드는 조향 포텐셔미터를 A8 로 보낸다(amap 은 A15 였음).
 // ADC 스캔(adc_scan.ino)으로 확인: 바퀴를 돌리면 A8 만 0~612 로 크게 변했다.
-#define Steering_Sensor A8    // 조향 포텐셔미터 (ms2405 보드 기준)
+// ★ 2026-08-22: amap 계열 보드로 교체 → 조향 포텐셔미터가 **A15** 로 돌아왔다.
+//   ADC 스캔 실측: 앞바퀴를 좌우로 돌리면 A15 만 0~913 으로 변동(폭 913).
+//   A8(폭 498)·A9(405) 등은 인접채널 크로스토크다. ms2405 계열일 땐 A8 이었다.
+#define Steering_Sensor A15   // 조향 포텐셔미터 (amap 계열 보드 기준)
 // ★ 2026-08-20: 엔코더 = A/B 직교펄스 **인터럽트 직결** (옛 SPI 카운터 방식 폐기).
 //   경위: ms2405 교체 후 ENC1 이 0 고정 → SPI CS 후보 29핀 전수 스캔 전부 0x00 무응답,
 //   A/B 펄스 스캔도 전 핀 무전이. amap 보드에 LS7366R 카운터가 내장돼 있었고 ms2405 엔
@@ -42,10 +47,11 @@
 //   엔코더1(전륜, 속도계산에 사용): A→D18, B→D19
 //   엔코더2(후륜, 현재 미사용)    : A→D20, B→D21
 //   5V→아두이노 5V, GND→아두이노 GND
-#define ENC1_A 18
-#define ENC1_B 19
-#define ENC2_A 20
-#define ENC2_B 21
+// ★ 2026-08-22: amap 계열 보드 = **SPI 카운터 CS 22/23** (실측 확인).
+//   ms2405 계열이었을 땐 카운터가 없어 A/B 인터럽트 직결(D18/19, D20/21)을 준비했었다.
+//   보드를 다시 ms2405 로 바꾸면 그 방식으로 되돌릴 것(커밋 4331b7e 참고).
+#define ENC1_ADD 22           // 엔코더 SPI CS
+#define ENC2_ADD 23
 #define SONAR_NUM 3
 #define MAX_DISTANCE 200
 
@@ -58,9 +64,13 @@
 //   A8 에선 저ADC rail(0)=물리 오른쪽, 고ADC rail(627)=물리 왼쪽. 이름은 레거시라 헷갈리지만
 //   로직(steerAngleToADC 클램프, at_left/right_limit)은 수치 min/max 로만 동작해 그대로 옳다.
 // ※ 중앙 282 는 좌우 중점(313)과 다른 비대칭(링키지 기하). 얼추중앙(220) 아닌 직진 정밀측정값.
-#define STEER_CENTER    282
-#define STEER_LEFT_MAX    0    // 저ADC rail = 물리 오른쪽 끝(실측 0)
-#define STEER_RIGHT_MAX 627    // 고ADC rail = 물리 왼쪽 끝(실측 627)
+// ★ 2026-08-22: amap 계열 보드(A15)로 교체 → A15 시절 값으로 복귀.
+//   ※ 아래 424/0~949 는 옛 amap 실측값이다. 이 보드가 '그때 그 보드'인지 확실치 않으므로
+//     STEER_MOTOR_TEST 1 로 좌/중/우를 재측정해 확정할 것(ADC 스캔 관측범위는 0~913였음).
+//   (ms2405 계열이었을 때의 A8 실측값은 center282 / 0~627 / 14.1 — 커밋 f6f741d)
+#define STEER_CENTER    424
+#define STEER_LEFT_MAX    0
+#define STEER_RIGHT_MAX 949
 // 최대 타각: 30°는 가정값이었고, 2026-08-13 실측 결과 **20°**. (가정대로 두면
 // pure pursuit가 20° 명령해도 실제로는 13°만 꺾여 코너마다 밖으로 밀린다.)
 #define STEER_MAX_ANGLE  20.0
@@ -91,7 +101,9 @@
 //     · 우측 -20° 명령 → ADC 0 (정확)
 //     · 좌측 +20° 명령 → ADC 564 (실제 ~16.3°, 언더스티어=안전측)
 //   실트랙에서 코너를 밖으로 밀면 15.7(평균)까지 올릴 것.
-#define STEER_COUNTS_PER_DEG  14.1
+// ★ 2026-08-22: A15 복귀 → 옛 amap 값 21.2 로 되돌림(A8 시절은 14.1 이었다).
+//   좌/중/우 재측정 후 (rail-center)/20° 로 다시 산출할 것.
+#define STEER_COUNTS_PER_DEG  21.2
 
 int steerAngleToADC(float ang) {
   if (ang >  STEER_MAX_ANGLE) ang =  STEER_MAX_ANGLE;
@@ -131,7 +143,7 @@ float steerADCToAngle(int adc) {
 #define MAX_STEER_PWM   130
 // ★ 진단 스위치. 1 = 조향모터 OFF(손으로 돌려 센서 ADC 측정). 측정 끝나면 0 으로.
 //   플래시 확인용도 겸함: 이 펌웨어가 들어가면 조향모터가 안 버틴다(손으로 돌아감).
-#define STEER_MOTOR_TEST 0
+#define STEER_MOTOR_TEST 1
 // ★★ 엔코더 없음 모드 (2026-08-22).
 //   ms2405 에는 amap 에 있던 SPI 카운터 IC 가 없어 엔코더 신호가 아두이노에 오지 않는다
 //   (SPI 라인 전기 진단: D50~53·D22/23 이 '아무것도 안 물린 기준핀'과 동일).
@@ -145,7 +157,9 @@ float steerADCToAngle(int adc) {
 //   ★ 엔코더 A/B 를 D18/D19 에 직결하면 **이 값을 0 으로 되돌릴 것**. 그러면 원래의
 //     속도 폐루프·스톨보호가 전부 복귀한다(ROS 쪽은 고칠 것 없음 — VEL: 인터페이스 동일).
 //   ⚠ 이 모드에서는 구동 스톨 보호가 없다. 바퀴가 걸려도 못 자르니 장시간 무인 주행 금지.
-#define NO_ENCODER 1
+// ★ 2026-08-22: 0 으로 복귀. amap 계열 보드에 SPI 카운터가 있어 엔코더가 살아났다.
+//   속도 폐루프와 구동 스톨 보호가 모두 정상 동작한다.
+#define NO_ENCODER 0
 // 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
 // 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
 #define STEER_SOFT_MS   2500UL
@@ -397,35 +411,27 @@ int readVccMv() {
 //   · B 가 변하는 순간엔 항상 A==B  (10→11, 01→00)
 // 역방향이면 각각 반대가 되므로, 위 조건으로 ±1 을 정한다. A/B 양쪽 CHANGE 를 잡아
 // 한 주기에 4틱 → 분해능 4체배.
-volatile long enc1_ticks = 0, enc2_ticks = 0;
-
-void isrEnc1A() { enc1_ticks += (digitalRead(ENC1_A) != digitalRead(ENC1_B)) ? 1 : -1; }
-void isrEnc1B() { enc1_ticks += (digitalRead(ENC1_A) == digitalRead(ENC1_B)) ? 1 : -1; }
-void isrEnc2A() { enc2_ticks += (digitalRead(ENC2_A) != digitalRead(ENC2_B)) ? 1 : -1; }
-void isrEnc2B() { enc2_ticks += (digitalRead(ENC2_A) == digitalRead(ENC2_B)) ? 1 : -1; }
-
 void initEncoders() {
-  // 오픈컬렉터 출력 엔코더도 읽히도록 풀업. (푸시풀이면 풀업이 있어도 무해)
-  pinMode(ENC1_A, INPUT_PULLUP); pinMode(ENC1_B, INPUT_PULLUP);
-  pinMode(ENC2_A, INPUT_PULLUP); pinMode(ENC2_B, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ENC1_A), isrEnc1A, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC1_B), isrEnc1B, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC2_A), isrEnc2A, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC2_B), isrEnc2B, CHANGE);
+  pinMode(ENC1_ADD, OUTPUT); pinMode(ENC2_ADD, OUTPUT);
+  digitalWrite(ENC1_ADD, HIGH); digitalWrite(ENC2_ADD, HIGH);
+  SPI.begin();
+  digitalWrite(ENC1_ADD, LOW); SPI.transfer(0x88); SPI.transfer(0x03); digitalWrite(ENC1_ADD, HIGH);
+  digitalWrite(ENC2_ADD, LOW); SPI.transfer(0x88); SPI.transfer(0x03); digitalWrite(ENC2_ADD, HIGH);
 }
-// long(4바이트) 읽기는 원자적이지 않다. ISR 이 도중에 끼어들면 상위/하위 바이트가
-// 섞인 엉터리 값이 나오므로 반드시 인터럽트를 막고 읽는다(SREG 복원 방식이라
-// 인터럽트가 꺼진 문맥에서 불려도 안전).
 long readEncoder(int no) {
-  uint8_t s = SREG; cli();
-  long v = (no == 1) ? enc1_ticks : enc2_ticks;
-  SREG = s;
-  return v;
+  unsigned int c1, c2, c3, c4;
+  digitalWrite(ENC1_ADD + no - 1, LOW);
+  SPI.transfer(0x60);
+  c1 = SPI.transfer(0x00); c2 = SPI.transfer(0x00); c3 = SPI.transfer(0x00); c4 = SPI.transfer(0x00);
+  digitalWrite(ENC1_ADD + no - 1, HIGH);
+  return ((long)c1 << 24) + ((long)c2 << 16) + ((long)c3 << 8) + (long)c4;
 }
 void clearEncoderCount(int no) {
-  uint8_t s = SREG; cli();
-  if (no == 1) enc1_ticks = 0; else enc2_ticks = 0;
-  SREG = s;
+  digitalWrite(ENC1_ADD + no - 1, LOW);
+  SPI.transfer(0x98); SPI.transfer(0x00); SPI.transfer(0x00); SPI.transfer(0x00); SPI.transfer(0x00);
+  digitalWrite(ENC1_ADD + no - 1, HIGH);
+  delayMicroseconds(100);
+  digitalWrite(ENC1_ADD + no - 1, LOW); SPI.transfer(0xE0); digitalWrite(ENC1_ADD + no - 1, HIGH);
 }
 
 // ============================ 7. 속도 계산 (10ms 이동평균) ====================
