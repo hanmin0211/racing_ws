@@ -112,19 +112,32 @@
 //     · 우측 -20° → ADC 0 (정확)
 //     · 좌측 +20° → ADC 824 (실제 ~15.7°, 언더스티어 = 안전측 오차)
 //   실트랙에서 코너를 밖으로 밀면 23.4(평균)까지 올릴 것.
-#define STEER_COUNTS_PER_DEG  20.6
+// ★ 2026-08-22: **방향별 스케일로 분리**. 단일값(20.6)을 쓰던 것을 좌/우 각각의
+//   실측 기울기로 나눈다.
+//   근거: 이 보드에서 좌rail 936 / center 412 / 우rail 0 을 모두 실측했다.
+//     좌반 (936-412)/20° = 26.2,  우반 (412-0)/20° = 20.6 counts/도 (링키지 비대칭)
+//   단일값 20.6 을 쓰면 **좌회전이 명령의 78% 만 꺾여**(18° 명령 → 실제 약 14°)
+//   좌코너에서 밖으로 밀려 차선을 밟는다. 과거엔 좌우 최대타각이 실측되지 않아
+//   보수적으로 단일값을 썼지만, 이제 양쪽 rail 이 모두 실측됐으므로 분리가 옳다.
+//   ※ 각 방향의 '최대타각 20°' 가정 자체는 남아있다. 실트랙에서 한쪽만 계속 밀리면
+//     그쪽 값을 조정할 것.
+#define STEER_CPD_LEFT   26.2    // +각(좌회전) counts/도
+#define STEER_CPD_RIGHT  20.6    // -각(우회전) counts/도
+#define STEER_COUNTS_PER_DEG  23.4   // 레거시 참조용 평균값
 
 int steerAngleToADC(float ang) {
   if (ang >  STEER_MAX_ANGLE) ang =  STEER_MAX_ANGLE;
   if (ang < -STEER_MAX_ANGLE) ang = -STEER_MAX_ANGLE;
-  float adc = STEER_CENTER + ang * STEER_COUNTS_PER_DEG;   // 좌+ → ADC↑
+  // 좌+ → ADC↑ (방향별 기울기 적용)
+  float adc = STEER_CENTER + ang * (ang >= 0 ? STEER_CPD_LEFT : STEER_CPD_RIGHT);
   return constrain((int)adc, STEER_LEFT_MAX, STEER_RIGHT_MAX);
 }
 
 // ADC → 실제 조향각[도]. 명령각이 아니라 '지금 바퀴가 실제로 몇 도인지'.
 // 자율주행 중 조향 추종 오차를 감시하려면 이 값이 필요하다.
 float steerADCToAngle(int adc) {
-  return (adc - STEER_CENTER) / STEER_COUNTS_PER_DEG;
+  int d = adc - STEER_CENTER;
+  return (d >= 0) ? (d / STEER_CPD_LEFT) : (d / STEER_CPD_RIGHT);
 }
 
 // ============================ 3. 안전 파라미터 ================================
