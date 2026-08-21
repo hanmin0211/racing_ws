@@ -18,3 +18,5 @@ __pycache__/
 # 임시
 nano
 src/sllidar_ros2/
+# 경로 스무딩 백업(원본은 waypoints_recorded.yaml 로 보존됨)
+*.yaml.bak
