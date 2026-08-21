@@ -68,9 +68,12 @@
 //   ※ 아래 424/0~949 는 옛 amap 실측값이다. 이 보드가 '그때 그 보드'인지 확실치 않으므로
 //     STEER_MOTOR_TEST 1 로 좌/중/우를 재측정해 확정할 것(ADC 스캔 관측범위는 0~913였음).
 //   (ms2405 계열이었을 때의 A8 실측값은 center282 / 0~627 / 14.1 — 커밋 f6f741d)
-#define STEER_CENTER    424
+// ★ 2026-08-22 이 보드 실측 확정(모터 OFF 상태, 각 위치 80~100샘플):
+//     완전 왼쪽 = 936(고rail) / 직진 중앙 = 412 / 완전 오른쪽 = 0(저rail)
+//   옛 amap 값(424 / 0~949)과 미세하게 다르다 → 이 보드 개체값으로 갱신.
+#define STEER_CENTER    412
 #define STEER_LEFT_MAX    0
-#define STEER_RIGHT_MAX 949
+#define STEER_RIGHT_MAX 936
 // 최대 타각: 30°는 가정값이었고, 2026-08-13 실측 결과 **20°**. (가정대로 두면
 // pure pursuit가 20° 명령해도 실제로는 13°만 꺾여 코너마다 밖으로 밀린다.)
 #define STEER_MAX_ANGLE  20.0
@@ -103,7 +106,13 @@
 //   실트랙에서 코너를 밖으로 밀면 15.7(평균)까지 올릴 것.
 // ★ 2026-08-22: A15 복귀 → 옛 amap 값 21.2 로 되돌림(A8 시절은 14.1 이었다).
 //   좌/중/우 재측정 후 (rail-center)/20° 로 다시 산출할 것.
-#define STEER_COUNTS_PER_DEG  21.2
+// ★ 2026-08-22 이 보드 실측 재산정: center412, 좌rail936, 우rail0.
+//   좌반 (936-412)/20°=26.20, 우반 412/20°=20.60. 비대칭이라 기존 철학대로
+//   **보수적으로 작은 20.6** 채택(오버스티어 회피 — 큰 값을 쓰면 명령보다 더 꺾인다).
+//     · 우측 -20° → ADC 0 (정확)
+//     · 좌측 +20° → ADC 824 (실제 ~15.7°, 언더스티어 = 안전측 오차)
+//   실트랙에서 코너를 밖으로 밀면 23.4(평균)까지 올릴 것.
+#define STEER_COUNTS_PER_DEG  20.6
 
 int steerAngleToADC(float ang) {
   if (ang >  STEER_MAX_ANGLE) ang =  STEER_MAX_ANGLE;
@@ -143,7 +152,7 @@ float steerADCToAngle(int adc) {
 #define MAX_STEER_PWM   130
 // ★ 진단 스위치. 1 = 조향모터 OFF(손으로 돌려 센서 ADC 측정). 측정 끝나면 0 으로.
 //   플래시 확인용도 겸함: 이 펌웨어가 들어가면 조향모터가 안 버틴다(손으로 돌아감).
-#define STEER_MOTOR_TEST 1
+#define STEER_MOTOR_TEST 0
 // ★★ 엔코더 없음 모드 (2026-08-22).
 //   ms2405 에는 amap 에 있던 SPI 카운터 IC 가 없어 엔코더 신호가 아두이노에 오지 않는다
 //   (SPI 라인 전기 진단: D50~53·D22/23 이 '아무것도 안 물린 기준핀'과 동일).
