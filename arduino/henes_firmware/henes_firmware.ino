@@ -291,6 +291,13 @@ int prev_sensorValue = STEER_CENTER;
 //     ② 전진 명령(PWM:60)에 ENC1 이 **증가**해야 정상. 감소하면 부호를 뒤집는다
 //        (배선 A/B 를 바꾸거나 이 상수의 부호를 반전).
 //     ③ 그다음 tools/encoder_calib 로 RTK 대조 보정.
+// ★ 2026-08-22 새 보드(amap 계열, SPI 카운터)에서 재검증:
+//   · 부호: 모터로 전진 구동(PWM:60) → ENC1 **감소**(0→-2428), 속도 +3.0m/s 로 정상 계산.
+//     ⇒ 음수 부호가 맞다. (손으로 굴렸을 땐 증가해서 반대로 보였는데, 그 방향이 후진이었다.
+//        손 방향은 착각하기 쉬우니 부호는 반드시 모터 구동으로 확인할 것)
+//   · 크기: 5바퀴 손 측정 1504 counts → 1바퀴 301. 290 대비 +3.8% 로 손측정 오차 범위다.
+//     290 은 RTK 대조(encoder_calib, 보정계수 1.0208)로 나온 값이므로 그대로 유지하고,
+//     실차에서 encoder_calib 재실행으로 정밀 보정한다.
 const float wheel_radius = 0.1327;
 const int counts_per_revolution = -290;
 const float wheel_circumference = 2 * 3.14159 * wheel_radius;
