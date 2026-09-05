@@ -61,7 +61,7 @@ from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import (DurabilityPolicy, QoSProfile, qos_profile_sensor_data)
 from sensor_msgs.msg import Imu, NavSatFix
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Int32
 
 M_PER_DEG = 111320.0
 
@@ -109,9 +109,49 @@ class HeadingInitNode(Node):
     # 근본 해결은 STEER_CENTER 수정이고, 이건 현장 임시 대응용이다.
     self.declare_parameter('auto_steer_bias', 0.0)
     # 조향 중앙 역산용 (펌웨어와 같은 값이어야 카운트 환산이 맞다)
+    # ★ 2026-08-24 정정: 옛 amap 보드 값(424 / 21.2)이 남아 있었다.
+    #   이 보드 실측은 center 412 / 좌rail 936 / 우rail 0 이고, counts/도 는
+    #   좌 26.2 · 우 20.6 으로 **비대칭**이다(henes_firmware.ino 참고).
+    #   틀린 상수로 STEER_CENTER 를 권고하면 조향 중립이 통째로 어긋나므로
+    #   펌웨어와 같은 값을 쓴다. (사고 런에서 '424 → 518 권장' 이 나온 원인)
     self.declare_parameter('wheelbase', 0.785)
-    self.declare_parameter('steer_counts_per_deg', 21.2)
-    self.declare_parameter('steer_center', 424)
+    self.declare_parameter('steer_center', 412)
+    self.declare_parameter('steer_cpd_left', 26.2)    # +각(좌) counts/도
+    self.declare_parameter('steer_cpd_right', 20.6)   # -각(우) counts/도
+    self.declare_parameter('steer_counts_per_deg', 23.4)   # 레거시 평균
+
+    # ★ 게이트④ — 앞바퀴가 펴져 있지 않으면 캘리브를 시작하지 않는다.
+    #   정지 상태에서 바퀴가 꺾여 있으면 (a) 펌웨어가 중앙으로 되돌리려다
+    #   타이어 접지마찰에 막혀 STEER 스톨이 계속 나고 (b) 출발 초반이 곡선이라
+    #   '10m 직진' 자체가 직진이 아니게 된다.
+    #   2026-08-24 벤치에서 조향 ADC 567~643 (중립 412) = 좌로 5.9~8.8° 꺾인 채로
+    #   캘리브를 돌리고 있었다. 스톨 임계(15카운트)의 10배가 넘는 오차였다.
+    #   /steering_adc 가 안 올라오면(control:=false 등) 이 게이트는 건너뛴다.
+    self.declare_parameter('require_wheels_straight', True)
+    self.declare_parameter('max_steer_offset_deg', 2.0)
+
+    # ★ 2026-08-24 충돌 사고 대응 — 측위 점프를 '직진'으로 오인한 사고.
+    #
+    #   로그(21:53): 자동직진 출발 명령은 08.245 에 나가는데, 07.669 에 이미
+    #   '8.4/10m' 를 갔다고 보고됐다. 즉 **차가 서 있는 동안** 좌표가 0.38초에
+    #   7.3m 튀었다. 그 시각은 NTRIP 첫 RTCM 수신(07.829) 직전 — 단독측위에서
+    #   RTK Fixed 로 해가 스냅하며 생긴 점프다.
+    #   그 점프 벡터를 진행방향으로 믿고 yaw_offset=-155.8° 를 확정했고,
+    #   헤딩이 통째로 틀어진 채 AUTO 로 넘어가 우측으로 감겨 벽에 충돌했다.
+    #
+    #   기존 직진성 검사는 이걸 못 잡는다: 점프 후 '최근 구간'과 '전체 현'이
+    #   둘 다 같은 점프 벡터라 편차가 안 생기고, 지속편차 1.5m 도 못 채운다.
+    #   그래서 성질이 다른 게이트 셋을 각각 독립으로 건다.
+    #
+    #   ① RTK 수렴 전에는 시작조차 안 한다 (점프의 원인 자체를 제거)
+    #   ② 물리적으로 불가능한 이동속도는 측위 점프로 보고 무효화
+    #   ③ 물리적 최소 소요시간을 못 채운 '완료'는 거부
+    self.declare_parameter('require_rtk', True)
+    self.declare_parameter('max_h_std', 0.05)       # 수평 σ 상한[m]
+    self.declare_parameter('max_jump_speed', 2.0)   # 이 속도 초과 이동 = 점프[m/s]
+    # 완료 판정 시 최대 편차 하드 상한[도]. 지속편차 검사를 빠져나온 큰 peak 도
+    # 여기서 막는다 (사고 때 36° 가 그대로 통과했다).
+    self.declare_parameter('max_peak_dev_deg', 25.0)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -167,6 +207,25 @@ class HeadingInitNode(Node):
     self.wheelbase = float(self.get_parameter('wheelbase').value)
     self.counts_per_deg = float(self.get_parameter('steer_counts_per_deg').value)
     self.steer_center = int(self.get_parameter('steer_center').value)
+    self.cpd_left = float(self.get_parameter('steer_cpd_left').value)
+    self.cpd_right = float(self.get_parameter('steer_cpd_right').value)
+    self.require_straight = bool(
+        self.get_parameter('require_wheels_straight').value)
+    self.max_steer_off = float(
+        self.get_parameter('max_steer_offset_deg').value)
+    self.steer_adc = None        # 최근 조향 ADC
+    self.steer_adc_t = 0.0
+    self._last_straight_log = 0.0
+    self.require_rtk = bool(self.get_parameter('require_rtk').value)
+    self.max_h_std = float(self.get_parameter('max_h_std').value)
+    self.max_jump_speed = float(self.get_parameter('max_jump_speed').value)
+    self.max_peak_dev = math.radians(
+        float(self.get_parameter('max_peak_dev_deg').value))
+    self._last_fix = None        # (t, east, north) — 점프 검사용
+    self._rtk_ok = False
+    self._last_rtk_log = 0.0
+    self.calib_t0 = None         # 시작점을 잡은 시각
+    self.drive_started_t = None  # 실제로 굴러가기 시작한 시각(카운트다운 후)
     self.track = []               # 캘리브 구간 궤적 (조향 중앙 역산용)
     self.drive_t0 = None          # 카운트다운 시작 시각
     self.drive_aborted = False    # 실패/타임아웃 후에는 자동 재주행하지 않는다
@@ -197,6 +256,7 @@ class HeadingInitNode(Node):
     self.create_subscription(NavSatFix, fix_topic, self.fix_cb,
                              qos_profile_sensor_data)
     self.create_subscription(Imu, imu_topic, self.imu_cb, 50)
+    self.create_subscription(Int32, '/steering_adc', self.steer_adc_cb, 10)
     self.create_timer(0.3, self.shutdown_check)
     if self.auto_drive:
       self.create_timer(0.1, self.drive_tick)
@@ -213,6 +273,45 @@ class HeadingInitNode(Node):
   def imu_cb(self, msg: Imu):
     y = yaw_from_quat(msg.orientation)
     self.imu_yaw = -y if self.invert_imu_yaw else y
+
+  def steer_adc_cb(self, msg: Int32):
+    self.steer_adc = int(msg.data)
+    self.steer_adc_t = self.get_clock().now().nanoseconds * 1e-9
+
+  def _steer_angle_now(self):
+    """현재 조향각[도]. 펌웨어 steerADCToAngle 과 같은 식(방향별 기울기)."""
+    if self.steer_adc is None:
+      return None
+    d = self.steer_adc - self.steer_center
+    return d / self.cpd_left if d >= 0 else d / self.cpd_right
+
+  def _wheels_straight(self) -> bool:
+    """앞바퀴가 펴져 있는가. 텔레메트리가 없으면 판정하지 않고 통과시킨다.
+
+    ★ 왜 통과시키나
+      control:=false 로 측위만 볼 때나 아두이노가 안 붙었을 때는
+      /steering_adc 가 아예 안 온다. 그 경우까지 막으면 캘리브가 영영
+      시작되지 않는다. 게이트는 '알 수 있을 때만' 건다.
+    """
+    if not self.require_straight:
+      return True
+    t = self.get_clock().now().nanoseconds * 1e-9
+    if self.steer_adc is None or t - self.steer_adc_t > 2.0:
+      return True                       # 조향 텔레메트리 없음 — 판정 불가
+    ang = self._steer_angle_now()
+    if abs(ang) <= self.max_steer_off:
+      return True
+    if t - self._last_straight_log > 2.0:
+      self._last_straight_log = t
+      side = '좌' if ang > 0 else '우'
+      self.get_logger().warn(
+          f'앞바퀴가 {side}로 {abs(ang):.1f}° 꺾여 있다 '
+          f'(ADC {self.steer_adc}, 중립 {self.steer_center}, '
+          f'허용 ±{self.max_steer_off:.1f}°) — 출발하지 않는다. '
+          f'손으로 앞바퀴를 정면에 맞출 것. '
+          f'⚠ 이대로 가면 초반이 곡선이라 10m 직진이 직진이 아니다. '
+          f'무시하려면 require_wheels_straight:=false.')
+    return False
 
   def _settled(self, msg: NavSatFix) -> bool:
     """실패 후 재시작: 차량이 실제로 멈출 때까지 시작점 기록을 미룬다.
@@ -288,13 +387,93 @@ class HeadingInitNode(Node):
     kappa = 8.0 * h / (c * c)
     delta_deg = math.degrees(math.atan(kappa * self.wheelbase))
     # +각도(좌) = ADC 증가. 좌로 휘었다면 실제 직진 ADC는 현재값보다 작다.
-    new_center = self.steer_center - delta_deg * self.counts_per_deg
+    # ★ counts/도 는 방향별로 다르다(좌 26.2 / 우 20.6). 평균값을 쓰면 권고치가
+    #   한쪽으로 최대 12% 어긋난다 — 그대로 펌웨어에 넣으면 중립이 망가진다.
+    cpd = self.cpd_left if delta_deg >= 0 else self.cpd_right
+    new_center = self.steer_center - delta_deg * cpd
     return h, delta_deg, new_center
+
+  def _rtk_ready(self, msg: NavSatFix) -> bool:
+    """RTK 가 수렴했는가. 수렴 전에는 시작점조차 잡지 않는다.
+
+    ★ 판정은 status.status 가 아니라 **공분산**으로 한다.
+      지금 쓰는 ublox_nav_sat_fix_hp 드라이버는 RTK Fixed 에서도
+      status.status=1(SBAS) 만 내보내고 2(GBAS)를 절대 안 준다.
+      status>=2 로 걸면 영원히 통과 못 한다(waypoint_recorder 에서 확인된 사실).
+      공분산은 Fixed(수 mm) / Float(수십 cm) 구분이 훨씬 확실하다.
+    """
+    if not self.require_rtk:
+      return True
+    h_std = math.sqrt(max(0.0, msg.position_covariance[0]
+                          + msg.position_covariance[4]))
+    if msg.position_covariance_type == 0:
+      ok = msg.status.status >= 2          # 공분산을 못 믿는 드라이버 폴백
+    else:
+      ok = h_std <= self.max_h_std
+    t = self.get_clock().now().nanoseconds * 1e-9
+    if ok:
+      if not self._rtk_ok:
+        self._rtk_ok = True
+        self.get_logger().info(
+            f'RTK 수렴 (수평 σ={h_std * 100:.1f}cm) — 헤딩 캘리브를 시작한다.')
+      return True
+    self._rtk_ok = False
+    if t - self._last_rtk_log > 2.0:
+      self._last_rtk_log = t
+      self.get_logger().warn(
+          f'RTK 수렴 대기 중 (수평 σ={h_std * 100:.1f}cm > '
+          f'{self.max_h_std * 100:.0f}cm) — 출발하지 않는다. '
+          f'⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다'
+          f'(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.')
+    return False
+
+  def _invalidate_calib(self, reason):
+    """측위 이상으로 캘리브를 무효화한다.
+
+    ★ 왜 _reject_and_retry 와 따로 두나
+      저쪽은 '차가 휘었다'가 전제라 궤적 곡률에서 조향 트림을 학습한다.
+      GPS 가 튄 경우 그 궤적은 차의 움직임이 아니므로, 거기서 트림을 뽑으면
+      멀쩡한 조향에 엉뚱한 보정이 쌓인다. 그래서 트림은 손대지 않는다.
+    """
+    self.calib_fail_count += 1
+    self.get_logger().error(f'❌ 헤딩 캘리브 무효: {reason}')
+    self.lat0 = None
+    self.prev_e = self.prev_n = None
+    self.max_dev = 0.0
+    self.max_dev_at = 0.0
+    self.max_dev_run = 0.0
+    self._dev_run_start = None
+    self.drive_yaw0 = None
+    self._last_fix = None
+    self.calib_t0 = None
+    self.drive_started_t = None
+    self._last_log_m = -1
+    self.rearming = True
+    self._settle_lat = None
+    self._last_settle_log = 0.0
+    if self.auto_drive:
+      if self.calib_fail_count < self.max_calib_retries:
+        self.drive_t0 = None
+        self.get_logger().warn(
+            f'자동 재시도 {self.calib_fail_count}/{self.max_calib_retries} — '
+            f'차를 시작점으로 되돌리면 자동 재출발(후진 안 함).')
+        self._stop_driving(f'재시도 {self.calib_fail_count}')
+      else:
+        self.drive_aborted = True
+        self.get_logger().error(
+            '연속 실패 — 자동 재주행 중단. RTK/안테나 상태를 확인할 것.')
+        self._stop_driving('측위 이상 연속 실패')
 
   def fix_cb(self, msg: NavSatFix):
     if self.done_time is not None:
       return
     if math.isnan(msg.latitude) or abs(msg.latitude) < 1e-9:
+      return
+    # ① RTK 게이트 — 수렴 전에는 시작점도 안 잡고 카운트다운도 안 돈다.
+    if self.lat0 is None and not self._rtk_ready(msg):
+      return
+    # ④ 앞바퀴 정렬 게이트 — 꺾인 채로 출발하면 초반이 곡선이 된다.
+    if self.lat0 is None and not self._wheels_straight():
       return
     if self.lat0 is None:
       if self.rearming and not self._settled(msg):
@@ -325,6 +504,8 @@ class HeadingInitNode(Node):
       self.max_dev = 0.0
       self.max_dev_at = 0.0
       self.track = [(0.0, 0.0)]
+      self.calib_t0 = self.get_clock().now().nanoseconds * 1e-9
+      self._last_fix = (self.calib_t0, 0.0, 0.0)
       self.get_logger().info(
           f'시작점 기록: ({self.lat0:.7f}, {self.lon0:.7f}). 직진 시작하세요.')
       if self.auto_drive and self.drive_t0 is None:
@@ -334,6 +515,36 @@ class HeadingInitNode(Node):
     east = (msg.longitude - self.lon0) * M_PER_DEG * self.cos_lat0
     north = (msg.latitude - self.lat0) * M_PER_DEG
     dist = math.hypot(east, north)
+
+    # ② 점프 게이트 — 연속한 두 fix 사이의 '함축 속도'가 물리적으로 불가능하면
+    #    차가 움직인 게 아니라 측위 해가 튄 것이다.
+    #    사고 당시 0.38초에 7.3m(=19m/s)가 그대로 적분됐다.
+    t_now = self.get_clock().now().nanoseconds * 1e-9
+    if self._last_fix is not None:
+      lt, le, ln = self._last_fix
+      dt = t_now - lt
+      step = math.hypot(east - le, north - ln)
+      if dt > 1e-3 and step / dt > self.max_jump_speed:
+        v_imp = step / dt
+        if self.drive_started_t is None:
+          # 아직 굴러가기 전이다. 차는 가만히 있는데 좌표만 튄 것이므로
+          # 실패로 세지 않고 **기준점만 다시 잡는다**(RTK 확정 직후 정상 동작).
+          self.get_logger().warn(
+              f'측위 점프 감지: {step:.1f}m/{dt:.2f}s = {v_imp:.1f}m/s '
+              f'(출발 전) — 시작점을 다시 잡는다.')
+          self.lat0 = None
+          self._last_fix = None
+          self.calib_t0 = None
+          self.track = []
+          self.drive_t0 = None       # 카운트다운도 다시
+          self._last_log_m = -1
+          return
+        self._invalidate_calib(
+            f'주행 중 측위 점프 {step:.1f}m/{dt:.2f}s = {v_imp:.1f}m/s '
+            f'(상한 {self.max_jump_speed:.1f}m/s). '
+            f'이 점프를 직진으로 적분하면 헤딩이 통째로 틀어진다.')
+        return
+    self._last_fix = (t_now, east, north)
     # 캘리브가 끝나지 않고 세션이 길어져도 무한정 쌓이지 않게 상한을 둔다.
     # 정상 캘리브(10m, ~5Hz)는 100점 안팎이라 걸릴 일이 없다.
     if len(self.track) < 2000:
@@ -386,7 +597,36 @@ class HeadingInitNode(Node):
         self.get_logger().warn('IMU yaw 미수신 — 헤딩 계산 보류.')
         return
       max_dev = getattr(self, 'max_dev', 0.0)
-      # (지속편차 거부는 위 조기 감지에서 이미 처리됐다. 여기 도달했으면 직진 성공.)
+
+      # ③ 최소 소요시간 게이트 — 10m 를 물리적으로 가능한 시간보다 빨리
+      #    '갔다'면 그건 주행이 아니라 측위 점프의 누적이다.
+      #    자동직진은 속도제어를 받으므로 auto_speed 의 2배를 넘을 수 없다.
+      #    (사고 때: 출발 3.4초 만에 10.1m '완주' → 여기서 걸린다)
+      if self.auto_drive and self.drive_started_t is not None:
+        v_cap = max(0.05, self.auto_speed * 2.0)
+        t_ref = self.drive_started_t
+      else:
+        v_cap = self.max_jump_speed          # 사람이 미는 경우
+        t_ref = self.calib_t0
+      if t_ref is not None:
+        need = self.calib_distance / v_cap
+        took = self.get_clock().now().nanoseconds * 1e-9 - t_ref
+        if took < need:
+          self._invalidate_calib(
+              f'{dist:.1f}m 를 {took:.1f}초 만에 갔다고 나온다 '
+              f'(최소 {need:.1f}초 필요, 속도상한 {v_cap:.2f}m/s). '
+              f'실제 주행이 아니라 측위 점프다.')
+          return
+
+      # ③-b peak 편차 하드 상한 — 지속편차(1.5m) 를 못 채운 큰 튐도 여기서 막는다.
+      #     사고 때 peak 36° 가 아무 저항 없이 통과했다.
+      if max_dev > self.max_peak_dev:
+        self._invalidate_calib(
+            f'최대 편차 {math.degrees(max_dev):.0f}° > '
+            f'{math.degrees(self.max_peak_dev):.0f}° (@{self.max_dev_at:.1f}m). '
+            f'직진으로 볼 수 없다.')
+        return
+
       course = math.atan2(north, east)
       yaw_offset = normalize_angle(course - self.imu_yaw)
       # max_dev를 성공 시에도 남긴다: 자동 직진에서 이 값이 매번 한쪽으로
@@ -459,6 +699,9 @@ class HeadingInitNode(Node):
     self.max_dev_run = 0.0
     self._dev_run_start = None
     self.drive_yaw0 = None
+    self._last_fix = None
+    self.calib_t0 = None
+    self.drive_started_t = None
     self._last_log_m = -1
     self.rearming = True
     self._settle_lat = None
@@ -541,6 +784,11 @@ class HeadingInitNode(Node):
     steer += self.auto_steer_bias
     steer = max(-self.auto_max_corr - abs(self.auto_steer_bias),
                 min(self.auto_max_corr + abs(self.auto_steer_bias), steer))
+
+    if self.drive_started_t is None:
+      # 카운트다운이 끝나고 실제로 구동 명령이 나가는 첫 순간.
+      # 최소 소요시간 게이트(③)의 기준점이다.
+      self.drive_started_t = t
 
     cmd = Twist()
     cmd.linear.x = self.auto_speed
