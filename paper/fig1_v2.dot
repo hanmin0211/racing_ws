@@ -1,0 +1,48 @@
+digraph localization {
+  rankdir=TB;
+  bgcolor="white";
+  nodesep=0.30; ranksep=0.38;
+  node [fontname="Helvetica", fontsize=13, margin="0.10,0.05"];
+  edge [fontname="Helvetica", fontsize=11, color="#555555", arrowsize=0.8];
+
+  // hardware (dashed)
+  caster [label="NGII VRS caster", shape=box, style="filled,dashed", fillcolor="#efefef"];
+  f9p    [label="ZED-F9P", shape=box, style="filled,dashed", fillcolor="#efefef"];
+  imuhw  [label="A9 IMU", shape=box, style="filled,dashed", fillcolor="#efefef"];
+
+  // nodes
+  ntrip [label="/ngii_vrs_ntrip_client", shape=ellipse, style=filled, fillcolor="#cfe8fc"];
+  ublox [label="/ublox_dgnss", shape=ellipse, style=filled, fillcolor="#cfe8fc"];
+  imu   [label="/imu", shape=ellipse, style=filled, fillcolor="#cfe8fc"];
+  hinit [label="/gps_heading_init", shape=ellipse, style=filled, fillcolor="#cfe8fc"];
+  loc   [label="/direct_localization", shape=ellipse, style=filled, fillcolor="#a8d5a2"];
+  ctrl  [label="/local_pure_pursuit", shape=ellipse, style=filled, fillcolor="#ffe0b2"];
+
+  // topics
+  t_rtcm [label="/ntrip_client/rtcm", shape=box, style=filled, fillcolor="#fff9c4"];
+  t_fix  [label="/fix", shape=box, style=filled, fillcolor="#fff9c4"];
+  t_imu  [label="/handsfree/imu", shape=box, style=filled, fillcolor="#fff9c4"];
+  t_off  [label="/heading/yaw_offset", shape=box, style=filled, fillcolor="#fff9c4"];
+  t_odom [label="/odometry/filtered", shape=box, style=filled, fillcolor="#fff9c4"];
+
+  caster -> ntrip  [label="RTCM3", style=dashed];
+  ntrip  -> caster [label="GGA", style=dashed, constraint=false];
+  ntrip  -> t_rtcm;
+  t_rtcm -> ublox;
+  f9p    -> ublox  [label="USB", style=dashed];
+  imuhw  -> imu    [label="USB", style=dashed];
+  ublox  -> t_fix;
+  imu    -> t_imu;
+
+  t_fix -> hinit;  t_imu -> hinit;
+  hinit -> t_off;
+  t_fix -> loc [constraint=false];
+  t_imu -> loc [constraint=false];
+  t_off -> loc;
+  loc -> t_odom -> ctrl;
+
+  { rank=same; caster; f9p; imuhw; }
+  { rank=same; ntrip; ublox; imu; }
+  { rank=same; t_rtcm; t_fix; t_imu; }
+  { rank=same; hinit; }
+}
