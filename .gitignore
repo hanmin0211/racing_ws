@@ -29,3 +29,4 @@ scratchpad/
 .claude/worktrees/
 *.bak
 *.bak.yaml
+.~lock.*#
