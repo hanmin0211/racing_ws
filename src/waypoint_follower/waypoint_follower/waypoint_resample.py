@@ -60,10 +60,21 @@ def resample(points, spacing, closed=False):
   return np.column_stack([xs, ys])
 
 
-def save_waypoints(points, path):
-  data = {'waypoints': [{'x': float(x), 'y': float(y)} for x, y in points]}
+def save_waypoints(points, path, origin=None):
+  """웨이포인트 저장. origin 을 주면 원점 스탬프를 함께 남긴다.
+
+  ★ 원점을 같이 저장하는 이유
+    로컬좌표는 (UTM − 원점)이라 원점 없이는 해석이 불가능하다. 스탬프가
+    없으면 장소가 바뀐 뒤 옛 파일이 조용히 150km 어긋난 경로로 읽힌다.
+    global_path_publisher 가 이 값을 보고 환산·거부한다.
+  """
+  data = {}
+  if origin is not None:
+    data['origin'] = origin
+  data['waypoints'] = [{'x': float(x), 'y': float(y)} for x, y in points]
   with open(path, 'w') as f:
-    yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+    yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False,
+                   allow_unicode=True)
 
 
 def main():
@@ -76,7 +87,15 @@ def main():
 
   pts = load_waypoints(args.input)
   out = resample(pts, args.spacing, closed=args.closed)
-  save_waypoints(out, args.output)
+  # 입력의 원점 스탬프를 그대로 물려준다(있으면).
+  src_origin = None
+  try:
+    d = yaml.safe_load(open(args.input, 'r')) or {}
+    if isinstance(d.get('origin'), dict):
+      src_origin = d['origin']
+  except Exception:  # noqa: BLE001
+    pass
+  save_waypoints(out, args.output, origin=src_origin)
   total = float(np.sum(np.linalg.norm(np.diff(pts, axis=0), axis=1)))
   print(f'리샘플 완료: {len(pts)}점({total:.1f}m) → {len(out)}점 '
         f'@ {args.spacing}m 간격 → {args.output}')

@@ -39,10 +39,29 @@ def load(path):
   return [(float(p['x']), float(p['y'])) for p in d['waypoints']]
 
 
-def save(path, pts):
-  d = {'waypoints': [{'x': float(x), 'y': float(y)} for x, y in pts]}
+def save(path, pts, origin=None):
+  """평활화 결과 저장. 입력의 원점 스탬프를 그대로 물려준다.
+
+  스탬프를 빠뜨리면 평활화한 순간 '어느 장소 것인지 모르는 파일'이 되어
+  global_path_publisher 의 원점 검증이 무력해진다.
+  """
+  d = {}
+  if origin is not None:
+    d['origin'] = origin
+  d['waypoints'] = [{'x': float(x), 'y': float(y)} for x, y in pts]
   with open(path, 'w') as f:
-    yaml.safe_dump(d, f, default_flow_style=False, sort_keys=False)
+    yaml.safe_dump(d, f, default_flow_style=False, sort_keys=False,
+                   allow_unicode=True)
+
+
+def load_origin(path):
+  """입력 파일의 원점 스탬프(dict) — 없으면 None."""
+  try:
+    d = yaml.safe_load(open(path)) or {}
+    o = d.get('origin')
+    return o if isinstance(o, dict) else None
+  except Exception:  # noqa: BLE001
+    return None
 
 
 def resample(pts, step):
@@ -167,7 +186,11 @@ def main():
     print(f'\n✅ 전 구간 R >= {args.target_r}m — 최대 타각 18도로 모두 통과 가능')
 
   if args.write:
-    save(args.out, after)
+    org = load_origin(args.inp)
+    save(args.out, after, origin=org)
+    if org is None:
+      print('\n⚠ 입력에 원점 스탬프가 없어 결과에도 못 남겼다. '
+            'tools/shift_waypoints.py --stamp-only 로 먼저 찍을 것.')
     print(f'\n저장: {args.out}')
   else:
     print('\n(미리보기만 — 저장하려면 --write)')

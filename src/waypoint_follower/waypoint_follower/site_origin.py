@@ -56,6 +56,109 @@ def declare_and_get(node):
   return epsg, ox, oy
 
 
+
+# ---------------------------------------------------------------------------
+# 원점 스탬프 — 좌표 파일이 "어느 원점에서 찍혔는지" 스스로 말하게 한다
+# ---------------------------------------------------------------------------
+#
+# ★ 왜 필요한가
+#   로컬좌표는 (UTM − 원점) 이라 원점을 모르면 해석이 불가능하다. 그런데
+#   웨이포인트 YAML 에는 원점이 안 적혀 있었다. 장소가 바뀌어 원점을 갱신하면
+#   옛 파일이 **조용히** 150km 어긋난 경로로 읽힌다(2026-08-17 실사고와 동일 계열).
+#   stop_point_recorder / parking_pose_recorder 는 이미 원점을 같이 저장한다.
+#   여기서 그 두 포맷을 모두 읽는 공통 함수를 두고, 웨이포인트도 같게 만든다.
+#
+#   포맷 A (stop_point_recorder):  origin_x: 477800.0
+#                                  origin_y: 3964400.0
+#   포맷 B (parking_pose_recorder): origin: {x: ..., y: ..., epsg: ..., site: ...}
+#
+#   두 포맷을 모두 지원한다. 새로 쓰는 건 포맷 B(정보가 더 많다).
+
+
+def read_origin_stamp(d):
+  """YAML dict 에서 원점 스탬프를 꺼낸다.
+
+  Returns:
+    (ox, oy, epsg, site) — 스탬프가 없으면 (None, None, None, None).
+  """
+  if not isinstance(d, dict):
+    return (None, None, None, None)
+  o = d.get('origin')
+  if isinstance(o, dict) and 'x' in o and 'y' in o:
+    try:
+      return (float(o['x']), float(o['y']),
+              int(o['epsg']) if o.get('epsg') is not None else None,
+              o.get('site'))
+    except (TypeError, ValueError):
+      return (None, None, None, None)
+  if d.get('origin_x') is not None and d.get('origin_y') is not None:
+    try:
+      return (float(d['origin_x']), float(d['origin_y']),
+              int(d['utm_epsg']) if d.get('utm_epsg') is not None else None,
+              d.get('site'))
+    except (TypeError, ValueError):
+      return (None, None, None, None)
+  return (None, None, None, None)
+
+
+def origin_stamp(epsg, ox, oy, site):
+  """새로 저장할 파일에 넣을 원점 블록(포맷 B)."""
+  return {'x': float(ox), 'y': float(oy), 'epsg': int(epsg),
+          'site': str(site)}
+
+
+def origin_delta(file_ox, file_oy, cur_ox, cur_oy):
+  """파일 원점 → 현재 원점 변환량. 파일의 로컬좌표에 **더하면** 현재 좌표계 값.
+
+  local_file = utm − file_o,  local_cur = utm − cur_o
+  ⇒ local_cur = local_file + (file_o − cur_o)
+  (bringup.load_stop_points 가 쓰는 규칙과 동일하다.)
+  """
+  return (float(file_ox) - float(cur_ox), float(file_oy) - float(cur_oy))
+
+
+def reconcile_origin(d, path='(파일)', logger=None):
+  """파일의 원점 스탬프를 현재 site_origin 과 대조해 (dx, dy, note) 를 낸다.
+
+  로컬좌표에 (dx, dy) 를 더하면 현재 원점 기준 좌표가 된다.
+  스탬프가 없으면 (0, 0) 을 주되 **반드시 경고한다** — 조용히 넘어가는 것이
+  바로 150km 사고의 형태였다.
+  """
+  def _say(msg, warn=False):
+    if logger is not None:
+      (logger.warn if warn else logger.info)(msg)
+    else:
+      print(msg, flush=True)
+
+  cur_epsg, cur_ox, cur_oy, cur_site = load_site_origin(logger)
+  f_ox, f_oy, f_epsg, f_site = read_origin_stamp(d)
+
+  if f_ox is None:
+    _say(f'⚠ {path} 에 원점 기록이 없다(구버전 파일). '
+         f'현재 원점({cur_ox:.0f}, {cur_oy:.0f} — {cur_site}) 기준으로 그냥 '
+         '해석한다. 다른 장소에서 찍은 파일이면 좌표가 통째로 어긋난다.', warn=True)
+    return (0.0, 0.0, 'no-stamp')
+
+  if f_epsg is not None and cur_epsg is not None and f_epsg != cur_epsg:
+    _say(f'❌ {path} 의 UTM 대역(EPSG:{f_epsg})이 현재(EPSG:{cur_epsg})와 다르다. '
+         '환산할 수 없다 — 이 파일은 이 장소 것이 아니다.', warn=True)
+    return (0.0, 0.0, 'epsg-mismatch')
+
+  dx, dy = origin_delta(f_ox, f_oy, cur_ox, cur_oy)
+  if abs(dx) < 0.01 and abs(dy) < 0.01:
+    return (0.0, 0.0, 'match')
+
+  shift = (dx * dx + dy * dy) ** 0.5
+  _say(f'{path} 원점 환산: ({f_ox:.0f}, {f_oy:.0f} — {f_site}) → '
+       f'({cur_ox:.0f}, {cur_oy:.0f} — {cur_site})  Δ=({dx:+.1f}, {dy:+.1f})',
+       warn=shift > 1000.0)
+  if shift > 1000.0:
+    _say(f'❌ 원점 차이가 {shift / 1000:.1f}km 다. 이 파일은 **다른 장소**에서 '
+         '기록된 것이다. 환산해도 좌표는 현 위치에서 그만큼 떨어진다 — '
+         '이 장소에서 다시 기록할 것.', warn=True)
+  return (dx, dy, 'shifted')
+
+
 if __name__ == '__main__':
   e, x, y, s = load_site_origin()
   print(f'EPSG:{e}  origin=({x}, {y})  site={s}')
