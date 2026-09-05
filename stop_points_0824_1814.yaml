@@ -1,0 +1,9 @@
+origin_x: 477800.0
+origin_y: 3964400.0
+stop_points:
+- x: -25.091
+  y: 78.552
+detected:
+- x: -25.091
+  y: 78.552
+  held_s: 3.5
