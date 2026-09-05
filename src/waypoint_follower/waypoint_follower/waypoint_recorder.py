@@ -36,6 +36,7 @@ import os
 import time
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 import yaml
 from pyproj import Transformer
 from rclpy.node import Node
@@ -43,7 +44,8 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import NavSatFix
 from std_srvs.srv import Trigger
 
-from waypoint_follower.site_origin import declare_and_get
+from waypoint_follower.site_origin import (declare_and_get, load_site_origin,
+                                           origin_stamp)
 from waypoint_follower.waypoint_resample import resample, save_waypoints
 
 DEFAULT_OUT = ('/home/han/racing_ws/src/pure_pursuit_pkg/config/'
@@ -59,6 +61,9 @@ class WaypointRecorder(Node):
     # 원점은 config/site_origin.yaml 이 정본. utm_epsg/origin_x/origin_y 파라미터를
     # 여기서 선언하고 읽는다(CLI -p 로 덮어쓰기 가능).
     epsg, self.origin_x, self.origin_y = declare_and_get(self)
+    self.utm_epsg = epsg
+    # 저장 파일에 남길 장소 이름 (site_origin.yaml 의 site:)
+    self.site_name = load_site_origin(self.get_logger())[3]
     self.declare_parameter('point_spacing', 1.0)
     self.declare_parameter('stop_seconds', 3.0)
     self.declare_parameter('require_rtk', False)
@@ -89,10 +94,28 @@ class WaypointRecorder(Node):
     self.last_xy = None          # 마지막으로 '기록한' 점
     self.last_pos = None         # 마지막으로 '본' 위치 (정지 판정용)
     self.last_motion_time = time.time()
+    self.h_acc_m = None      # /ubx_nav_hp_pos_llh 수평정확도 [m]
+    self.h_acc_t = 0.0
     self.saved = False
     self._warned_rtk = False
 
     # /fix(ublox)는 BEST_EFFORT 발행이므로 센서 QoS로 구독해야 받는다.
+    # ★ RTK 품질 보조 입력 (2026-09-05 용인 현장에서 발견)
+    #   지금 드라이버(ublox_dgnss)는 /fix 에 **공분산을 아예 안 채운다**
+    #   (position_covariance 전부 0, covariance_type=0=UNKNOWN). 게다가 RTK
+    #   Fixed 인데도 status.status=1(SBAS) 만 준다. 그래서 예전 판정 경로가
+    #   둘 다 막혀 require_rtk:=true 로 두면 **한 점도 기록되지 않았다.**
+    #   정확도는 /ubx_nav_hp_pos_llh 의 h_acc 에 살아 있다(0.1mm 단위).
+    #   현장 실측: h_acc=141 → 1.41cm = RTK Fixed. 이걸 폴백으로 쓴다.
+    try:
+      from ublox_ubx_msgs.msg import UBXNavHPPosLLH
+      self.create_subscription(UBXNavHPPosLLH, '/ubx_nav_hp_pos_llh',
+                               self.hpacc_cb, qos_profile_sensor_data)
+      self.get_logger().info('RTK 품질 보조: /ubx_nav_hp_pos_llh h_acc 사용')
+    except Exception as e:  # noqa: BLE001
+      self.get_logger().warn(
+          f'/ubx_nav_hp_pos_llh 구독 불가({e}) — 공분산/status 만 본다')
+
     self.create_subscription(NavSatFix, fix_topic, self.fix_cb,
                              qos_profile_sensor_data)
     self.create_service(Trigger, '~/save', self.save_srv)
@@ -105,27 +128,50 @@ class WaypointRecorder(Node):
         f'RTK 필터: {"ON — 수평 σ ≤ %.0fcm 인 점만 기록" % (self.max_h_std * 100)}'
         if self.require_rtk else 'RTK 필터: OFF — 모든 점 기록 (품질 무관)')
 
+  def hpacc_cb(self, msg):
+    """UBX HPPOSLLH 의 h_acc 는 0.1mm 단위 정수다."""
+    try:
+      self.h_acc_m = float(msg.h_acc) * 1e-4
+      self.h_acc_t = time.time()
+    except Exception:  # noqa: BLE001
+      pass
+
   def fix_cb(self, msg: NavSatFix):
     if math.isnan(msg.latitude) or abs(msg.latitude) < 1e-9:
       return
     # RTK 품질 확인 — 공분산(수평 표준편차) 기준. 위 declare_parameter 주석 참고.
     h_std = math.sqrt(max(0.0, msg.position_covariance[0]
                           + msg.position_covariance[4]))
+    # ★ 품질 출처를 순서대로 고른다 (2026-09-05 용인).
+    #   ① /fix 공분산 — 채워져 있으면 제일 좋다
+    #   ② /ubx_nav_hp_pos_llh 의 h_acc — 지금 드라이버는 여기에만 값이 있다
+    #   ③ status.status — 이 드라이버는 Fixed 여도 1 만 주므로 최후수단
+    src = 'cov'
+    if msg.position_covariance_type == 0:
+      if (self.h_acc_m is not None
+          and time.time() - self.h_acc_t <= 2.0):
+        h_std, src = self.h_acc_m, 'h_acc'
+      else:
+        src = 'status'
     if self.require_rtk:
-      if msg.position_covariance_type == 0:
-        # 공분산을 못 믿는 드라이버면 status 로 폴백
+      if src == 'status':
+        # 공분산도 h_acc 도 못 쓸 때만. 이 드라이버에서는 사실상 항상 거부된다.
         ok = msg.status.status >= 2
       else:
         ok = h_std <= self.max_h_std
       if not ok:
+        why = ('/fix 공분산·h_acc 둘 다 못 읽는다 — '
+               'ubx_nav_hp_pos_llh 가 나오는지 확인할 것'
+               if src == 'status'
+               else f'수평 σ={h_std * 100:.1f}cm > {self.max_h_std * 100:.0f}cm')
         self.get_logger().warn(
-            f'RTK 정밀도 미달 (수평 σ={h_std * 100:.1f}cm > '
-            f'{self.max_h_std * 100:.0f}cm) — 기록 보류',
+            f'RTK 정밀도 미달 [{src}] ({why}) — 기록 보류',
             throttle_duration_sec=3.0)
         self._warned_rtk = True
         return
       if self._warned_rtk:
-        self.get_logger().info(f'RTK 회복 (수평 σ={h_std * 100:.1f}cm) — 기록 재개')
+        self.get_logger().info(
+            f'RTK 회복 [{src}] (수평 σ={h_std * 100:.1f}cm) — 기록 재개')
         self._warned_rtk = False
 
     utm_x, utm_y = self.tf.transform(msg.longitude, msg.latitude)
@@ -145,7 +191,8 @@ class WaypointRecorder(Node):
       self.last_xy = (x, y)
       self.saved = False
       self.get_logger().info(
-          f'점 기록 #{len(self.waypoints)}: ({x:.2f}, {y:.2f})  σ={h_std * 100:.1f}cm')
+          f'점 기록 #{len(self.waypoints)}: ({x:.2f}, {y:.2f})  '
+          f'σ={h_std * 100:.1f}cm [{src}]')
 
   def check_stop(self):
     if (self.waypoints and not self.saved
@@ -167,10 +214,16 @@ class WaypointRecorder(Node):
       return False
     try:
       os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
-      data = {'waypoints': [{'x': float(x), 'y': float(y)}
+      # ★ 원점을 반드시 함께 남긴다. 없으면 장소가 바뀐 뒤 이 파일이
+      #   조용히 150km 어긋난 경로로 읽힌다(global_path_publisher 가 검증).
+      stamp = origin_stamp(self.utm_epsg, self.origin_x, self.origin_y,
+                           self.site_name)
+      data = {'origin': stamp,
+              'waypoints': [{'x': float(x), 'y': float(y)}
                             for x, y in self.waypoints]}
       with open(self.output_file, 'w') as f:
-        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+        yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False,
+                       allow_unicode=True)
       self.saved = True
       self.get_logger().info(
           f'✅ 저장 완료: {len(self.waypoints)}개 점(원본) → {self.output_file}')
@@ -180,7 +233,7 @@ class WaypointRecorder(Node):
         base, ext = os.path.splitext(self.output_file)
         res_path = f'{base}_resampled_{self.resample_spacing:g}{ext}'
         res = resample(self.waypoints, self.resample_spacing)
-        save_waypoints(res, res_path)
+        save_waypoints(res, res_path, origin=stamp)
         self.get_logger().info(
             f'✅ 리샘플 저장: {len(res)}개 점 @ {self.resample_spacing:g}m → '
             f'{res_path}')
@@ -195,7 +248,9 @@ def main(args=None):
   node = WaypointRecorder()
   try:
     rclpy.spin(node)
-  except KeyboardInterrupt:
+  except (KeyboardInterrupt, ExternalShutdownException):
+    # Ctrl-C 로 끝내는 게 정상 사용법이다. 여기서 안 잡으면 traceback 이
+    # 찍혀 '저장됐는지' 가 로그에 묻힌다.
     pass
   finally:
     # 종료 시에도 안전하게 저장 (컨텍스트가 이미 내려갔을 수 있으니 방어적으로)
