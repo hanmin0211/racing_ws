@@ -131,17 +131,23 @@ class TrafficLightDetectorNode(Node):
         self.prev_time = now
 
         # ---- 이번 프레임의 원시 관측 ----
+        # 새 모델(best_hailo_op11) 3클래스: 0=green, 1=orange(yellow), 2=red.
+        # 라벨 문자열이 아니라 **클래스 인덱스**로 매핑한다(문자열이 바뀌어도 안전).
+        # orange(황색)은 '정지'로 취급 — 자율주행에서 황색 통과는 위험. RED 로 접는다.
+        # (황색을 별도 상태로 쓰려면 여기서 raw_state="YELLOW" 로 바꾸고 bridge 도 확장할 것)
         raw_state = "NONE"
         if num > 0:
             best_idx = int(np.argmax(scores))
-            best_label = self.labels[classes[best_idx]]
+            best_cls = int(classes[best_idx])
             best_score = scores[best_idx]
 
             if best_score >= self.score_threshold:
-                if best_label == "traffic_red":
-                    raw_state = "RED"
-                elif best_label == "traffic_green":
+                if best_cls == 0:      # green traffic light
                     raw_state = "GREEN"
+                elif best_cls == 2:    # red traffic light
+                    raw_state = "RED"
+                elif best_cls == 1:    # orange/yellow → 안전하게 정지
+                    raw_state = "RED"
 
         # ---- 시간 필터: confirm_frames 연속 일치해야 확정 ----
         if raw_state == self.cand_state:

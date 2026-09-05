@@ -30,14 +30,16 @@ bringup.launch.py
 """
 
 import os
+import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 DEFAULT_WAYPOINTS = ('/home/han/racing_ws/src/pure_pursuit_pkg/config/'
                      'waypoints_recorded_resampled_0.5.yaml')
@@ -149,11 +151,29 @@ def generate_launch_description():
   mission = LaunchConfiguration('mission')
   max_speed = LaunchConfiguration('max_speed')
   lidar = LaunchConfiguration('lidar')
+  crosswalk = LaunchConfiguration('crosswalk')
+  crosswalk_dwell = LaunchConfiguration('crosswalk_dwell')
+  crosswalk_tolerance = LaunchConfiguration('crosswalk_tolerance')
+  crosswalk_bias = LaunchConfiguration('crosswalk_bias')
+  parking = LaunchConfiguration('parking')
+  sequencer = LaunchConfiguration('sequencer')
+  sudden_stop = LaunchConfiguration('sudden_stop')
+  sudden_stop_dwell = LaunchConfiguration('sudden_stop_dwell')
+  mission_plan = LaunchConfiguration('mission_plan')
+  parking_slot = LaunchConfiguration('parking_slot')
+  parking_dir = LaunchConfiguration('parking_dir')
   # 정지지점은 런치 시점에 파일에서 읽는다(LaunchConfiguration 은 파라미터
   # 배열로 못 넘기므로 여기서 실제 값으로 확정한다).
+  # ★ waypoints:= 오버라이드를 sys.argv 에서 직접 읽는다. 안 그러면 정지지점
+  #   '코스 위' 검사가 항상 기본(대구) 경로와 비교돼, 다른 장소에서 커스텀
+  #   waypoints 를 넘기면 정지점이 149km 밖으로 오판돼 거부된다(2026-09-02 실측).
+  wp_for_check = DEFAULT_WAYPOINTS
+  for _a in sys.argv:
+    if _a.startswith('waypoints:='):
+      wp_for_check = _a.split(':=', 1)[1]
   stop_pts = load_stop_points(
       os.environ.get('STOP_POINTS_FILE', DEFAULT_STOP_POINTS),
-      DEFAULT_WAYPOINTS)
+      wp_for_check)
 
   return LaunchDescription([
       DeclareLaunchArgument('rviz', default_value='true'),
@@ -188,6 +208,37 @@ def generate_launch_description():
       # 회피 결과는 /obstacle_distance(정지)+/lidar/avoid_steer(조향 override)로
       # 나가 먹스가 AUTO 중에 반영한다. enable_plot 은 헤드리스라 기본 false.
       DeclareLaunchArgument('lidar', default_value='false'),
+      # ⚠ crosswalk:=true 면 횡단보도 정지(정지선 앞 정지 → 3초 → 재출발)를 켠다.
+      # 정지지점은 mission 과 같은 ~/stop_points.yaml 을 쓴다.
+      # mission:=true 와 함께 켜지 말 것(같은 토픽을 서로 덮어쓴다).
+      DeclareLaunchArgument('crosswalk', default_value='false'),
+      DeclareLaunchArgument('crosswalk_dwell', default_value='3.0'),
+      # 대회 규정: 정지선에서 64cm 이내. 판정만 하고 제어는 바꾸지 않는다.
+      DeclareLaunchArgument('crosswalk_tolerance', default_value='0.64'),
+      # ★ 2026-08-24 실차: 앞바퀴가 정지선 30cm 넘어감 → stop_bias 로 뒤로 민다.
+      # 노드 규약: 양수 = 정지지점을 앞당겨 봐 더 뒤에서 멈춤. 앞바퀴 30cm + 5cm 여유 = 0.35
+      # 2026-08-24 2차: 0.35 로도 아직 넘어감 → 0.45.
+      DeclareLaunchArgument('crosswalk_bias', default_value='0.45'),
+      # ⚠ parking:=true 면 후진주차 노드를 띄운다. 띄우기만 하고 대기하므로
+      # 자율주행에 영향이 없다. 실행은 /parking/start 로 사람이 트리거한다.
+      # ★ 미션 시퀀서 (2026-09-04)
+      #   true 면 mission_sequencer 가 config/mission_plan.yaml 순서대로
+      #   미션을 하나씩 arm/disarm 한다. 이때 미션 노드는 arm 을 받기 전엔
+      #   아무것도 발행하지 않는다(require_arm). 미션이 8개가 되면
+      #   '이건 이거랑 같이 켜지 말 것' 을 사람이 지킬 수 없다.
+      DeclareLaunchArgument('sequencer', default_value='false'),
+      DeclareLaunchArgument(
+          'mission_plan',
+          default_value='/home/han/racing_ws/config/mission_plan.yaml'),
+      # ⚠ sudden_stop:=true 면 돌발 급정지 미션(라이다 전방 장애물 → 완전정지 →
+      #   5초 → 재출발)을 켠다. crosswalk 와 같은 /stop_line_distance 를 쓰므로
+      #   **동시에 켜려면 sequencer:=true 로 하나씩만 arm 해야 한다.**
+      DeclareLaunchArgument('sudden_stop', default_value='false'),
+      DeclareLaunchArgument('sudden_stop_dwell', default_value='5.0'),
+      DeclareLaunchArgument('parking', default_value='false'),
+      DeclareLaunchArgument('parking_slot', default_value='1'),
+      DeclareLaunchArgument('parking_dir',
+                            default_value=os.path.expanduser('~')),
 
       # 1. RTK GPS (ublox_dgnss + nav_sat_fix + NTRIP)
       IncludeLaunchDescription(
@@ -278,7 +329,9 @@ def generate_launch_description():
           name='lidar_clustering',
           output='screen',
           condition=IfCondition(lidar),
-          parameters=[{'enable_plot': False}],
+          parameters=[{
+              'enable_plot': False,
+              'require_arm_for_steer': ParameterValue(sequencer, value_type=bool)}],
       ),
 
       # 7-b. 신호등 → 정지선거리 (mission:=true 일 때만)
@@ -291,6 +344,80 @@ def generate_launch_description():
           output='screen',
           condition=IfCondition(mission),
           parameters=[{'stop_points': stop_pts}],
+      ),
+
+      # 7-c. 횡단보도 정지 (crosswalk:=true 일 때만)
+      # 정지선 앞에 서고 → 3초 대기 → 다시 출발. 신호등과 무관하게 무조건 선다.
+      # ⚠ mission:=true 와 **동시에 켜지 말 것** — 둘 다 /stop_line_distance 를
+      #   발행해 서로 덮어쓴다. 노드가 기동 시 발행자 수를 세어 경고한다.
+      Node(
+          package='mission_perception',
+          executable='crosswalk_stop_node',
+          name='crosswalk_stop',
+          output='screen',
+          condition=IfCondition(crosswalk),
+          # ParameterValue 로 타입을 못박는다 — dwell:=3 처럼 정수로 주면
+          # 문자열 "3" 이 int 로 추론돼 double 파라미터와 타입이 어긋난다.
+          parameters=[{
+              'stop_points': stop_pts,
+              'dwell': ParameterValue(crosswalk_dwell, value_type=float),
+              'stop_tolerance': ParameterValue(crosswalk_tolerance,
+                                               value_type=float),
+              'stop_bias': ParameterValue(crosswalk_bias,
+                                          value_type=float),
+              # 시퀀서를 쓰면 arm 을 받기 전엔 발행하지 않는다.
+              'require_arm': ParameterValue(sequencer, value_type=bool)}],
+      ),
+
+      # 7-d. 후진주차 (parking:=true 일 때만)
+      # 띄워도 /parking/start 를 받기 전엔 **아무것도 발행하지 않는다**(자율주행을
+      # 덮어쓰지 않기 위해). 완주 뒤 손으로 트리거하는 것이 가장 안전하다:
+      #   ros2 topic pub --once /parking/start std_msgs/Bool "{data: true}"
+      Node(
+          package='mission_perception',
+          executable='parking_node',
+          name='parking_node',
+          output='screen',
+          condition=IfCondition(parking),
+          parameters=[{
+              'slot': ParameterValue(parking_slot, value_type=int),
+              'pose_dir': ParameterValue(parking_dir, value_type=str),
+              'auto_start': False,
+              # ★ 시퀀서가 있으면 /goal_reached 자동 트리거를 끈다.
+              #   트리거 주인이 둘이면 시퀀서가 아직 arm 하지 않았는데
+              #   완주 신호만으로 주차가 시작된다.
+              'trigger_on_goal_reached': ParameterValue(
+                  PythonExpression(["'", sequencer, "'.lower() != 'true'"]),
+                  value_type=bool)}],
+      ),
+
+      # 7-d2. 돌발 급정지 (sudden_stop:=true 일 때만)
+      # 라이다 /obstacle_distance 만 보고 판단한다 — 카메라가 필요 없다.
+      # 서는 것은 longitudinal 이 이미 하고, 이 노드는 '정지 확인 → 5초 유지 →
+      # 재출발' 상태기계와, 안 치워졌을 때 빠져나오는 경로를 담당한다.
+      Node(
+          package='mission_perception',
+          executable='sudden_stop_node',
+          name='sudden_stop',
+          output='screen',
+          condition=IfCondition(sudden_stop),
+          parameters=[{
+              'dwell': ParameterValue(sudden_stop_dwell, value_type=float),
+              'require_arm': ParameterValue(sequencer, value_type=bool)}],
+      ),
+
+      # 7-e. 미션 시퀀서 (sequencer:=true 일 때만)
+      # 코스 진행거리(s)를 보고 미션을 **한 번에 하나만** arm 한다.
+      # 타임아웃이 지나면 강제로 disarm 하고 자율로 복귀시킨다 —
+      # 미션 실패는 감점이지만 그 자리에 멈춰 있으면 탈락이기 때문이다.
+      Node(
+          package='mission_perception',
+          executable='mission_sequencer',
+          name='mission_sequencer',
+          output='screen',
+          condition=IfCondition(sequencer),
+          parameters=[{
+              'plan_file': ParameterValue(mission_plan, value_type=str)}],
       ),
 
       # 8. RViz (rviz:=false 로 끌 수 있음)
