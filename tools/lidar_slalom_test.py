@@ -2,18 +2,30 @@
 # -*- coding: utf-8 -*-
 """lidar_slalom_test.py — 대회 회피 미션(슬라롬) 폐루프 오프라인 검증.
 
-실물 코스 없이, 실제 대회 배치를 합성 라이다로 재현해 follow-gap 회피가
-박스를 안 박고 통과하는지 검증한다. (ROS 불필요 — 순수 계산)
+실물 코스 없이 장애물 배치를 합성 라이다로 재현해, follow-gap 회피가 장애물을
+안 박고 통과하는지 검증한다. (ROS 불필요 — 순수 계산)
 
-대회 스펙(2026):
-  · 박스 900×500×600mm, 종방향 2.5m 간격, 좌우 교차 슬라롬(2케이스).
-  · follow-gap 이 avoid_steer 를 주면 그대로 조향, CLEAR 면 직진.
+★ 대회 규정 (HL FMA 2026 경기규정 항목 4 — S코스 장애물 회피, 신규)
+  · 장애물은 **T870 차체(바퀴 없음) 2대**를 고정 배치한다. (박스가 아니다)
+  · 중앙선 없이 **좌·우측으로 자유 회피** 주행.
+  · 배치는 **좌→우 또는 우→좌 랜덤**으로 **매 주행마다 변동 가능**.
+    → 그래서 웨이포인트로 궤적을 미리 찍어둘 수 없다. 라이다가 그날 본 대로
+      피해야 한다. 이 시험이 존재하는 이유다.
+  · 감점: 접촉 10점/회 · 충돌 후 주행불가 10점 · 차량 이동 5점 ·
+          미션 포기 15점 · 구간 내 차선이탈 최대 10점.
+
+⚠ **장애물 치수는 아직 실측 전이다.**
+  예전 이 파일에는 "이삿짐박스 900×500×600mm, 2.5m 간격, 3개" 가 적혀 있었는데
+  **규정에 없는 값이었다**(출처 불명). 지금 기본값은 T870 제원에서 잡은 **잠정치**다.
+  9/5 현장에서 차체 길이·폭과 배치 간격을 실측해 --length/--width/--spacing 으로
+  넣고 다시 돌릴 것. 그전 튜닝 결과는 참고치일 뿐이다.
 
 검증 항목:
-  · 전 구간 박스와의 최소 간격 (차폭 고려) — 충돌 없이 통과하는가.
+  · 전 구간 장애물과의 최소 간격 (차폭 고려) — 충돌 없이 통과하는가.
   · 조향 포화 여부 / 코스 이탈 여부.
 """
 
+import argparse
 import math
 import sys
 
@@ -22,10 +34,13 @@ sys.path.insert(0, '/home/han/racing_ws/src/lidar_clustering')
 from lidar_clustering.follow_gap_planner import FollowGapPlanner
 
 
-class Box:
-  """차량 맵 좌표계의 축정렬 박스(장애물)."""
+class Obstacle:
+  """차량 맵 좌표계의 축정렬 장애물(T870 차체).
 
-  def __init__(self, cx, cy, length=0.9, width=0.5):
+  기본값은 T870 제원 기준 **잠정치** — 현장 실측으로 덮어쓸 것.
+  """
+
+  def __init__(self, cx, cy, length=1.30, width=0.78):
     self.cx, self.cy = cx, cy
     self.x0, self.x1 = cx - length / 2, cx + length / 2
     self.y0, self.y1 = cy - width / 2, cy + width / 2
@@ -47,7 +62,7 @@ class FakeScan:
     self.range_min = 0.10
     self.range_max = rmax
 
-  def cast(self, boxes, px, py, yaw):
+  def cast(self, obstacles, px, py, yaw):
     ranges = []
     for i in range(self.n):
       # 차량 로컬(정면 +x, yaw_offset=0 으로 planner 를 쓸 것)
@@ -55,7 +70,7 @@ class FakeScan:
       wa = yaw + a
       cos, sin = math.cos(wa), math.sin(wa)
       best = float('inf')
-      for b in boxes:
+      for b in obstacles:
         t = self._ray_box(px, py, cos, sin, b)
         if t is not None and t < best:
           best = t
@@ -82,7 +97,7 @@ class FakeScan:
     return tmin if tmin > 0 else None
 
 
-def run(case_name, boxes, y_start=0.0, v=0.6):
+def run(case_name, obstacles, y_start=0.0, v=0.6):
   planner = FollowGapPlanner(
       yaw_offset_deg=0.0, front_fov_deg=180.0, min_range=0.10, max_range=8.0,
       track_width=2.7, planning_lookahead=2.2, obstacle_trigger_distance=3.0,
@@ -96,12 +111,12 @@ def run(case_name, boxes, y_start=0.0, v=0.6):
   delta = 0.0
   slew = math.radians(90) * dt
   min_clear = float('inf')
-  x_end = max(b.cx for b in boxes) + 2.0
+  x_end = max(b.cx for b in obstacles) + 2.0
   steps = 0
   collided = False
   half_w = 0.775 / 2
   while px < x_end and steps < 4000:
-    d = planner.plan(scan.cast(boxes, px, py, yaw))
+    d = planner.plan(scan.cast(obstacles, px, py, yaw))
     if d.mode in ('AVOID',):
       tgt = max(-max_steer, min(max_steer, math.radians(d.best_angle_deg)))
       vv = 0.5      # 회피 저속
@@ -122,7 +137,7 @@ def run(case_name, boxes, y_start=0.0, v=0.6):
                     py + 0.4 * math.sin(yaw) + half_w * math.cos(yaw)),
                    (px + 0.4 * math.cos(yaw) + half_w * math.sin(yaw),
                     py + 0.4 * math.sin(yaw) - half_w * math.cos(yaw))):
-      for b in boxes:
+      for b in obstacles:
         c = b.clearance(*corner)
         min_clear = min(min_clear, c)
         if c <= 0.0:
@@ -134,23 +149,42 @@ def run(case_name, boxes, y_start=0.0, v=0.6):
         break
   passed = px >= x_end and not collided
   print(f'  [{case_name}] {"✅ 통과" if passed else "❌ 실패"} — '
-        f'최종 x={px:.1f}m, 박스 최소간격 {min_clear:.2f}m, '
+        f'최종 x={px:.1f}m, 장애물 최소간격 {min_clear:.2f}m, '
         f'{"충돌!" if collided else "충돌없음"}')
   return passed
 
 
 def main():
-  s = 2.5   # 종방향 간격
-  off = 0.65
-  print('대회 슬라롬 회피 폐루프 검증 (박스 0.9×0.5m, 2.5m 간격, ±0.65m 교차)\n')
-  # 케이스1: 좌-우-좌
-  c1 = [Box(0, +off), Box(s, -off), Box(2 * s, +off)]
-  # 케이스2: 우-좌-우
-  c2 = [Box(0, -off), Box(s, +off), Box(2 * s, -off)]
-  r1 = run('케이스1 좌-우-좌', c1)
-  r2 = run('케이스2 우-좌-우', c2)
+  ap = argparse.ArgumentParser(
+      description='S코스 장애물 회피(T870 차체 2대) 폐루프 검증')
+  ap.add_argument('--length', type=float, default=1.30,
+                  help='장애물 길이[m] — T870 차체. **현장 실측값을 넣을 것**')
+  ap.add_argument('--width', type=float, default=0.78,
+                  help='장애물 폭[m] — T870 차체. **현장 실측값을 넣을 것**')
+  ap.add_argument('--spacing', type=float, default=2.5,
+                  help='두 장애물의 종방향 간격[m] — 규정에 명시 없음. 실측할 것')
+  ap.add_argument('--offset', type=float, default=0.65,
+                  help='중심선에서 좌우 오프셋[m] — 실측할 것')
+  ap.add_argument('--speed', type=float, default=0.6, help='주행 속도[m/s]')
+  args = ap.parse_args()
+
+  def O(cx, cy):
+    return Obstacle(cx, cy, args.length, args.width)
+
+  s, off = args.spacing, args.offset
+  print('S코스 장애물 회피 검증 — 규정: T870 차체 2대, 좌우 랜덤 배치\n')
+  print(f'  장애물 {args.length:.2f}×{args.width:.2f}m · 간격 {s:.2f}m · '
+        f'오프셋 ±{off:.2f}m · 속도 {args.speed:.1f}m/s')
+  print('  ⚠ 위 값은 잠정치다 — 현장 실측 후 --length/--width/--spacing 으로 덮어쓸 것\n')
+
+  # 규정: 배치는 좌→우 또는 우→좌 랜덤. 두 경우 다 통과해야 한다.
+  r1 = run('배치A 좌→우', [O(0, +off), O(s, -off)], v=args.speed)
+  r2 = run('배치B 우→좌', [O(0, -off), O(s, +off)], v=args.speed)
   print()
-  print('결과:', '✅ 두 케이스 모두 통과' if (r1 and r2) else '⚠ 일부 실패 — 파라미터 튜닝 필요')
+  ok = r1 and r2
+  print('결과:', '✅ 두 배치 모두 통과' if ok
+        else '⚠ 일부 실패 — 파라미터 튜닝 필요 (배치는 당일 랜덤이라 둘 다 통과해야 한다)')
+  sys.exit(0 if ok else 1)
 
 
 if __name__ == '__main__':

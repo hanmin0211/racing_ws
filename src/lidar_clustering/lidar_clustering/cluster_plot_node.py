@@ -6,7 +6,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
-from std_msgs.msg import Float64, String
+from std_msgs.msg import Bool, Float64, String
 
 from lidar_clustering.dbscan_clusterer import DBSCANClusterer
 from lidar_clustering.follow_gap_planner import FollowGapPlanner
@@ -70,11 +70,22 @@ class ClusterPlotNode(Node):
         )
 
         # ★ 대회 회피 미션(2026)에 맞춰 ROS 파라미터화 — 실트랙에서 리빌드 없이 튜닝.
-        # 장애물: 이삿짐박스 900×500×600mm, 종방향 2.5m 간격, 좌우 슬라롬.
+        #
+        # ★ 규정 (경기규정 항목 4 — S코스 장애물 회피, 신규)
+        #   · 장애물은 **T870 차체(바퀴 없음) 2대**. 중앙선 없이 좌·우 자유 회피.
+        #   · 배치는 좌→우 / 우→좌 **랜덤, 매 주행마다 변동 가능**.
+        #     → 궤적을 미리 찍어둘 수 없다. 라이다가 그날 본 대로 피해야 한다.
+        #   · 감점: 접촉 10점/회 · 미션 포기 15점 · 구간 내 차선이탈 최대 10점.
+        #
+        #   ⚠ 예전 이 주석에는 "이삿짐박스 900×500×600mm, 2.5m 간격" 이 적혀
+        #     있었는데 **규정에 없는 값이었다**(출처 불명, 2026-09-05 대조).
+        #     아래 기본값들도 그 잘못된 전제 위에서 잡힌 것이라 **현장 실측 후
+        #     다시 잡아야 한다.** tools/lidar_slalom_test.py 로 검증할 것.
+        #
         #   yaw_offset_deg      : 라이다 0°가 향하는 방향 보정(마운트 따라. 180=후방).
-        #   obstacle_trigger    : 이 거리 안 장애물에 반응(2.5m 간격이라 3.0 이하 권장).
-        #   planning_lookahead  : 갭 계획 전방거리(2.5m 간격이면 2.0~2.5 로 근접장애물 집중).
-        #   track_width         : 도로 폭(대회 도로 ~2.7m). 이 밖 점은 무시.
+        #   obstacle_trigger    : 이 거리 안 장애물에 반응.
+        #   planning_lookahead  : 갭 계획 전방거리.
+        #   track_width         : 도로 폭. 이 밖 점은 무시. **실측 필요**
         #   vehicle_width       : 차폭 0.775. safety_margin: 여유.
         gp = lambda n, d: float(self.declare_parameter(n, d).value)
         self.follow_gap_planner = FollowGapPlanner(
@@ -109,6 +120,29 @@ class ClusterPlotNode(Node):
         self.clear_distance = float(
             self.declare_parameter('clear_distance', 999.0).value)
 
+        # ★ 미션 시퀀서 연동 (2026-09-04)
+        #
+        #   라이다 출력은 성격이 다른 두 갈래다. **같이 끄면 안 된다.**
+        #
+        #     /obstacle_distance  종방향 감속·정지  = 안전 기능 → 항상 켠다
+        #     /lidar/avoid_steer  조향 override    = 회피 기동 → 구간 한정
+        #
+        #   조향만 구간을 제한하는 이유: 회피는 조향을 통째로 뺏는다. S코스가
+        #   아닌 곳에서 관중·표지물·연석에 반응해 틀면 그게 곧 **이탈=탈락**이다.
+        #   반대로 감속까지 끄면 코스 어디서든 앞에 뭐가 있어도 안 서게 된다 —
+        #   그건 더 위험하다. 그래서 감속은 언제나 살려둔다.
+        #
+        #   기본 false — 시퀀서 없이 쓰던 런치는 그대로 돌아간다.
+        self.require_arm = bool(
+            self.declare_parameter('require_arm_for_steer', False).value)
+        self.armed = not self.require_arm
+
+        # ★ /lidar/mute — 전방 감속을 잠깐 끈다 (2026-09-04)
+        #   돌발 급정지 미션이 5초 대기 후에도 더미가 안 치워졌을 때, 이걸 켜서
+        #   빠져나간다. **1분 이상 정지는 감점이 아니라 탈락**이기 때문이다.
+        #   위험한 기능이라 켠 동안 계속 경고를 남긴다.
+        self.muted = False
+
         # 제어팀 통합 발행
         self.obstacle_pub = self.create_publisher(
             Float64, '/obstacle_distance', 10)
@@ -122,6 +156,14 @@ class ClusterPlotNode(Node):
             self.scan_callback,
             qos_profile_sensor_data,
         )
+        self.create_subscription(
+            Bool,
+            str(self.declare_parameter('arm_topic', '/lidar/arm').value),
+            self.arm_cb, 10)
+        self.create_subscription(
+            Bool,
+            str(self.declare_parameter('mute_topic', '/lidar/mute').value),
+            self.mute_cb, 10)
 
         self.window_closed = False
         self.frame_count = 0
@@ -188,9 +230,52 @@ class ClusterPlotNode(Node):
         else:  # BLOCKED
             obs = float(d.front_distance)
             steer = NO_STEER
+        # ★ 감속(obstacle)은 언제나 내보낸다 — 안전 기능이다.
+        #   조향 override 만 arm 구간에서만 내보낸다.
+        if self.muted:
+            obs = self.clear_distance      # '아무것도 없음' 으로 보고
+            mode = f'{mode}(MUTE)'
+            self.get_logger().warn('MUTE 중 — 전방 감속 없음',
+                                   throttle_duration_sec=1.0)
         self.obstacle_pub.publish(Float64(data=obs))
+        if not self.armed:
+            steer = NO_STEER
+            mode = f'{mode}(조향OFF)'
         self.avoid_steer_pub.publish(Float64(data=steer))
         self.mode_pub.publish(String(data=f'{mode}|{d.direction}'))
+
+    def mute_cb(self, msg):
+        """전방 감속 일시 해제. 조향 회피에는 영향을 주지 않는다."""
+        want = bool(msg.data)
+        if want == self.muted:
+            return
+        self.muted = want
+        if want:
+            self.get_logger().warn(
+                '⚠ MUTE — 전방 장애물 감속을 끈다. 앞이 막혀 있어도 안 선다!')
+        else:
+            self.get_logger().info('MUTE 해제 — 전방 감속 복구')
+
+    def arm_cb(self, msg):
+        """arm 신호 — **조향 override 만** 켜고 끈다.
+
+        감속(/obstacle_distance)은 안전 기능이라 arm 과 무관하게 항상 나간다.
+
+        내려갈 때 NaN 을 한 번 쏘는 이유: 먹스는 마지막 avoid_steer 를
+        타임아웃(0.3s) 동안 들고 있으므로, 조용히 멈추면 그 사이 옛 회피각으로
+        조향한다. 명시적으로 '회피 없음' 을 알린다.
+        """
+        want = bool(msg.data)
+        if want == self.armed:
+            return
+        self.armed = want
+        if want:
+            self.get_logger().info('▶ ARM — 조향 회피 시작 (감속은 원래 켜져 있다)')
+        else:
+            # 조향만 놓는다. /obstacle_distance 는 계속 내보낸다 —
+            # 그걸 끊으면 코스 어디서든 앞을 막아도 안 서게 된다.
+            self.avoid_steer_pub.publish(Float64(data=NO_STEER))
+            self.get_logger().info('■ DISARM — 조향 회피만 끈다. 감속은 계속 동작')
 
     def scan_callback(self, msg):
         if self.window_closed:
