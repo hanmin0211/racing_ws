@@ -161,7 +161,27 @@ float steerADCToAngle(int adc) {
 // ★ 2026-08-22: 255 → **160**. 주행 중 전압강하로 멈추는 일을 막기 위해 낮춘다.
 //   이력: 111 완주 실적 / 190 에서 부하 시 3483mV 까지 떨어져 랩 종반 리셋.
 //   160 은 그 사이 값이다. VMIN 을 보며 문제없으면 단계적으로 올릴 것.
-#define MAX_DRIVE_PWM   160
+// ★ 2026-08-23: 150 으로 설정 (전압 여유 우선).
+//   FF 역산 기준 상한 속도: (150-80)/95 = 0.74m/s ≈ 2.65km/h.
+//   190 에서 부하 시 3483mV 까지 떨어져 랩 종반 리셋된 이력이 있어 보수적으로 잡았다.
+//   더 빠르게 필요하면 175(3.6km/h) → 186(4.0km/h) 순으로 올리되 VMIN 을 확인할 것.
+// ★ 2026-08-24: 4.5km/h 목표로 180 까지 올렸다가 **160 으로 되돌렸다.**
+//   180 주행에서 헤딩 캘리브 편차가 3° → 36° 로 나빠지고 10m 직진이 우로 1.25m
+//   휘었다(조향각 오차 -4.42°, VMIN 3920mV). 출력이 올라가며 돌입전류가 커져
+//   전압이 흔들린 것으로 본다.
+//   160 은 **완주 실적이 있는 값**이다. 속도를 올리려면 조향 중립부터 잡고,
+//   VMIN 을 보며 175 → 186 순으로 한 단계씩. 한 번에 한 변수만 바꾼다.
+// ★ 2026-09-05: 160 → **200**. 8분 지정시간을 맞추기 위한 상향.
+//   근거 — 용인 코스 실측 700.9m. MAX 160(=0.84m/s)이면 주행만 834초,
+//   주차·정지 포함 15.7분이라 지정시간 8분을 7.7분 초과 = 약 40점 감점.
+//   200 이면 (200-80)/95 = 1.26m/s → 주행 556초로 줄어든다.
+//   전제 — 2026-09-03 페라이트 하중에 의한 GND 접점 불량을 잡아 VCC 가
+//   5091~5115mV 로 안정됐다. 180 에서 났던 문제(헤딩 캘리브 편차 3°→36°,
+//   VMIN 3920mV)는 그 접지 불량이 원인이었을 가능성이 크다.
+//   ★ 반드시 확인할 것 — 올린 뒤 **헤딩 캘리브 편차**를 본다.
+//     3~5° 면 정상, 수십 도로 나빠지면 되돌린다. VMIN 3900mV 미만도 되돌림.
+//   더 올리려면 200 → 220 → 255 순으로 한 단계씩(255 = 1.84m/s = 8분 턱걸이).
+#define MAX_DRIVE_PWM   200
 // 조향 PWM 상한. 90은 벤치 초기 보수값이었는데, 실측 결과 '완전 정지 상태에서의
 // breakaway(정지마찰 뜯기)'에 부족했다(움직이는 중엔 90으로 충분히 잘 감).
 // 130으로 상향 — 스톨가드(PWM>30이 250ms간 무이동 시 컷 + 1.5s 쿨다운)가 보호한다.
@@ -184,7 +204,7 @@ float steerADCToAngle(int adc) {
 //   ⚠ 이 모드에서는 구동 스톨 보호가 없다. 바퀴가 걸려도 못 자르니 장시간 무인 주행 금지.
 // ★ 2026-08-22: 0 으로 복귀. amap 계열 보드에 SPI 카운터가 있어 엔코더가 살아났다.
 //   속도 폐루프와 구동 스톨 보호가 모두 정상 동작한다.
-#define NO_ENCODER 0
+#define NO_ENCODER 1   // 2026-09-05 용인: 이 보드 ENC1=0 고정(엔코더 미중계) → 개루프 FF 주행
 // 부팅 후 이 시간 동안 조향 PWM 상한을 0→MAX 로 램프 (돌입 전류 방지).
 // 아래 steering_pid_control 말미의 소프트스타트 주석 참고.
 #define STEER_SOFT_MS   2500UL
@@ -486,6 +506,22 @@ void apply_acceleration_limit() {
   if (target_velocity > commanded_velocity) commanded_velocity = min(target_velocity, commanded_velocity + md);
   else if (target_velocity < commanded_velocity) commanded_velocity = max(target_velocity, commanded_velocity - md);
 }
+// ---- 정지 홀드 (경사로 밀림 방지) — 위치 피드백 ----
+// 속도 setpoint 0 은 정지마찰 데드밴드로 못 잡는다(2026-09-02 실측: 안 잡으면
+// 계속 스르륵 밀림). 정지 순간 엔코더 위치를 래치하고 위치 PI 로 되돌린다.
+// forward = encoder1count 감소(cpr<0) → 뒤로 밀리면 perr>0 → +PWM = 전진.
+// target_velocity≈0 이라 구동 스톨가드(safety_guard 줄 625 조건)는 자동 비활성.
+// ★ 게인은 벤치 튜닝 시작값. 첫 시험은 반드시 바퀴 들고(공회전) 부호부터 확인:
+//   손으로 뒤로 굴리면 바퀴가 전진 방향으로 되밀어야 정상. 반대면 HOLD_KP 부호 뒤집기.
+bool  hold_active = false;
+long  hold_target = 0;
+float hold_isum   = 0.0;
+#define HOLD_KP        3.0     // PWM / 엔코더카운트 (되돌림 세기)
+#define HOLD_KI        0.5     // 적분 (잔여 밀림 제거)
+#define HOLD_ISUM_MAX  300.0   // 적분 권한 제한 (와인드업 방지)
+#define HOLD_MAX_PWM   160     // 홀드 최대 PWM
+#define HOLD_KD        3.0     // 속도 감쇠(D). 움직임에 저항해 진동 억제. 가속도항=0
+
 void velocity_pid_control() {
   // 개루프 모드: PID를 건너뛰고 지정 PWM을 레이트 제한만 걸어 인가한다.
   if (openloop_active) {
@@ -532,9 +568,16 @@ void velocity_pid_control() {
   if (!sat_p && !sat_n) velocity_error_sum = ts;
   float out = ff + velocity_kp * velocity_error + velocity_ki * velocity_error_sum + velocity_kd * ed;
   velocity_pwm_output = constrain((int)out, -MAX_DRIVE_PWM, MAX_DRIVE_PWM);
-  // 정지 상태
+  // ---- 정지: coast (PWM 0) ----
+  // ★ 2026-09-05 용인: 정지 홀드 PI 제거 → 옛 coast 복귀.
+  //   홀드는 target≈0(출발 직후 포함)에 켜지며 엔코더 위치로 잡는데, 이 보드에서
+  //   출발하자마자 계속 후진하는 회귀를 유발했다(정지 시 엔코더 값이 불안정 →
+  //   perr≠0 → 역방향 구동). 저번 대회에 되던 동작 = 정지 시 coast. 경사로 홀드가
+  //   필요하면 엔코더 극성·안정성 확정 후 재도입할 것.
   if (fabs(target_velocity) < 0.05 && fabs(commanded_velocity) < 0.05) {
-    velocity_pwm_output = 0; velocity_error_sum = 0.0;
+    velocity_pwm_output = 0;
+    velocity_error_sum = 0.0;
+    hold_active = false;
   }
   velocity_error_old = velocity_error;
 }
