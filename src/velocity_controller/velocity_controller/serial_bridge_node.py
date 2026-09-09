@@ -42,6 +42,14 @@ class SerialBridgeNode(Node):
         self.declare_parameter('port', 'auto')
         self.declare_parameter('baud', 57600)
         self.declare_parameter('watchdog_timeout', 0.5)  # 초 단위
+        # ★ 스톨 해제 판정 시간 (2026-09-09)
+        #   펌웨어는 **스톨일 때만** "STALL: drive=.. steer=.." 줄을 낸다.
+        #   해제됐다는 신호는 따로 안 준다. 그래서 예전 코드는 한 번 true 가
+        #   되면 /vehicle_stall 이 영영 true 로 남았다 — 실제로는 풀렸는데도
+        #   스톨로 보여서 로그·미션 판단이 오판한다.
+        #   텔레메트리가 20Hz(50ms)이므로, 이 시간 동안 STALL 줄이 한 번도
+        #   안 오면 해제된 것으로 본다.
+        self.declare_parameter('stall_clear_timeout', 0.5)
         # 조향각 클램프[도] = 실사용 한계. 물리 한계는 20°(펌웨어 캘리브 기준값)지만
         # 그 지점에서 포텐셔미터가 ADC 0으로 포화해 피드백을 잃고 엔드스톱 컷이 걸리므로
         # 18°로 제한한다. (예전 하드코딩 30°는 실제보다 훨씬 커서 위험했음)
@@ -129,6 +137,12 @@ class SerialBridgeNode(Node):
         # ---------- 타이머 1: 20Hz로 Arduino에 명령 전송 ----------
         # Arduino 자체 루프는 100Hz(10ms)로 돌지만, 목표값 전송은 그렇게 자주
         # 안 보내도 됨. 20Hz(50ms)면 반응성과 시리얼 부하 사이 적당한 절충점.
+        self.stall_clear_timeout = float(
+            self.get_parameter('stall_clear_timeout').value)
+        self.stall_state = False      # 마지막으로 발행한 값
+        self.last_stall_msg = 0.0     # STALL 줄을 마지막으로 본 시각
+        self.stall_timer = self.create_timer(0.1, self.stall_check)
+
         self.send_timer = self.create_timer(0.05, self.send_command)
 
         # ---------- 타이머 2: 10Hz로 워치독(안전장치) 체크 ----------
@@ -267,6 +281,20 @@ class SerialBridgeNode(Node):
                                     throttle_duration_sec=2.0)
 
     # ------------------------------------------------------------------
+    def stall_check(self):
+        """STALL 줄이 stall_clear_timeout 동안 안 오면 해제로 본다.
+
+        펌웨어가 해제 신호를 안 주기 때문에 '안 오는 것' 으로 판단할 수밖에 없다.
+        텔레메트리가 20Hz 라 0.5s 면 10주기 — 충분히 여유 있다.
+        """
+        if not self.stall_state:
+            return
+        if time.time() - self.last_stall_msg > self.stall_clear_timeout:
+            self.stall_state = False
+            self.stall_pub.publish(Bool(data=False))
+            self.get_logger().info(
+                f'스톨 해제 ({self.stall_clear_timeout:.1f}s 간 STALL 없음)')
+
     def watchdog_check(self):
         """일정 시간 /cmd_vel이 안 오면 강제 정지 (안전장치)."""
         elapsed = (self.get_clock().now() - self.last_cmd_time).nanoseconds / 1e9
@@ -419,10 +447,20 @@ class SerialBridgeNode(Node):
                 drive = line.split('drive=')[1].split()[0].strip()
                 steer = line.split('steer=')[1].split()[0].strip()
                 stalled = (drive not in ('0',)) or (steer not in ('0',))
-                self.stall_pub.publish(Bool(data=stalled))
                 if stalled:
+                    self.last_stall_msg = time.time()
+                    if not self.stall_state:
+                        self.stall_state = True
+                        self.stall_pub.publish(Bool(data=True))
                     self.get_logger().warn(
                         f'펌웨어 스톨 감지: {line}', throttle_duration_sec=2.0)
+                else:
+                    # drive=0 steer=0 을 명시적으로 준 경우 — 즉시 해제
+                    self.last_stall_msg = 0.0
+                    if self.stall_state:
+                        self.stall_state = False
+                        self.stall_pub.publish(Bool(data=False))
+                        self.get_logger().info('스톨 해제')
         except (IndexError, ValueError):
             pass   # 전송 중 잘린 줄은 무시
 
