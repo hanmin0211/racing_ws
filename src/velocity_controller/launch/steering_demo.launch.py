@@ -22,6 +22,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import LaunchConfigurationEquals
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -53,7 +54,9 @@ def generate_launch_description():
           executable='steering_demo',
           name='steering_demo',
           output='screen',
-          parameters=[{'amplitude': amplitude, 'loop': loop}],
+          parameters=[{'amplitude': ParameterValue(amplitude,
+                                                   value_type=float),
+                       'loop': ParameterValue(loop, value_type=bool)}],
           condition=LaunchConfigurationEquals('mode', 'demo'),
       ),
 
@@ -63,7 +66,10 @@ def generate_launch_description():
           executable='steering_sweep',
           name='steering_sweep',
           output='screen',
-          parameters=[{'amplitude': amplitude, 'half_period': half_period}],
+          parameters=[{'amplitude': ParameterValue(amplitude,
+                                                   value_type=float),
+                       'half_period': ParameterValue(half_period,
+                                                     value_type=float)}],
           condition=LaunchConfigurationEquals('mode', 'sweep'),
       ),
   ])

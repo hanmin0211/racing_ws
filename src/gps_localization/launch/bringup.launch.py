@@ -263,10 +263,12 @@ def generate_launch_description():
           parameters=[{
               'fix_topic': '/fix',
               'imu_topic': 'handsfree/imu',
-              'calib_distance': calib_distance,
+              'calib_distance': ParameterValue(calib_distance,
+                                              value_type=float),
               'invert_imu_yaw': invert_imu_yaw,
               'auto_drive': auto_calib,
-              'auto_speed': auto_calib_speed,
+              'auto_speed': ParameterValue(auto_calib_speed,
+                                          value_type=float),
           }],
       ),
 

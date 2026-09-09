@@ -36,12 +36,19 @@ def generate_launch_description():
   waypoints = LaunchConfiguration('waypoints')
   max_speed = LaunchConfiguration('max_speed')
   arduino_port = LaunchConfiguration('arduino_port')
+  max_steer = LaunchConfiguration('max_steer_deg')
 
   return LaunchDescription([
       DeclareLaunchArgument('waypoints', default_value=DEFAULT_WAYPOINTS),
       # 공중 시험이라 실제 도달속도가 아니라 '맵대로 조향/감속' 확인이 목적.
       DeclareLaunchArgument('max_speed', default_value='1.0'),
       DeclareLaunchArgument('arduino_port', default_value='auto'),
+      # ★ 조향 상한 (2026-09-09 추가)
+      #   control.launch.py 에는 있었는데 여기서 안 넘겨줘서 HIL 에서는 늘 18°
+      #   고정이었다. steer_sweep 실측 결과 ±18° 는 기구 끝단이라 양방향 모두
+      #   스톨이 걸린다(ADC 62~863 도달 후 컷). 용인 코스 최대 필요타각은
+      #   10.5° 이므로 12~15° 로 제한하면 끝단을 안 건드린다.
+      DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
 
       # 맵(전역경로)
       Node(
@@ -65,6 +72,7 @@ def generate_launch_description():
           launch_arguments={
               'arduino_port': arduino_port,
               'max_speed': max_speed,
+              'max_steer_deg': max_steer,
           }.items(),
       ),
   ])

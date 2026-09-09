@@ -28,6 +28,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -36,9 +37,17 @@ def generate_launch_description():
 
   pp_params = LaunchConfiguration('pp_params')
   arduino_port = LaunchConfiguration('arduino_port')
-  max_speed = LaunchConfiguration('max_speed')
-  max_steer = LaunchConfiguration('max_steer_deg')
   teleop = LaunchConfiguration('teleop')
+
+  # ★ 타입 강제 (2026-09-09)
+  #   런치 인자는 문자열이고 launch_ros 가 YAML 로 타입을 추론한다. 그래서
+  #   `max_steer_deg:=15` 는 INTEGER 로 들어가는데 노드는 declare_parameter(
+  #   'max_steer_deg', 18.0) 으로 DOUBLE 을 기대해 InvalidParameterTypeException
+  #   으로 즉사한다(vehicle_cmd_mux/serial_bridge 가 실제로 이렇게 죽었다).
+  #   ParameterValue(value_type=float) 로 감싸면 `15` 도 `15.0` 도 통과한다.
+  max_speed = ParameterValue(LaunchConfiguration('max_speed'), value_type=float)
+  max_steer = ParameterValue(LaunchConfiguration('max_steer_deg'),
+                             value_type=float)
 
   # teleop_keyboard 는 키 입력을 받아야 하므로 자체 터미널이 필요하다(xterm).
   # xterm 이 없으면 런치가 조용히 실패한다 — 현장에서 '왜 키가 안 먹지'로
