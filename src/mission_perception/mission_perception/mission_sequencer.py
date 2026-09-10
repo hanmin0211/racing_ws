@@ -88,6 +88,10 @@ class Mission:
     self.inhibits = [str(v) for v in (d.get('inhibits') or [])]
     self.select_topic = d.get('select_topic')     # 예: /parking/select
     self.select_value = d.get('select_value')
+    # ★ enabled:false = 계획에는 남겨두되 이번 주행에서는 안 켠다.
+    #   현장에서 s 값을 아직 못 잰 미션을 YAML 주석으로 지우면 되살릴 때
+    #   들여쓰기를 틀린다. 플래그 하나로 껐다 켜는 편이 안전하다.
+    self.enabled = bool(d.get('enabled', True))
 
     t = d.get('trigger') or {}
     self.trig_type = str(t.get('type', 'course_s'))
@@ -96,6 +100,8 @@ class Mission:
     self.px = float(t.get('x', 0.0))
     self.py = float(t.get('y', 0.0))
     self.radius = float(t.get('radius', 3.0))
+    # ★ 코스 전체를 덮는 배경 기능은 기본적으로 거부한다 — 아래 check_course 참고.
+    self.allow_full_course = bool(t.get('allow_full_course', False))
 
     self.state = PENDING
     self.armed_at = None
@@ -122,6 +128,13 @@ class MissionSequencer(Node):
 
     self.declare_parameter('plan_file', DEFAULT_PLAN)
     self.declare_parameter('odom_topic', '/odometry/filtered')
+    # ★ 지금 달리는 웨이포인트 파일. 계획 파일의 course.waypoints 와 대조한다.
+    #   bringup 이 넘겨준다. 빈 문자열이면 파일명 대조는 건너뛰고 길이 대조만 한다.
+    self.declare_parameter('waypoints_file', '')
+    # 계획의 course.path_length_m 과 실제 /global_path 길이의 허용 오차(비율).
+    self.declare_parameter('length_tolerance', 0.10)
+    # false 로 두면 불일치해도 그냥 진행한다(연습용). 대회에서는 절대 끄지 말 것.
+    self.declare_parameter('require_course_match', True)
     self.declare_parameter('rate', 10.0)
     # 8분. 초과하면 1분당 5점 감점이라 완주를 우선한다.
     self.declare_parameter('time_budget_s', 480.0)
@@ -137,6 +150,13 @@ class MissionSequencer(Node):
     self.reserve = float(g('reserve_s'))
     self.auto_start = bool(g('auto_start'))
 
+    self.plan_file = plan_file
+    self.waypoints_file = str(g('waypoints_file'))
+    self.length_tol = float(g('length_tolerance'))
+    self.require_match = bool(g('require_course_match'))
+    self.course_meta = {}
+    self.course_checked = False
+    self.course_ok = None          # None=미검증, True/False=검증 결과
     self.missions = self.load_plan(plan_file)
     if not self.missions:
       self.get_logger().error(
@@ -196,15 +216,119 @@ class MissionSequencer(Node):
     except Exception as e:  # noqa: BLE001
       self.get_logger().error(f'계획 파일 로드 실패: {e}')
       return []
+    self.course_meta = dict(d.get('course') or {})
     out = []
     for item in (d.get('missions') or []):
       try:
-        out.append(Mission(item))
+        m = Mission(item)
       except Exception as e:  # noqa: BLE001
         self.get_logger().error(f'미션 항목 무시({e}): {item}')
+        continue
+      if not m.enabled:
+        self.get_logger().warn(
+            f'⤳ {m.name} enabled:false — 이번 주행에서는 안 켠다 '
+            '(현장에서 s 를 채우면 true 로 바꿀 것)')
+        continue
+      out.append(m)
     # s 순서대로 — 계획 파일 순서 실수를 흡수한다.
     out.sort(key=lambda m: (m.s_enter if m.trig_type != 'point' else 0.0))
     return out
+
+  # ------------------------------------------------------------ 코스 대조
+  def check_course(self, path_len):
+    """계획 파일이 **지금 달리는 그 코스**의 것인지 확인한다.
+
+    ★ 왜 필요한가 (2026-09-10 실제로 걸린 문제)
+      config/mission_plan.yaml 이 대구(184m 코스) 값 그대로인 채 용인(648m)
+      웨이포인트로 주행하면, 후진주차 트리거 s_enter=175m 가 **용인 코스
+      한복판**에 떨어진다. 주행 중간에 차가 후진 기동을 시작한다 → 이탈 →
+      **탈락**이다. 조용히 일어나고, 일어나면 되돌릴 수 없다.
+
+      미션을 하나도 못 켜면 감점이다. 엉뚱한 데서 켜면 탈락이다.
+      그래서 **불일치가 의심되면 전부 끈다.**
+
+    대조 두 가지 (둘 중 하나라도 어긋나면 불일치):
+      1) course.path_length_m  vs  실제 /global_path 총 길이
+      2) course.waypoints      vs  실제로 로드된 웨이포인트 파일명
+    둘 다 계획에 없으면 대조할 수단이 없다 — 크게 경고하되 막지는 않는다
+    (예전 계획 파일과의 호환).
+    """
+    reasons = []
+    checked = False
+
+    want_len = self.course_meta.get('path_length_m')
+    if want_len is not None:
+      checked = True
+      want_len = float(want_len)
+      if want_len > 0:
+        rel = abs(path_len - want_len) / want_len
+        if rel > self.length_tol:
+          reasons.append(
+              f'코스 길이 불일치: 계획 {want_len:.1f}m vs 실제 {path_len:.1f}m '
+              f'({rel * 100:.0f}% 차이, 허용 {self.length_tol * 100:.0f}%)')
+
+    want_wp = self.course_meta.get('waypoints')
+    if want_wp and self.waypoints_file:
+      checked = True
+      a = os.path.basename(str(want_wp))
+      b = os.path.basename(self.waypoints_file)
+      if a != b:
+        reasons.append(f'웨이포인트 파일 불일치: 계획 "{a}" vs 실제 "{b}"')
+
+    if not checked:
+      self.get_logger().warn(
+          f'⚠ 계획 파일에 course.path_length_m / course.waypoints 가 없어 '
+          f'코스 대조를 못 한다: {self.plan_file}\n'
+          '   다른 장소의 계획을 그대로 쓰면 엉뚱한 지점에서 미션이 켜진다. '
+          '   course 항목을 채울 것.')
+
+    if reasons:
+      site = self.course_meta.get('site', '(site 미기재)')
+      msg = ('❌ 미션 계획이 이 코스의 것이 아니다 — ' + ' / '.join(reasons)
+             + f'\n   계획 파일 : {self.plan_file}'
+             + f'\n   계획 site : {site}')
+      if self.require_match:
+        self.get_logger().error(
+            msg + '\n   → 모든 미션을 **건너뛴다**. 자율 주행으로만 완주한다.'
+                  '\n     (미션 미실행은 감점, 엉뚱한 곳에서의 실행은 탈락이다)'
+                  '\n     이 코스에서 tools/mission_s.py 로 s 를 다시 잰 뒤'
+                  ' 계획 파일을 갱신할 것.')
+        for m in self.missions:
+          if m.state == PENDING:
+            m.state = SKIPPED
+          self.arm_pubs[m.name].publish(Bool(data=False))
+        return False
+      self.get_logger().error(
+          msg + '\n   → require_course_match:=false 라 그대로 진행한다. '
+                '연습이 아니면 지금 멈출 것.')
+      return True
+
+    # 코스는 맞다. 이제 개별 미션이 코스 위에 실제로 존재하는지 본다.
+    for m in self.missions:
+      if m.trig_type != 'course_s' or m.state in (DONE, SKIPPED):
+        continue
+      if m.s_enter > path_len:
+        m.state = SKIPPED
+        self.get_logger().warn(
+            f'⤳ {m.name} 건너뜀 — s_enter {m.s_enter:.1f}m 가 코스 끝'
+            f'({path_len:.1f}m) 밖이다. 계획 파일의 s 를 확인할 것.')
+        continue
+      # 배경 기능이 코스 전체를 덮는 경우.
+      #   라이다 조향 회피가 코스 전 구간에서 켜져 있으면 관중·표지물·연석에
+      #   반응해 조향을 뺏는다 → 이탈 = 탈락. 전방 감속/정지(안전 기능)는 이
+      #   플래그와 무관하게 항상 살아 있으므로 꺼도 안전은 안 줄어든다.
+      span = min(m.s_exit, path_len) - max(m.s_enter, 0.0)
+      if (not m.exclusive and not m.allow_full_course
+          and span >= 0.9 * path_len):
+        m.state = SKIPPED
+        self.get_logger().error(
+            f'⤳ {m.name} 건너뜀 — 배경 기능이 코스의 {span / path_len * 100:.0f}%'
+            f'(s {m.s_enter:.0f}~{m.s_exit:.0f}m)를 덮는다.\n'
+            '   코스 전체에서 조향을 뺏을 수 있다 = 이탈 위험. '
+            '해당 구간의 s 로 좁힐 것.\n'
+            '   (전방 장애물 감속·정지는 이것과 무관하게 계속 동작한다)\n'
+            '   의도한 것이라면 trigger 에 allow_full_course: true 를 명시할 것.')
+    return True
 
   # ------------------------------------------------------------------ 입력
   def path_cb(self, msg: Path):
@@ -219,6 +343,10 @@ class MissionSequencer(Node):
       self.get_logger().info(
           f'전역 경로 수신: {len(xy)}점 {s[-1]:.1f}m — 진행거리 기준 확보')
     self.path_xy, self.path_s = xy, s
+    # 경로를 처음 받은 이 시점이 계획 파일을 대조할 수 있는 가장 이른 시점이다.
+    if not self.course_checked:
+      self.course_checked = True
+      self.course_ok = self.check_course(s[-1])
 
   def odom_cb(self, msg: Odometry):
     p = msg.pose.pose.position
@@ -302,6 +430,10 @@ class MissionSequencer(Node):
     self.state_pub.publish(String(data=self.summary()))
 
     if self.pose is None:
+      return
+    # 코스 대조 전(또는 불일치)에는 아무것도 켜지 않는다.
+    #   point 트리거는 s 없이도 발동하므로 여기서 명시적으로 막아야 한다.
+    if self.require_match and not self.course_ok:
       return
     x, y = self.pose
 

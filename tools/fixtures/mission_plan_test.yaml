@@ -1,0 +1,60 @@
+# 시퀀서 로직 검증용 픽스처 — 실전 계획이 아니다.
+#
+# ★ 왜 분리했나 (2026-09-10)
+#   전에는 test_mission_sequencer.py 가 config/mission_plan.yaml 을 직접 읽었다.
+#   그런데 실전 계획은 현장 s 를 재기 전까지 전부 enabled:false 여야 안전하다
+#   (모르는 s 로 미션을 켜면 이탈=탈락). 그러면 로직 테스트가 통째로 죽는다.
+#   → 로직은 이 픽스처로 검증하고, 실전 계획은 코스 대조 케이스로 검증한다.
+#
+# 좌표계는 용인 주행 경로(648.3m)를 쓴다. s 값은 테스트가 90초 안에 다 지나갈
+# 수 있도록 앞쪽에 몰아 두었다(하네스가 3 m/s 로 달린다).
+course:
+  site: "테스트 픽스처 (용인 경로 기하만 사용)"
+  waypoints: "config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml"
+  path_length_m: 648.3
+
+missions:
+  - name: crosswalk
+    arm_topic: /crosswalk/arm
+    done_topic: /crosswalk/done
+    trigger: {type: course_s, s_enter: 30.0, s_exit: 55.0}
+    timeout_s: 8.0
+    expected_s: 12.0
+    critical: false
+
+  - name: ramp
+    arm_topic: /ramp/arm
+    done_topic: /ramp/done
+    trigger: {type: course_s, s_enter: 80.0, s_exit: 105.0}
+    timeout_s: 10.0
+    expected_s: 12.0
+    critical: false
+
+  - name: sudden_stop
+    arm_topic: /sudden_stop/arm
+    done_topic: /sudden_stop/done
+    inhibits: [lidar_avoid]
+    trigger: {type: course_s, s_enter: 130.0, s_exit: 155.0}
+    timeout_s: 10.0
+    expected_s: 12.0
+    critical: false
+
+  - name: parking
+    arm_topic: /parking/start
+    done_topic: /parking/done
+    select_topic: /parking/select
+    select_value: 3
+    trigger: {type: course_s, s_enter: 180.0, s_exit: 210.0}
+    timeout_s: 12.0
+    expected_s: 45.0
+    critical: false
+
+  # 배경 기능 — 구간이 좁으므로 코스 90% 규칙(648.3m)에 안 걸린다.
+  # ★ s_enter 는 첫 구간 미션(crosswalk 30m)보다 **앞**이어야 한다.
+  #   inhibits 케이스(④)가 '구간 미션이 켜질 때 배경이 이미 켜져 있다가
+  #   강제로 꺼지는가'를 보기 때문이다. 뒤에 두면 겹칠 일이 없어 검증이 안 된다.
+  - name: lidar_avoid
+    arm_topic: /lidar/arm
+    exclusive: false
+    trigger: {type: course_s, s_enter: 10.0, s_exit: 240.0}
+    critical: false

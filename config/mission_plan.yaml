@@ -1,75 +1,148 @@
-# 미션 계획 — 코스 위 어디서 어떤 미션을 켤지.
+# 미션 계획 — 용인운전면허시험장 (HL FMA 2026)
+# ====================================================================
+# 코스 위 어디서 어떤 미션을 켤지. 이 파일만 갈아끼우면 코드는 안 바뀐다.
 #
-# ★ 이 파일만 갈아끼우면 장소가 바뀌어도 코드는 안 바뀐다.
-#   미션 노드는 전부 띄워둔 채로 시퀀서가 arm 토픽으로만 켜고 끈다.
+# ★ 2026-09-10: 대구 보관본과 분리했다.
+#   이전에는 이 자리에 대구(184m) 계획이 있었다. 용인(648m) 웨이포인트로
+#   주행하면 후진주차 트리거 s_enter=175m 가 **용인 코스 한복판**에 떨어져
+#   주행 중간에 후진 기동이 시작된다 → 이탈 = **탈락**.
+#   대구 보관본: config/daegu_2026-08-17/mission_plan.yaml
 #
-# ★ 값 정하는 법
-#   1) 코스를 한 바퀴 기록해 waypoints 를 만든다
-#   2) python3 tools/list_waypoints.py --plot 으로 어디가 어디인지 본다
-#   3) 각 미션 구간의 진행거리 s 를 읽어 s_enter / s_exit 에 적는다
-#      s_enter 는 **미션 구간보다 넉넉히 앞**에 둔다(감속·정렬 시간).
-#   4) tools/test_mission_sequencer.py 로 순서를 확인한다
+# ★ 안전장치 (mission_sequencer.check_course)
+#   시퀀서가 /global_path 를 받는 즉시 아래 course 항목과 대조한다.
+#     · path_length_m  vs 실제 경로 총 길이 (허용 10%)
+#     · waypoints      vs 실제로 로드된 웨이포인트 파일명
+#   어긋나면 **모든 미션을 건너뛰고 자율 완주만** 한다.
+#   미션을 못 켜면 감점이고, 엉뚱한 데서 켜면 탈락이기 때문이다.
+#
+# ★ 값 정하는 법 (현장)
+#   python3 tools/mission_s.py --waypoints config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml \
+#       --live --name <미션명>
+#   미션 지점에 차를 세우고 실행하면 그 자리의 s 가 찍힌다.
+#   s_enter 는 미션 구간보다 **넉넉히 앞**에 둔다(감속·정렬 시간).
+#   그 다음 tools/test_mission_sequencer.py 로 순서를 확인한다.
+#
+# ★ enabled
+#   false = 계획에는 남기되 이번 주행에서는 안 켠다.
+#   현장에서 s 를 실측해 채운 **뒤에** true 로 바꾼다.
+#   s 를 모르는 채로 켜는 것이 이 대회에서 가장 비싼 실수다(탈락).
 #
 # ★ critical
-#   true  = 못 하면 탈락 위험 (완주 자체)
-#   false = 감점-only. 8분 예산이 모자라면 시퀀서가 **건너뛴다.**
-#           2026 신규 3개(S코스·돌발·신호제어차선)는 전부 감점-only 다.
+#   true  = 못 하면 완주 자체가 위험
+#   false = 감점-only. 8분 예산이 모자라면 시퀀서가 건너뛴다.
+#           2026 신규 3개(S코스·돌발·신호제어차선)는 전부 감점-only.
 #
 # ★ timeout_s
-#   이 시간을 넘기면 미션을 포기하고 자율 주행으로 복귀한다.
+#   넘기면 미션을 포기하고 자율 주행으로 복귀한다.
 #   **1분 이상 정지는 탈락**이므로 어떤 미션도 60초 근처로 두지 말 것.
 
 course:
-  site: "대구권 시험장 (2026-08-17) — 용인 기록 후 교체할 것"
-  waypoints: "src/pure_pursuit_pkg/config/waypoints_recorded_resampled_0.5.yaml"
+  site: "용인운전면허시험장 (2026-09-05 기록)"
+  waypoints: "config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml"
+  # 실측 648.27m (1298점, 0.5m 간격). 시퀀서가 이 값으로 코스를 대조한다.
+  path_length_m: 648.3
 
 missions:
-  # ── 횡단보도/정지선 (대구 코스 기준: 정지선이 경로 idx142 ≒ s 71m) ──
-  - name: crosswalk
-    arm_topic: /crosswalk/arm
-    done_topic: /crosswalk/done
-    trigger:
-      type: course_s
-      s_enter: 60.0      # 정지선 11m 앞부터 켠다(감속 여유)
-      s_exit:  85.0
-    timeout_s: 20.0      # 3초 대기 + 감속·재출발. 여유 두되 60s 근처 금지
-    expected_s: 12.0
-    critical: false
-
-  # ── 후진주차 (완주 종점) ──
+  # ── 후진주차 ──────────────────────────────────────────────────────
+  # ★ s 값 근거 (2026-09-10, 계산으로 확정 — 현장 실측 아님)
+  #   ~/parking_spur_yongin.yaml (9/5 기록, 같은 원점계 332200/4128600)의
+  #   주차 스퍼를 주행 경로에 투영했다:
+  #     스퍼 시작 (24.28, -23.42) → 경로 idx 580, s=289.9m, 이격 0.13m
+  #     스퍼 끝   (31.18, -26.36) → 경로 idx 595, s=297.4m, 이격 0.12m
+  #     스퍼가 경로에서 최대 12.2m 벗어난다 = 주차칸 안쪽
+  #   즉 주차 구간은 **s 290m 부근**이다(대구 계획의 175m 가 아니다).
+  #   0.13m 로 붙으므로 위치 자체는 신뢰할 만하지만, 진입 방향·정지 자세는
+  #   parking_pose_N.yaml 이 아직 대구 값이라 **현장 실측 전에는 켜지 말 것.**
   - name: parking
+    enabled: false          # ← parking_pose 를 용인에서 다시 찍은 뒤 true
     arm_topic: /parking/start
     done_topic: /parking/done
     select_topic: /parking/select
     select_value: 3
     trigger:
       type: course_s
-      s_enter: 175.0     # 종점(184m) 직전
-      s_exit:  200.0
+      s_enter: 280.0        # 스퍼 진입(289.9m) 10m 앞 — 감속·정렬 여유
+      s_exit:  305.0        # 스퍼 종료(297.4m) 뒤
     timeout_s: 50.0
     expected_s: 45.0
     critical: false
 
-  # ── 돌발 급정지 (라이다) ──
-  # 카메라 없이 라이다만으로 된다. /obstacle_distance 로 서는 건 longitudinal 이
-  # 이미 하고, 이 노드는 '정지 확인 → 5초 유지 → 재출발' 을 맡는다.
-  # ⚠ crosswalk 와 같은 /stop_line_distance 를 쓴다 — 시퀀서가 하나만 arm 하는
-  #   것이 전제다. s 구간이 겹치지 않게 할 것.
-  #
-  # ⚠ s 값은 용인 코스 기록 후 채운다:
-  #     python3 tools/mission_s.py --waypoints <파일> --live --name sudden_stop
-  # - name: sudden_stop
-  #   arm_topic: /sudden_stop/arm
-  #   done_topic: /sudden_stop/done
-  #   # ★ 규정 항목 7: "회피기동은 미션 성공으로 인정하지 않음"(10점).
-  #   #   이 구간에서 라이다가 옆으로 돌아 나가면 미션 실패다. 반드시 서야 한다.
-  #   inhibits: [lidar_avoid]
-  #   trigger: {type: course_s, s_enter: ?, s_exit: ?}
-  #   timeout_s: 25.0
-  #   expected_s: 12.0
-  #   critical: false
+  # ── 횡단보도 / 정지선 ─────────────────────────────────────────────
+  #   s 미정. 현장에서 정지선 앞에 세우고 mission_s.py --live --name crosswalk
+  - name: crosswalk
+    enabled: false
+    arm_topic: /crosswalk/arm
+    done_topic: /crosswalk/done
+    trigger:
+      type: course_s
+      s_enter: 0.0          # ← 실측값으로 교체 (정지선 11m 앞)
+      s_exit:  0.0
+    timeout_s: 20.0
+    expected_s: 12.0
+    critical: false
 
-  # ── 라이다 조향 회피 (배경 기능) ──
+  # ── 경사로 정지·출발 (규정 항목 3) ────────────────────────────────
+  #   규정: 정지검지구역 = 경사로 시작점 1m ~ 정상부 1m.
+  #         3초 이상 정지 후 출발 / 후방 50cm 이상 밀리면 5점 /
+  #         정지 후 뒷바퀴가 정상부 정지구획선을 30초 이내 통과 못하면 5점.
+  #   ★ 새 노드 불필요 — crosswalk_stop_node 와 하는 일이 같다
+  #     (정지선 접근 → 완전정지 → dwell → 재출발). 경사로 정지점을
+  #     stop_point_recorder 로 찍고 dwell:=3.0 으로 띄운다.
+  #   ⚠ timeout_s 는 규정의 30초 상한 안에서 빠져나오도록 30 미만.
+  - name: ramp
+    enabled: false
+    arm_topic: /ramp/arm
+    done_topic: /ramp/done
+    trigger:
+      type: course_s
+      s_enter: 0.0
+      s_exit:  0.0
+    timeout_s: 25.0
+    expected_s: 12.0
+    critical: false
+
+  # ── 신호교차로 (규정 항목 5) ──────────────────────────────────────
+  #   규정: 좌회전 포함 1회 이상 / 정지신호에 앞범퍼가 정지선 통과 5점 /
+  #         교차로 내 20초 이상 정지 10점 / 30초 이내 통과 못하면 5점.
+  #         정지선 직전 1m 내 정지시간은 지정시간에 산입하지 않음.
+  #   ⚠ timeout_s 30 미만.
+  #   ⚠ 카메라 신호등 판정이 아직 불안정하다(YOLOv8s 재학습 대기).
+  #     빨강을 놓치면 정지선 통과 5점, 초록을 빨강으로 보면 교차로 안에서
+  #     20초 정지 10점이다. 재학습 전에는 켜지 말 것.
+  - name: traffic_light
+    enabled: false
+    arm_topic: /traffic_light/arm
+    done_topic: /traffic_light/done
+    trigger:
+      type: course_s
+      s_enter: 0.0
+      s_exit:  0.0
+    timeout_s: 28.0
+    expected_s: 20.0
+    critical: false
+
+  # ── 돌발 급정지 (라이다, 규정 항목 7) ─────────────────────────────
+  #   카메라 없이 라이다만으로 된다. /obstacle_distance 로 서는 건
+  #   longitudinal 이 이미 하고, 이 노드는 '정지 확인 → 5초 유지 → 재출발'.
+  #   ⚠ crosswalk 와 같은 /stop_line_distance 를 쓴다 — 시퀀서가 하나만
+  #     arm 하는 것이 전제다. s 구간이 겹치지 않게 할 것.
+  #   ★ 규정: "회피기동은 미션 성공으로 인정하지 않음"(10점).
+  #     이 구간에서 라이다가 옆으로 돌아 나가면 미션 실패다. 반드시 서야 한다.
+  #     → inhibits 로 lidar_avoid 를 명시적으로 막는다.
+  - name: sudden_stop
+    enabled: false
+    arm_topic: /sudden_stop/arm
+    done_topic: /sudden_stop/done
+    inhibits: [lidar_avoid]
+    trigger:
+      type: course_s
+      s_enter: 0.0
+      s_exit:  0.0
+    timeout_s: 25.0
+    expected_s: 12.0
+    critical: false
+
+  # ── 라이다 조향 회피 (배경 기능) ──────────────────────────────────
   # ★ 이 항목이 켜고 끄는 것은 **조향 override 뿐이다.**
   #   전방 장애물 감속·정지(/obstacle_distance)는 안전 기능이라 이 항목과
   #   무관하게 **코스 전체에서 항상 동작한다.** (라이다 노드가 직접 보장)
@@ -77,57 +150,24 @@ missions:
   # ★ exclusive: false — 구간 미션이 아니라 배경이다. 다른 미션을 막지 않고
   #   done 신호도 타임아웃도 없다. 구간을 벗어나면 조향 회피만 꺼진다.
   #
-  # ⚠ 지금 s 범위가 코스 전체(0~9999)다 = 어디서든 조향을 뺏을 수 있다.
-  #   용인에서 S코스 구간 s 를 알아낸 뒤 **그 구간으로 좁힐 것.**
+  # ⚠ 예전 값은 s 0~9999(코스 전체)였다 = 어디서든 조향을 뺏을 수 있다.
   #   S코스가 아닌 곳에서 관중·표지물·연석에 반응해 조향을 틀면 이탈=탈락이다.
-  #     python3 tools/mission_s.py --waypoints <파일> --live --name s_course
+  #   시퀀서가 이제 '코스 90% 이상을 덮는 배경 기능'을 거부한다
+  #   (trigger 에 allow_full_course: true 를 명시하지 않는 한).
+  #   → S코스 구간 s 를 재서 좁힐 것:
+  #     python3 tools/mission_s.py --waypoints <용인파일> --live --name s_course
   - name: lidar_avoid
+    enabled: false
     arm_topic: /lidar/arm
     exclusive: false
     trigger:
       type: course_s
-      s_enter: 0.0
-      s_exit: 9999.0
+      s_enter: 0.0          # ← S코스 진입 s
+      s_exit:  0.0          # ← S코스 탈출 s
     critical: false
 
 # ─────────────────────────────────────────────────────────────────────
-# 용인 코스용 뼈대 (9/5 기록 후 s 값을 채운다)
-# ─────────────────────────────────────────────────────────────────────
-# ── 경사로 정지·출발 (규정 항목 3) ──
-#   규정: 정지검지구역은 경사로 시작점 1m 지점 ~ 정상부 1m 지점.
-#         3초 이상 정지 후 출발 / 후방 50cm 이상 밀리면 5점 /
-#         정지 후 뒷바퀴가 정상부 정지구획선을 **30초 이내** 통과 못하면 5점.
-#   ★ 새 노드가 필요 없다 — crosswalk_stop_node 가 하는 일과 같다
-#     (정지선 접근 → 완전정지 → dwell → 재출발). 경사로 정지점을
-#     stop_point_recorder 로 찍고 dwell:=3.0 으로 띄우면 된다.
-#   ⚠ timeout_s 는 30 미만이어야 한다 — 규정의 30초 상한 안에서 빠져나와야 한다.
-# - name: ramp
-#   arm_topic: /ramp/arm
-#   done_topic: /ramp/done
-#   trigger: {type: course_s, s_enter: ?, s_exit: ?}
-#   timeout_s: 25.0
-#   expected_s: 12.0
-#   critical: false
-#
-# ── 신호교차로 (규정 항목 5) ──
-#   규정: 좌회전 포함 1회 이상 / 정지신호에 앞범퍼가 정지선 통과 5점 /
-#         교차로 내 20초 이상 정지 10점 / 30초 이내 교차로 통과 못하면 5점.
-#         신호등에 따라 정지선 직전 1m 내 정지시간은 지정시간에 산입하지 않음.
-#   ⚠ timeout_s 를 30 미만으로 — 교차로 안에서 30초를 넘기면 감점이다.
-# - name: traffic_light
-#   arm_topic: /traffic_light/arm
-#   done_topic: /traffic_light/done
-#   trigger: {type: course_s, s_enter: ?, s_exit: ?}
-#   timeout_s: 28.0
-#   expected_s: 20.0
-#   critical: false
-#
-# - name: s_course        # S코스 장애물 회피 (라이다)
-#   arm_topic: /lidar/arm
-#   trigger: {type: course_s, s_enter: ?, s_exit: ?}
-#   timeout_s: 30.0
-#   expected_s: 20.0
-#   critical: false
-#
-# - name: parking_perp    # 직각주차
-# - name: parking_para    # 평행주차
+# 아직 계획에 없는 것 — 현장 확인 후 항목 추가
+#   · parking_perp  직각주차 (규정 항목 6)
+#   · parking_para  평행주차 (규정 항목 8)
+#   두 미션 모두 expected_s 추정치조차 없다. 8분 예산에 반영되지 않은 상태다.
