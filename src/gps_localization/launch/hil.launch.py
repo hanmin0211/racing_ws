@@ -37,6 +37,7 @@ def generate_launch_description():
   max_speed = LaunchConfiguration('max_speed')
   arduino_port = LaunchConfiguration('arduino_port')
   max_steer = LaunchConfiguration('max_steer_deg')
+  curv_gain = LaunchConfiguration('curvature_gain')
 
   return LaunchDescription([
       DeclareLaunchArgument('waypoints', default_value=DEFAULT_WAYPOINTS),
@@ -49,6 +50,10 @@ def generate_launch_description():
       #   스톨이 걸린다(ADC 62~863 도달 후 컷). 용인 코스 최대 필요타각은
       #   10.5° 이므로 12~15° 로 제한하면 끝단을 안 건드린다.
       DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
+      # ★ 코너 감속 세기 (2026-09-10 추가). 8분 예산의 가장 큰 소프트웨어 레버라
+      #   HIL 에서 조합을 시험할 수 있어야 한다.
+      #   판단표: python3 tools/lap_budget.py --waypoints <코스파일>
+      DeclareLaunchArgument('curvature_gain', default_value='6.0'),
 
       # 맵(전역경로)
       Node(
@@ -73,6 +78,7 @@ def generate_launch_description():
               'arduino_port': arduino_port,
               'max_speed': max_speed,
               'max_steer_deg': max_steer,
+              'curvature_gain': curv_gain,
           }.items(),
       ),
   ])
