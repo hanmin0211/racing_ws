@@ -419,7 +419,14 @@ def generate_launch_description():
           output='screen',
           condition=IfCondition(sequencer),
           parameters=[{
-              'plan_file': ParameterValue(mission_plan, value_type=str)}],
+              'plan_file': ParameterValue(mission_plan, value_type=str),
+              # ★ 계획 파일이 이 코스의 것인지 시퀀서가 대조하게 넘긴다.
+              #   (2026-09-10) 대구 계획으로 용인을 달리면 후진주차가 코스
+              #   한복판에서 켜진다 — 이탈 = 탈락. LaunchConfiguration 은
+              #   비교에 못 쓰므로 정지지점 검사와 같은 방식으로 sys.argv 에서
+              #   확정한 실제 경로를 넘긴다.
+              'waypoints_file': wp_for_check,
+          }],
       ),
 
       # 8. RViz (rviz:=false 로 끌 수 있음)

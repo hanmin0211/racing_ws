@@ -38,7 +38,14 @@ from rclpy.qos import DurabilityPolicy, QoSProfile            # noqa: E402
 from std_msgs.msg import Bool, String                         # noqa: E402
 
 WS = '/home/han/racing_ws'
-PLAN = f'{WS}/config/mission_plan.yaml'
+# ★ 로직 검증은 픽스처로 한다 (2026-09-10).
+#   실전 계획(config/mission_plan.yaml)은 현장 s 를 재기 전까지 전부
+#   enabled:false 여야 안전하다 — 모르는 s 로 미션을 켜면 이탈=탈락이다.
+#   그러면 arm 이 하나도 안 일어나 로직 테스트가 통째로 죽는다. 분리한다.
+PLAN = f'{WS}/tools/fixtures/mission_plan_test.yaml'
+LIVE_PLAN = f'{WS}/config/mission_plan.yaml'
+DAEGU_PLAN = f'{WS}/config/daegu_2026-08-17/mission_plan.yaml'
+YONGIN_WP = f'{WS}/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml'
 
 
 def load_path(plan):
@@ -176,6 +183,8 @@ def run_case(title, plan, respond, extra_params, duration, speed=3.0,
   print(f'\n{"=" * 66}\n  {title}\n{"=" * 66}')
   cmd = ['ros2', 'run', 'mission_perception', 'mission_sequencer',
          '--ros-args', '-p', f'plan_file:={plan_file or PLAN}']
+  # 계획 파일이 이 코스의 것인지 시퀀서가 대조할 수 있게 넘긴다.
+  cmd += ['-p', f'waypoints_file:={YONGIN_WP}']
   for k, v in extra_params.items():
     cmd += ['-p', f'{k}:={v}']
   env = dict(os.environ)
@@ -209,9 +218,12 @@ def run_case(title, plan, respond, extra_params, duration, speed=3.0,
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument('--case', default='all',
-                  choices=['all', 'normal', 'timeout', 'budget', 'inhibit'])
+                  choices=['all', 'normal', 'timeout', 'budget', 'inhibit',
+                           'course'])
+  ap.add_argument('--plan', default=PLAN,
+                  help='로직 검증에 쓸 계획 파일 (기본: 픽스처)')
   args = ap.parse_args()
-  plan = yaml.safe_load(open(PLAN, encoding='utf-8'))
+  plan = yaml.safe_load(open(args.plan, encoding='utf-8'))
   names = [m['name'] for m in plan['missions']]
   ex_names = [m['name'] for m in plan['missions'] if m.get('exclusive', True)]
   ov_names = [m['name'] for m in plan['missions']
@@ -313,6 +325,53 @@ def main():
       print(out[-1200:])
     results += [blocked, inhibit_log]
     os.unlink(tmp.name)
+
+  if args.case in ('all', 'course'):
+    # ★ 2026-09-10 — 탈락급 오류 방지.
+    #   대구(184m) 계획으로 용인(648m) 코스를 달리면 후진주차 트리거
+    #   s_enter=175m 가 용인 코스 한복판에 떨어진다. 주행 중간에 후진 기동이
+    #   시작되고 그건 이탈 = 탈락이다. 시퀀서가 코스를 대조해 **전부 건너뛰어야**
+    #   한다. 미션 미실행은 감점이고, 엉뚱한 곳에서의 실행은 탈락이다.
+    h, out = run_case(
+        '⑤ 코스 대조 — 다른 장소의 계획이면 아무것도 arm 하지 않는가',
+        plan, respond={n: 3.0 for n in names},
+        extra_params={'time_budget_s': 480.0}, duration=45,
+        plan_file=DAEGU_PLAN)
+    armed_any = [n for _, n, k in h.log if k == 'ARM']
+    ok1 = not armed_any
+    ok2 = '이 코스의 것이 아니다' in out
+    print(f'\n  8) 불일치 시 arm 없음    {"✅" if ok1 else "❌"} '
+          f'{armed_any if armed_any else "(하나도 안 켬)"}')
+    print(f'  9) 불일치를 로그로 알림  {"✅" if ok2 else "❌"}')
+    if not (ok1 and ok2):
+      print(out[-1500:])
+    results += [ok1, ok2]
+
+    # 배경 기능이 코스 전체를 덮으면 거부하는가 (관중·연석에 조향을 뺏김 = 이탈)
+    import copy, tempfile
+    plan3 = copy.deepcopy(plan)
+    for m in plan3['missions']:
+      if not m.get('exclusive', True):
+        m['trigger'] = {'type': 'course_s', 's_enter': 0.0, 's_exit': 9999.0}
+    tmp3 = tempfile.NamedTemporaryFile('w', suffix='.yaml', delete=False,
+                                       encoding='utf-8')
+    yaml.safe_dump(plan3, tmp3, allow_unicode=True, sort_keys=False)
+    tmp3.close()
+    h, out = run_case(
+        '⑥ 배경 기능이 코스 전체(0~9999)를 덮으면 거부하는가',
+        plan3, respond={n: 3.0 for n in names},
+        extra_params={'time_budget_s': 480.0}, duration=40, plan_file=tmp3.name)
+    ov_armed = [n for _, n, k in h.log
+                if k == 'ARM' and not h.exclusive.get(n, True)]
+    ok3 = not ov_armed
+    ok4 = '코스의' in out and '건너뜀' in out
+    print(f'\n 10) 전 구간 배경 거부     {"✅" if ok3 else "❌"} '
+          f'{ov_armed if ov_armed else "(안 켬)"}')
+    print(f' 11) 거부 사유 로그        {"✅" if ok4 else "❌"}')
+    if not (ok3 and ok4):
+      print(out[-1500:])
+    results += [ok3, ok4]
+    os.unlink(tmp3.name)
 
   print(f'\n{"=" * 66}')
   print('결론: ' + ('미션 시퀀서 정상 ✅' if all(results)

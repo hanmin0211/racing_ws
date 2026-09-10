@@ -99,6 +99,7 @@ def simulate(wps, args):
   max_step = math.radians(args.max_steer_rate_deg) / args.rate
 
   delta = 0.0
+  v = args.min_speed        # 정지에서 출발 (가속도 한계를 받는다)
   prev_idx = None
   log = {'x': [], 'y': [], 'cte': [], 'delta': [], 'v': [], 's': [],
          'kappa': []}
@@ -122,8 +123,17 @@ def simulate(wps, args):
     kappa_path = abs(float(out['curvature']))
 
     # 속도: longitudinal_controller 와 같은 곡률 감속식
-    v = args.speed / (1.0 + args.curv_gain * kappa_path)
-    v = max(args.min_speed, min(args.speed, v))
+    v_target = args.speed / (1.0 + args.curv_gain * kappa_path)
+    v_target = max(args.min_speed, min(args.speed, v_target))
+    # ★ 가속도 한계 (longitudinal_controller_node 의 profiled_speed 와 동일).
+    #   이걸 안 넣으면 커브 진입에서 속도가 순간이동해 **실제보다 낙관적**으로
+    #   나온다. 저속(0.5)에선 차이가 없지만 대회속도(1.8+)에선 커브 진입이
+    #   실제로 더 빠르고 그만큼 더 벌어진다.
+    dv = v_target - v
+    if dv > 0:
+      v += min(dv, args.max_accel * dt)
+    else:
+      v -= min(-dv, args.max_decel * dt)
 
     # pure pursuit
     ld = min(max(args.k_ld * v + args.min_ld, args.min_ld), args.max_ld)
@@ -277,6 +287,9 @@ def main():
   ap.add_argument('--wheelbase', type=float, default=0.785)
   ap.add_argument('--max-steer-deg', type=float, default=18.0)
   ap.add_argument('--max-steer-rate-deg', type=float, default=90.0)
+  # longitudinal_controller_node 의 기본값과 같게 둔다(실제와 맞춰야 의미가 있다).
+  ap.add_argument('--max-accel', type=float, default=1.0)
+  ap.add_argument('--max-decel', type=float, default=1.8)
   ap.add_argument('--n-back', type=int, default=5)
   ap.add_argument('--n-forward', type=int, default=20)
   ap.add_argument('--rate', type=float, default=20.0)
