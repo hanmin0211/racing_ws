@@ -100,6 +100,11 @@ def simulate(wps, args):
 
   delta = 0.0
   v = args.min_speed        # 정지에서 출발 (가속도 한계를 받는다)
+  # 외부에서 Namespace 를 직접 만들어 부르는 호출자(tools/lap_budget.py 등)가
+  # 새 인자를 몰라도 죽지 않게 기본값을 여기서 확정한다.
+  speed_cap = float(getattr(args, 'speed_cap', 0.0) or 0.0)
+  max_accel = float(getattr(args, 'max_accel', 1.0))
+  max_decel = float(getattr(args, 'max_decel', 1.8))
   prev_idx = None
   log = {'x': [], 'y': [], 'cte': [], 'delta': [], 'v': [], 's': [],
          'kappa': []}
@@ -129,11 +134,17 @@ def simulate(wps, args):
     #   이걸 안 넣으면 커브 진입에서 속도가 순간이동해 **실제보다 낙관적**으로
     #   나온다. 저속(0.5)에선 차이가 없지만 대회속도(1.8+)에선 커브 진입이
     #   실제로 더 빠르고 그만큼 더 벌어진다.
+    # ★ 하드웨어 속도 상한 (펌웨어 MAX_DRIVE_PWM 에 의한 클램프).
+    #   v_max 를 실제 도달속도보다 크게 주면 곡률 감속식 v_max/(1+g·κ) 의
+    #   분자가 커져 **코너 목표속도만 올라간다**(직진은 어차피 하드웨어가 자름).
+    #   즉 설정과 실차가 어긋나면 조용히 더 공격적으로 코너를 돈다.
+    if speed_cap > 0:
+      v_target = min(v_target, speed_cap)
     dv = v_target - v
     if dv > 0:
-      v += min(dv, args.max_accel * dt)
+      v += min(dv, max_accel * dt)
     else:
-      v -= min(-dv, args.max_decel * dt)
+      v -= min(-dv, max_decel * dt)
 
     # pure pursuit
     ld = min(max(args.k_ld * v + args.min_ld, args.min_ld), args.max_ld)
@@ -290,6 +301,9 @@ def main():
   # longitudinal_controller_node 의 기본값과 같게 둔다(실제와 맞춰야 의미가 있다).
   ap.add_argument('--max-accel', type=float, default=1.0)
   ap.add_argument('--max-decel', type=float, default=1.8)
+  ap.add_argument('--speed-cap', type=float, default=0.0,
+                  help='하드웨어 도달 상한[m/s]. 0=없음. '
+                       'v_max 를 실제보다 크게 설정했을 때의 영향을 본다')
   ap.add_argument('--n-back', type=int, default=5)
   ap.add_argument('--n-forward', type=int, default=20)
   ap.add_argument('--rate', type=float, default=20.0)

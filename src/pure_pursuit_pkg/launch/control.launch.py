@@ -48,6 +48,11 @@ def generate_launch_description():
   max_speed = ParameterValue(LaunchConfiguration('max_speed'), value_type=float)
   max_steer = ParameterValue(LaunchConfiguration('max_steer_deg'),
                              value_type=float)
+  # ★ 코너 감속 세기 (2026-09-10 추가).
+  #   longitudinal_controller 가 init 에서 값을 캐시하므로 `ros2 param set` 으로는
+  #   못 바꾼다. 재빌드 없이 현장에서 조정하려면 런치 인자여야 한다.
+  curv_gain = ParameterValue(LaunchConfiguration('curvature_gain'),
+                             value_type=float)
 
   # teleop_keyboard 는 키 입력을 받아야 하므로 자체 터미널이 필요하다(xterm).
   # xterm 이 없으면 런치가 조용히 실패한다 — 현장에서 '왜 키가 안 먹지'로
@@ -63,8 +68,19 @@ def generate_launch_description():
       DeclareLaunchArgument('pp_params', default_value=default_params),
       DeclareLaunchArgument('arduino_port', default_value='auto'),
       # 구동모터 벤치검증 전이라 보수적 기본값. 검증 후 상향할 것.
+      # ⚠ max_speed 는 **실제로 도달 가능한 속도**여야 한다.
+      #   곡률 감속식이 v = max_speed/(1+gain·|κ|) 라서, max_speed 를 하드웨어
+      #   상한보다 높게 주면 분자만 커져 **코너 목표속도만 올라간다**(직진은
+      #   어차피 펌웨어가 자른다). 즉 코너 감속이 조용히 무력화된다.
+      #   실측(2026-09-10 시뮬): max_speed 2.8 + PWM160(실제 0.84) 이면
+      #   코스 전 구간을 0.84 로 통과한다 = gain 이 없는 것과 같다.
+      #   도달속도 = (MAX_DRIVE_PWM − 80) / 95   (펌웨어 개루프 FF 실측값)
+      #     PWM 160 → 0.84 · PWM 200 → 1.26 · PWM 255 → 1.84
       DeclareLaunchArgument('max_speed', default_value='1.0'),
       DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
+      # 코너 감속 세기. 낮출수록 빠르고 경로에서 더 벌어진다.
+      #   판단표: python3 tools/lap_budget.py --waypoints <코스파일>
+      DeclareLaunchArgument('curvature_gain', default_value='6.0'),
       # teleop:=true 면 키보드 수동 제어 노드도 함께 띄운다(먹스에서 사람 우선).
       DeclareLaunchArgument('teleop', default_value='false'),
 
@@ -83,7 +99,7 @@ def generate_launch_description():
           executable='longitudinal_controller',
           name='longitudinal_controller',
           output='screen',
-          parameters=[{'v_max': max_speed}],
+          parameters=[{'v_max': max_speed, 'curvature_gain': curv_gain}],
       ),
 
       # 명령 먹스: 단일 /cmd_vel 출구 + 최종 안전 클램프

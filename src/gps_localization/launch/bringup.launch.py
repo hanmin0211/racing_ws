@@ -150,6 +150,8 @@ def generate_launch_description():
   auto_calib_speed = LaunchConfiguration('auto_calib_speed')
   mission = LaunchConfiguration('mission')
   max_speed = LaunchConfiguration('max_speed')
+  max_steer_deg = LaunchConfiguration('max_steer_deg')
+  curvature_gain = LaunchConfiguration('curvature_gain')
   lidar = LaunchConfiguration('lidar')
   crosswalk = LaunchConfiguration('crosswalk')
   crosswalk_dwell = LaunchConfiguration('crosswalk_dwell')
@@ -201,6 +203,15 @@ def generate_launch_description():
       # 느려진다. 5 km/h = 1.39. 무게중심이 높으면(배터리 뱅크 등) 낮게 시작해
       # 코너 거동을 보고 올릴 것. 먹스·v_max·조향 상한에 함께 전달된다.
       DeclareLaunchArgument('max_speed', default_value='2.8'),
+      # ★ 2026-09-10 추가 — 여태 제어 체인에 안 넘어가던 두 개.
+      #   max_steer_deg: 안 넘겨서 실차는 늘 control.launch.py 기본 18° 였다.
+      #     steer_sweep 실측상 ±18° 는 기구 끝단이라 양방향 스톨이 난다
+      #     (hil.launch.py 는 2026-09-09 에 같은 이유로 이미 고쳤다).
+      #     용인 코스 필요타각은 시뮬상 최대 11.7° 라 15° 로 충분하다.
+      #   curvature_gain: 8분 예산의 가장 큰 소프트웨어 레버인데 노출이 없어
+      #     재빌드해야만 바꿀 수 있었다(노드가 init 에서 캐시한다).
+      DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
+      DeclareLaunchArgument('curvature_gain', default_value='6.0'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
       #   ros2 launch sllidar_ros2 sllidar_a1_launch.py \
@@ -319,6 +330,8 @@ def generate_launch_description():
           launch_arguments={
               'arduino_port': arduino_port,
               'max_speed': max_speed,
+              'max_steer_deg': max_steer_deg,
+              'curvature_gain': curvature_gain,
           }.items(),
       ),
 
