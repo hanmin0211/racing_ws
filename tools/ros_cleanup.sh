@@ -23,9 +23,18 @@ set -u
 pkill -f "[r]os2 launch"                     2>/dev/null
 pkill -f "[/]opt/ros/humble/lib/"            2>/dev/null
 pkill -f "[/]home/han/racing_ws/install/"    2>/dev/null
+# ★ 2026-09-11 추가 — tools/ 에서 직접 돌리는 보조 노드들.
+#   위 두 패턴은 install/ · /opt/ros/ 아래만 잡는다. `python3 tools/hil_vehicle.py`
+#   는 어느 쪽에도 안 걸려 **살아남았다**(인계문서에는 같이 죽는다고 적혀 있었으나
+#   실제로는 반대였다, 2026-09-11 확인).
+#   남은 hil_vehicle 이 있는 채로 새로 띄우면 두 대가 같은 /odometry/filtered 에
+#   발행해 결과가 통째로 쓰레기가 된다 — 그리고 조용히 그렇게 된다.
+pkill -f "[t]ools/hil_vehicle.py"            2>/dev/null
+pkill -f "[t]ools/hil_probe.py"              2>/dev/null
 sleep 2
 pkill -9 -f "[/]opt/ros/humble/lib/"         2>/dev/null
 pkill -9 -f "[/]home/han/racing_ws/install/" 2>/dev/null
+pkill -9 -f "[t]ools/hil_vehicle.py"         2>/dev/null
 sleep 1
 
 echo "정리 후 남은 개수 (전부 0이어야 정상):"

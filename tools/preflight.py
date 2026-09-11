@@ -336,6 +336,79 @@ def check_parking(wp, cur, args):
         'tools/test_parking_node.py --slot N 으로 폐루프 확인할 것.')
 
 
+def check_mission_plan(path, wp, args):
+  """미션 계획이 **이 코스의 것인지** 본다.
+
+  ★ 왜 체크리스트에 넣나 (2026-09-10 발견)
+    config/mission_plan.yaml 이 대구(184m) 값 그대로인 채 용인(648m)을 달리면
+    후진주차 트리거 s_enter=175m 가 코스 한복판에 떨어진다. 주행 중간에 후진
+    기동이 시작되고 그건 이탈 = **탈락**이다. 다른 치명 항목(정지점·주차자세)은
+    런타임 가드가 '안 쓰고 넘어가는' 식으로 안전하게 실패하는데, 미션 계획은
+    **엉뚱한 위치에서 실제로 동작한다.** 가장 비싼 실수라 주행 전에 본다.
+
+  (mission_sequencer 도 같은 대조를 런타임에 하지만, 주행 전에 알아야 고친다)
+  """
+  head(f'E. 미션 계획 — {os.path.basename(path)}')
+  if not os.path.exists(path):
+    warn(f'미션 계획 파일 없음: {path} (시퀀서 미사용이면 정상)')
+    return
+  try:
+    d = yaml.safe_load(open(path, encoding='utf-8')) or {}
+  except Exception as e:  # noqa: BLE001
+    bad(f'미션 계획 로드 실패: {e}')
+    return
+
+  course = d.get('course') or {}
+  site = course.get('site', '(site 미기재)')
+  print(f'  site   : {site}')
+  path_len = path_length(wp) if wp else 0.0
+
+  want_len = course.get('path_length_m')
+  if want_len is None:
+    warn('계획에 course.path_length_m 이 없다 — 코스 대조 불가. 채울 것')
+  elif path_len > 0:
+    rel = abs(path_len - float(want_len)) / float(want_len)
+    if rel > 0.10:
+      bad(f'미션 계획: 코스 길이 불일치 (계획 {float(want_len):.1f}m vs '
+          f'실제 {path_len:.1f}m) — 다른 장소의 계획이다')
+    else:
+      ok(f'코스 길이 일치 ({float(want_len):.1f}m vs {path_len:.1f}m)')
+
+  want_wp = course.get('waypoints')
+  if want_wp:
+    a, b = os.path.basename(str(want_wp)), os.path.basename(args.waypoints)
+    if a != b:
+      bad(f'미션 계획: 웨이포인트 불일치 (계획 "{a}" vs 실제 "{b}")')
+    else:
+      ok(f'웨이포인트 일치 ({a})')
+
+  missions = d.get('missions') or []
+  on = [m for m in missions if m.get('enabled', True)]
+  print(f'  미션   : 전체 {len(missions)}개 중 활성 {len(on)}개')
+  if not on:
+    warn('활성 미션이 0개 — 자율 완주만 한다(미션 전부 감점). '
+         '현장에서 s 를 재고 enabled:true 로 바꿀 것')
+  for m in on:
+    t = m.get('trigger') or {}
+    if str(t.get('type', 'course_s')) != 'course_s':
+      continue
+    e0, e1 = float(t.get('s_enter', 0.0)), float(t.get('s_exit', 0.0))
+    name = m.get('name', '?')
+    if e0 == 0.0 and e1 == 0.0:
+      bad(f'{name}: s 가 0~0 인데 enabled 다 — 실측값을 안 채웠다')
+      continue
+    if path_len > 0 and e0 > path_len:
+      bad(f'{name}: s_enter {e0:.0f}m 가 코스 끝({path_len:.0f}m) 밖이다')
+      continue
+    span = min(e1, path_len or e1) - max(e0, 0.0)
+    if (not m.get('exclusive', True) and not t.get('allow_full_course')
+        and path_len > 0 and span >= 0.9 * path_len):
+      bad(f'{name}: 배경 기능이 코스의 {span / path_len * 100:.0f}% 를 덮는다 '
+          '— 어디서든 조향을 뺏을 수 있다(이탈 위험). 구간으로 좁힐 것')
+      continue
+    print(f'    · {name:<14} s {e0:6.1f}~{e1:6.1f}m')
+
+
 def main():
   ap = argparse.ArgumentParser(
       description='주행 데이터 일관성·주행가능성 사전 검사')
@@ -357,6 +430,8 @@ def main():
   ap.add_argument('--plan-r-rev-max', type=float, default=5.0)
   ap.add_argument('--plan-back-max', type=float, default=3.0)
   ap.add_argument('--skip-parking', action='store_true')
+  ap.add_argument('--mission-plan',
+                  default='/home/han/racing_ws/config/mission_plan.yaml')
   args = ap.parse_args()
 
   print('=' * 68)
@@ -369,6 +444,7 @@ def main():
   check_stop_points(args.stop_points, wp, cur)
   if not args.skip_parking:
     check_parking(wp, cur, args)
+  check_mission_plan(args.mission_plan, wp, args)
 
   head('요약')
   if FAILS:
