@@ -22,6 +22,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -38,6 +39,7 @@ def generate_launch_description():
   arduino_port = LaunchConfiguration('arduino_port')
   max_steer = LaunchConfiguration('max_steer_deg')
   curv_gain = LaunchConfiguration('curvature_gain')
+  lidar = LaunchConfiguration('lidar')
 
   return LaunchDescription([
       DeclareLaunchArgument('waypoints', default_value=DEFAULT_WAYPOINTS),
@@ -54,6 +56,18 @@ def generate_launch_description():
       #   HIL 에서 조합을 시험할 수 있어야 한다.
       #   판단표: python3 tools/lap_budget.py --waypoints <코스파일>
       DeclareLaunchArgument('curvature_gain', default_value='6.0'),
+      # ★ 라이다 회피를 HIL 에 얹는다 (2026-09-11 추가).
+      #   GPS·웨이포인트·실주행 없이 **회피 체인 전체**를 검증할 수 있다:
+      #     실제 라이다 스캔 → cluster_plot_node → /lidar/avoid_steer
+      #       → vehicle_cmd_mux(AUTO 중 조향 override) → /cmd_vel
+      #       → 가상 차량이 RViz 에서 실제로 피해 간다
+      #   차를 안 움직이고도 "라이다가 보고 실제로 조향을 트는가" 를 눈으로 본다.
+      #   ⚠ 별도로 드라이버가 /scan 을 쏘고 있어야 한다:
+      #     ros2 launch sllidar_ros2 sllidar_a1_launch.py       #         serial_port:=/dev/ldlidar serial_baudrate:=256000
+      #   ⚠ 마운트 방향을 먼저 확인할 것(fg_yaw_offset_deg 기본 180).
+      #     tools/lidar_monitor.py 로 차 정면 물체가 ~0° 로 보이는지 본다.
+      #     뒤집혀 있으면 **반대로 피한다** = 이탈.
+      DeclareLaunchArgument('lidar', default_value='false'),
 
       # 맵(전역경로)
       Node(
@@ -69,6 +83,19 @@ def generate_launch_description():
           executable='local_sliding_window_node',
           name='local_sliding_window_node',
           output='screen',
+      ),
+      # 라이다 장애물 회피 (lidar:=true 일 때만)
+      #   require_arm_for_steer 는 false 로 둔다 — HIL 시험에는 시퀀서가 없고,
+      #   arm 을 아무도 안 주면 조향 회피가 영영 안 켜져 시험이 성립하지 않는다.
+      #   (실차 bringup 에서는 sequencer 인자에 묶여 구간 밖에서 안 켜진다)
+      Node(
+          package='lidar_clustering',
+          executable='cluster_plot_node',
+          name='lidar_clustering',
+          output='screen',
+          condition=IfCondition(lidar),
+          parameters=[{'enable_plot': False,
+                       'require_arm_for_steer': False}],
       ),
       # 제어 체인: pure_pursuit + longitudinal + mux + serial_bridge(→아두이노)
       IncludeLaunchDescription(
