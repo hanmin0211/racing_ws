@@ -97,7 +97,7 @@ class FakeScan:
     return tmin if tmin > 0 else None
 
 
-def run(case_name, obstacles, y_start=0.0, v=0.6):
+def run(case_name, obstacles, y_start=0.0, v=0.6, escape_s=3.0):
   planner = FollowGapPlanner(
       yaw_offset_deg=0.0, front_fov_deg=180.0, min_range=0.10, max_range=8.0,
       track_width=2.7, planning_lookahead=2.2, obstacle_trigger_distance=3.0,
@@ -115,15 +115,36 @@ def run(case_name, obstacles, y_start=0.0, v=0.6):
   steps = 0
   collided = False
   half_w = 0.775 / 2
+  # ★ 막힘 탈출 (cluster_plot_node 의 blocked_escape_s 와 같은 동작).
+  #   차가 서면 스캔이 안 바뀌어 BLOCKED 가 영원히 풀리지 않는다. 규정상
+  #   1분 이상 정지는 탈락이므로, 일정 시간 막히면 회피를 포기하고 경로로
+  #   빠져나간다. 여기서도 같이 모사해야 이 하네스가 실제 동작을 반영한다.
+  stuck = 0.0
+  escaping = False
+  escaped_at = None
+  # 차선이탈 판정. 회피가 과해서 트랙 밖으로 나가면 규정상 차선이탈이고
+  # (1회당 1점, 최대 10점), 연석까지 넘으면 **탈락**이다. 충돌만 안 나면
+  # '통과' 로 보던 예전 판정은 이 실패를 못 봤다(2026-09-11).
+  track_half = 2.7 / 2
+  max_abs_y = 0.0
   while px < x_end and steps < 4000:
     d = planner.plan(scan.cast(obstacles, px, py, yaw))
-    if d.mode in ('AVOID',):
+    if d.mode in ('BLOCKED', 'NO_SCAN'):
+      stuck += dt
+    else:
+      stuck = 0.0
+      escaping = False
+    if escape_s > 0.0 and stuck >= escape_s and not escaping:
+      escaping = True
+      escaped_at = px
+
+    if d.mode == 'AVOID' and not escaping:
       tgt = max(-max_steer, min(max_steer, math.radians(d.best_angle_deg)))
       vv = 0.5      # 회피 저속
-    elif d.mode in ('BLOCKED', 'NO_SCAN'):
+    elif d.mode in ('BLOCKED', 'NO_SCAN') and not escaping:
       tgt = delta   # 유지(정지 상황)
       vv = 0.0
-    else:            # CLEAR → GPS 경로(중앙선 y=0)로 복귀. 실제 시스템은 이때
+    else:            # CLEAR(또는 탈출 중) → GPS 경로(중앙선 y=0)로 복귀.
       # pure-pursuit 가 경로를 따르므로 '직진'이 아니라 중앙선으로 돌아온다.
       # 간이 경로추종: heading + 횡오차(py) 비례로 중앙선 겨냥.
       tgt = max(-max_steer, min(max_steer, -1.2 * yaw - 0.6 * py))
@@ -142,15 +163,24 @@ def run(case_name, obstacles, y_start=0.0, v=0.6):
         min_clear = min(min_clear, c)
         if c <= 0.0:
           collided = True
+    max_abs_y = max(max_abs_y, abs(py))
     steps += 1
-    if vv == 0.0 and d.mode != 'CLEAR':
-      # 정지 상황이 지속되면 통과 실패
-      if steps > 200:
-        break
-  passed = px >= x_end and not collided
+    # 정지가 오래 지속되면 통과 실패로 본다.
+    # ★ 기준은 '전체 스텝 수' 가 아니라 '막혀 있던 시간' 이어야 한다.
+    #   예전엔 steps>200 이라, 코스 뒤쪽에서 막히면 1초만 서 있어도 끊겨서
+    #   막힘 탈출(escape_s, 기본 3초)이 발동할 기회조차 없었다(2026-09-11).
+    if stuck > (escape_s if escape_s > 0.0 else 0.0) + 10.0:
+      break
+  through = px >= x_end and not collided
+  in_lane = (max_abs_y + half_w) <= track_half
+  passed = through and in_lane
+  esc = f', 막힘탈출 발동(x={escaped_at:.1f}m)' if escaped_at is not None else ''
+  lane = (f'차선 안(최대 |y|={max_abs_y:.2f}m)' if in_lane
+          else f'★차선이탈(최대 |y|={max_abs_y:.2f}m > 허용 '
+               f'{track_half - half_w:.2f}m)')
   print(f'  [{case_name}] {"✅ 통과" if passed else "❌ 실패"} — '
         f'최종 x={px:.1f}m, 장애물 최소간격 {min_clear:.2f}m, '
-        f'{"충돌!" if collided else "충돌없음"}')
+        f'{"충돌!" if collided else "충돌없음"}, {lane}{esc}')
   return passed
 
 
@@ -166,6 +196,9 @@ def main():
   ap.add_argument('--offset', type=float, default=0.65,
                   help='중심선에서 좌우 오프셋[m] — 실측할 것')
   ap.add_argument('--speed', type=float, default=0.6, help='주행 속도[m/s]')
+  ap.add_argument('--escape-s', type=float, default=3.0,
+                  help='이 시간 이상 BLOCKED 면 회피를 포기하고 경로로 빠져나간다 '
+                       '(cluster_plot_node 의 blocked_escape_s 와 같은 값). 0=끔')
   args = ap.parse_args()
 
   def O(cx, cy):
@@ -178,12 +211,21 @@ def main():
   print('  ⚠ 위 값은 잠정치다 — 현장 실측 후 --length/--width/--spacing 으로 덮어쓸 것\n')
 
   # 규정: 배치는 좌→우 또는 우→좌 랜덤. 두 경우 다 통과해야 한다.
-  r1 = run('배치A 좌→우', [O(0, +off), O(s, -off)], v=args.speed)
-  r2 = run('배치B 우→좌', [O(0, -off), O(s, +off)], v=args.speed)
+  r1 = run('배치A 좌→우', [O(0, +off), O(s, -off)], v=args.speed,
+           escape_s=args.escape_s)
+  r2 = run('배치B 우→좌', [O(0, -off), O(s, +off)], v=args.speed,
+           escape_s=args.escape_s)
   print()
   ok = r1 and r2
   print('결과:', '✅ 두 배치 모두 통과' if ok
-        else '⚠ 일부 실패 — 파라미터 튜닝 필요 (배치는 당일 랜덤이라 둘 다 통과해야 한다)')
+        else '⚠ 일부 실패 — 배치는 당일 랜덤이라 둘 다 통과해야 한다')
+  if not ok:
+    print()
+    print('  판정 기준 두 가지를 구분할 것:')
+    print('   · 충돌/고착  = 장애물 접촉 10점, 1분 이상 정지면 **탈락**')
+    print('   · 차선이탈   = 1회당 1점(최대 10점), 연석을 넘으면 **탈락**')
+    print('  회피가 갭 중앙을 겨냥하고(필요 7.2° 대비 13°), 방위각을 조향각으로')
+    print('  그대로 쓰며(1.43배), 트랙을 차량 기준으로 보기 때문에 과조향이 난다.')
   sys.exit(0 if ok else 1)
 
 
