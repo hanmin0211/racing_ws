@@ -68,9 +68,10 @@ def summarize(rows, max_steer_deg, path_len, tag=''):
   if not rows:
     print('샘플이 없다 — 스택이 안 돌았거나 토픽이 안 왔다.')
     return False
-  A = {k: np.array([r[k] for r in rows], dtype=float)
-       for k in ('t', 'cte', 's', 'cmd_steer', 'act_steer', 'adc', 'v_cmd',
-                 'vcc', 'stall', 'enc')}
+  keys = ('t', 'cte', 's', 'cmd_steer', 'act_steer', 'adc', 'v_cmd',
+          'vcc', 'stall', 'enc', 'avoid', 'obs', 'lmode')
+  A = {k: np.array([r.get(k, float('nan')) for r in rows], dtype=float)
+       for k in keys}
   dur = A['t'][-1] - A['t'][0]
   moved = A['s'].max() - A['s'].min()
 
@@ -139,6 +140,35 @@ def summarize(rows, max_steer_deg, path_len, tag=''):
           + (' …' if len(eps) > 12 else ''))
 
   print('-' * 74)
+  # 라이다 회피 — /lidar/mode 가 왔을 때만
+  lm = A['lmode']
+  av = A['avoid']
+  if np.isfinite(av).any() or (lm > 0).any():
+    n_av = int((lm == 1.0).sum())
+    n_bl = int((lm == 2.0).sum())
+    print(f'  라이다 회피     : AVOID {n_av}샘플 ({n_av / len(lm) * 100:.1f}%)  '
+          f'BLOCKED {n_bl}샘플 ({n_bl / len(lm) * 100:.1f}%)')
+    # 회피 에피소드
+    on = lm == 1.0
+    starts = np.where(np.diff(on.astype(int)) == 1)[0] + 1
+    print(f'     회피 발동    : {len(starts)}회'
+          + (' — s ' + ', '.join(f'{A["s"][i]:.0f}m' for i in starts[:10])
+             if len(starts) else ''))
+    if n_av:
+      cte_av = A['cte'][on]
+      print(f'     회피 중 이탈 : 평균 {cte_av.mean():.3f}m  최대 '
+            f'{cte_av.max():.3f}m')
+      sa = av[np.isfinite(av) & on]
+      if len(sa):
+        print(f'     회피 조향각  : 평균 {np.abs(sa).mean():+.1f}°  최대 '
+              f'{np.abs(sa).max():.1f}°')
+    if n_bl:
+      print('     ⚠ BLOCKED 가 있었다 — 라이다가 길이 막혔다고 판단해 차를')
+      print('       세운 것이다. 대회에서 1분 이상이면 탈락이다.')
+    ob = A['obs'][np.isfinite(A['obs'])]
+    if len(ob):
+      print(f'     전방 최근접  : {ob.min():.2f}m')
+  print('-' * 74)
   # 전원
   v = A['vcc'][A['vcc'] > 0]
   if len(v):
@@ -181,7 +211,7 @@ def run_live(args):
   from rclpy.node import Node
   # /steering_angle 은 Float64 다 (Float32 로 구독하면 타입 불일치로
   # **조용히 아무것도 안 온다** — 2026-09-10 실제로 걸렸다).
-  from std_msgs.msg import Bool, Float64, Int32
+  from std_msgs.msg import Bool, Float64, Int32, String
 
   wp, cum_s = load_waypoints(args.wp)
   seg = np.hypot(*np.diff(wp, axis=0).T)
@@ -195,7 +225,12 @@ def run_live(args):
       self.ring = deque(maxlen=int(3.0 * args.rate))   # 스톨 직전 3초
       self.cur = dict(cte=0.0, s=0.0, cmd_steer=0.0, act_steer=float('nan'),
                       adc=float('nan'), v_cmd=0.0, vcc=0.0, stall=0.0,
-                      enc=float('nan'))
+                      enc=float('nan'),
+                      # 라이다 회피 (lidar:=true 로 띄웠을 때만 들어온다)
+                      avoid=float('nan'),   # 회피 조향각[도], NaN=회피 없음
+                      obs=float('nan'),     # 전방 장애물 거리[m]
+                      lmode=0.0)            # 0=없음/CLEAR 1=AVOID 2=BLOCKED
+      self.lmode_txt = ''
       self.have_odom = False
       self.done = False
       # ★ /goal_reached 는 완주 후 계속 true 로 남는다(래치). 프로브를 나중에
@@ -212,6 +247,9 @@ def run_live(args):
       self.create_subscription(Int32, '/vcc_mv', self.vcc, 20)
       self.create_subscription(Int32, '/encoder_count', self.enc, 20)
       self.create_subscription(Bool, '/goal_reached', self.goal, 10)
+      self.create_subscription(Float64, '/lidar/avoid_steer', self.avoid, 20)
+      self.create_subscription(Float64, '/obstacle_distance', self.obs, 20)
+      self.create_subscription(String, '/lidar/mode', self.lmode, 20)
       self.create_timer(1.0 / args.rate, self.tick)
       print(f'계측 시작 — 경로 {len(wp)}점 {path_len:.1f}m. '
             'Ctrl-C 또는 완주 시 요약.')
@@ -228,6 +266,15 @@ def run_live(args):
       self.cur['v_cmd'] = float(m.linear.x)
 
     def act(self, m): self.cur['act_steer'] = float(m.data)
+
+    def avoid(self, m): self.cur['avoid'] = float(m.data)
+
+    def obs(self, m): self.cur['obs'] = float(m.data)
+
+    def lmode(self, m):
+      t = str(m.data).upper()
+      self.lmode_txt = t
+      self.cur['lmode'] = 2.0 if 'BLOCK' in t else (1.0 if 'AVOID' in t else 0.0)
 
     def adc(self, m): self.cur['adc'] = float(m.data)
 
