@@ -34,8 +34,9 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.actions import (DeclareLaunchArgument,
+                            IncludeLaunchDescription, LogInfo)
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
@@ -371,6 +372,17 @@ def generate_launch_description():
               'ff_gain': LaunchConfiguration('ff_gain'),
           }.items(),
       ),
+
+      # ★ 2026-09-12 학교 — lidar:=true 를 빼먹어 차가 의자를 그대로 박았다.
+      #   라이다 드라이버는 떠 있어서 /scan_front 가 정상 발행 중이었는데,
+      #   그걸 받아 판단하는 노드가 없으니 차 입장에선 장애물이 없는 것이었다.
+      #   조용히 넘어가면 대회장에서 똑같이 반복된다 — 시작할 때 크게 외친다.
+      LogInfo(condition=UnlessCondition(lidar), msg=[
+          '\n'
+          '════════════════════════════════════════════════════════════\n'
+          '  ⚠⚠  회피 꺼짐 (lidar:=false)  —  장애물을 그대로 들이받는다\n'
+          '       장애물·S코스·돌발정지 구간을 달릴 거면 lidar:=true\n'
+          '════════════════════════════════════════════════════════════']),
 
       # 7-c. 라이다 장애물 회피 (lidar:=true 일 때만)
       # /scan → DBSCAN+트래킹+FollowGap → /obstacle_distance + /lidar/avoid_steer.
