@@ -235,9 +235,17 @@ class ClusterPlotNode(Node):
             Float64, '/lidar/avoid_steer', 10)
         self.mode_pub = self.create_publisher(String, '/lidar/mode', 10)
 
+        # ★ 2026-09-12 — 스캔 토픽을 파라미터로 뺐다.
+        #   이 차에는 라이다가 **앞뒤 두 대** 달려 있다(둘 다 CP2102).
+        #   드라이버를 두 번 띄우면 기본값 그대로라 **둘 다 /scan 에 발행**하고,
+        #   그러면 앞뒤 스캔이 섞여 회피가 **뒤쪽 물체에 반응**한다 = 이탈.
+        #   전방 회피는 /scan_front 만 봐야 한다.
+        #   (기본값은 /scan 으로 둔다 — 한 대만 띄우던 기존 사용법이 그대로 돈다)
+        self.scan_topic = str(
+            self.declare_parameter('scan_topic', '/scan').value)
         self.subscription = self.create_subscription(
             LaserScan,
-            '/scan',
+            self.scan_topic,
             self.scan_callback,
             qos_profile_sensor_data,
         )
@@ -250,6 +258,14 @@ class ClusterPlotNode(Node):
             str(self.declare_parameter('mute_topic', '/lidar/mute').value),
             self.mute_cb, 10)
 
+        # ★ 스캔 워치독 (2026-09-12)
+        #   토픽 이름이 어긋나면(단일 /scan vs 앞뒤 분리 /scan_front) 이 노드는
+        #   **아무 말 없이 라이다가 없는 것처럼** 동작한다. 회피도 전방 정지도
+        #   조용히 사라진다 — 현장에서 가장 찾기 어려운 종류의 고장이다.
+        #   구독한 토픽 이름을 박아 크게 알린다.
+        self._last_scan_t = None
+        self.create_timer(2.0, self._scan_watchdog)
+
         self.window_closed = False
         self.frame_count = 0
         self.draw_interval = 2
@@ -257,11 +273,29 @@ class ClusterPlotNode(Node):
         self.status_log_interval = 20
 
         self.get_logger().info(
-            'LiDAR DBSCAN + Hungarian + Follow the Gap started.'
+            f'LiDAR DBSCAN + Hungarian + Follow the Gap started. '
+            f'(scan={self.scan_topic}, yaw_offset='
+            f'{math.degrees(self.follow_gap_planner.yaw_offset):.0f}°, '
+            f'aim={self.follow_gap_planner.aim})'
         )
         self.get_logger().info(
             'Vehicle coordinate: +X forward, +Y left, -Y right.'
         )
+
+    def _scan_watchdog(self):
+        now = self.get_clock().now().nanoseconds * 1e-9
+        if self._last_scan_t is None:
+            self.get_logger().error(
+                f'❌ 스캔이 한 번도 안 왔다 — 구독 토픽: {self.scan_topic}\n'
+                '   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.\n'
+                '   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).\n'
+                '   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan',
+                throttle_duration_sec=5.0)
+        elif now - self._last_scan_t > 3.0:
+            self.get_logger().error(
+                f'❌ 스캔이 {now - self._last_scan_t:.0f}초째 끊겼다 '
+                f'({self.scan_topic}) — 전방 정지·회피가 모두 죽어 있다.',
+                throttle_duration_sec=5.0)
 
     def path_steer_cb(self, msg):
         self.path_steer_deg = float(msg.data)
@@ -424,6 +458,7 @@ class ClusterPlotNode(Node):
             self.get_logger().info('■ DISARM — 조향 회피만 끈다. 감속은 계속 동작')
 
     def scan_callback(self, msg):
+        self._last_scan_t = self.get_clock().now().nanoseconds * 1e-9
         if self.window_closed:
             return
 

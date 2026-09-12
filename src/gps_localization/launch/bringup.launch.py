@@ -219,6 +219,10 @@ def generate_launch_description():
       # 회피 결과는 /obstacle_distance(정지)+/lidar/avoid_steer(조향 override)로
       # 나가 먹스가 AUTO 중에 반영한다. enable_plot 은 헤드리스라 기본 false.
       DeclareLaunchArgument('lidar', default_value='false'),
+      # ★ 라이다가 앞뒤 두 대다. lidar_dual.launch.py 가 /scan_front 로 낸다.
+      #   한 대만(sllidar_a1_launch.py) 띄웠으면 scan_topic:=/scan 으로 줄 것.
+      #   어긋나면 조용히 라이다가 없는 것처럼 동작한다(노드가 경고는 낸다).
+      DeclareLaunchArgument('scan_topic', default_value='/scan_front'),
       # ⚠ crosswalk:=true 면 횡단보도 정지(정지선 앞 정지 → 3초 → 재출발)를 켠다.
       # 정지지점은 mission 과 같은 ~/stop_points.yaml 을 쓴다.
       # mission:=true 와 함께 켜지 말 것(같은 토픽을 서로 덮어쓴다).
@@ -345,6 +349,7 @@ def generate_launch_description():
           output='screen',
           condition=IfCondition(lidar),
           parameters=[{
+              'scan_topic': LaunchConfiguration('scan_topic'),
               'enable_plot': False,
               'require_arm_for_steer': ParameterValue(sequencer, value_type=bool)}],
       ),
