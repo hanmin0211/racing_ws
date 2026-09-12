@@ -181,8 +181,22 @@ def simulate(w, obstacles, a):
       reason = f'로컬 경로 생성 실패 (step {step})'
       break
 
+    # ---- 경로 추종 조향을 먼저 구한다 (aim='path' 가 이걸 기준으로 겨냥한다) ----
+    ld0 = min(max(a.k_ld * v + a.min_ld, a.min_ld), a.max_ld)
+    la0 = find_lookahead(out['points'], ld0)
+    if la0 is None:
+      reason = 'lookahead 없음'
+      break
+    xl0, yl0 = la0
+    dd0 = math.hypot(xl0, yl0)
+    if xl0 <= 0.05 or dd0 < 0.1:
+      reason = f'lookahead 가 차량 뒤 (step {step})'
+      break
+    d_path = math.atan(L * (2.0 * yl0 / (dd0 * dd0)))
+
     # ---- 라이다 ----
-    d = planner.plan(scan.cast(obstacles, x, y, yaw))
+    d = planner.plan(scan.cast(obstacles, x, y, yaw),
+                     target_deg=math.degrees(d_path))
     mode = d.mode
     # 고착 두 종류 (cluster_plot_node 와 같은 판정)
     #   BLOCKED/NO_SCAN     — 갭이 없다 / 스캔이 없다
@@ -221,17 +235,6 @@ def simulate(w, obstacles, a):
                else float('nan'))
 
     # ---- 횡방향: pure pursuit, AVOID 면 먹스가 통째로 갈아끼운다 ----
-    ld = min(max(a.k_ld * v + a.min_ld, a.min_ld), a.max_ld)
-    la = find_lookahead(out['points'], ld)
-    if la is None:
-      reason = 'lookahead 없음'
-      break
-    x_ld, y_ld = la
-    ld_dist = math.hypot(x_ld, y_ld)
-    if x_ld <= 0.05 or ld_dist < 0.1:
-      reason = f'lookahead 가 차량 뒤 (step {step})'
-      break
-    d_path = math.atan(L * (2.0 * y_ld / (ld_dist * ld_dist)))
     # ★ 먹스 규약: AVOID 면 GPS 조향을 **통째로** 회피각으로 갈아끼운다.
     #   (vehicle_cmd_mux_node.py: s, mode = self.avoid_steer, 'AVOID(라이다)')
     d_target = math.radians(avoid) if not math.isnan(avoid) else d_path
@@ -317,7 +320,8 @@ def main():
   ap.add_argument('--vehicle-width', type=float, default=0.775)
   ap.add_argument('--safety-margin', type=float, default=0.25)
   ap.add_argument('--escape-s', type=float, default=8.0)
-  ap.add_argument('--aim', choices=('center', 'nearest'), default='center',
+  ap.add_argument('--aim', choices=('center', 'nearest', 'path'),
+                  default='path',
                   help="갭 안 겨냥점. center=갭 중앙(원형), "
                        "nearest=직진에 가장 가까운 각(필요한 만큼만 비켜감)")
   ap.add_argument('--aim-margin-deg', type=float, default=2.0)

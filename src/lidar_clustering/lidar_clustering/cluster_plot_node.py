@@ -103,10 +103,8 @@ class ClusterPlotNode(Node):
             side_score_margin=gp('fg_side_score_margin', 0.20),
             # 갭 안에서 겨냥점 — 'nearest' 는 '필요한 만큼만 비켜간다'.
             # follow_gap_planner 의 self.aim 주석 참고.
-            # ⚠ 기본값은 'center' 다. 'nearest' 는 차선이탈을 완전히 없애지만
-            #   시험한 전 배치에서 **장애물을 스쳤다**(최소간격 0.00m).
-            #   측정 내역은 follow_gap_planner 의 self.aim 주석 참고.
-            aim=str(self.declare_parameter('fg_aim', 'center').value),
+            # 기본 'path' — 측정 근거는 follow_gap_planner 의 self.aim 주석.
+            aim=str(self.declare_parameter('fg_aim', 'path').value),
             aim_margin_deg=gp('fg_aim_margin_deg', 2.0),
         )
 
@@ -211,10 +209,35 @@ class ClusterPlotNode(Node):
         #   **1.43배 과조향**이고, 이게 회피가 차선을 크게 벗어나는 원인 중 하나다.
         #     'bearing' = 예전 동작(그대로 사용)
         #     'pursuit' = 퓨어퍼슛 환산
+        # ★ aim='path' 용 — 경로 추종이 원하는 조향 방향.
+        #   local_pure_pursuit 가 /steering_cmd 로 낸다(도, 좌+/우−).
+        #   이게 있어야 '경로로 돌아오는 쪽으로 비켜간다' 가 된다.
+        #   못 받으면(타임아웃) 0 으로 두어 aim='nearest' 와 같게 동작한다.
+        self.path_steer_deg = 0.0
+        self.path_steer_time = 0.0
+        self.path_steer_timeout = float(
+            self.declare_parameter('path_steer_timeout', 0.5).value)
+        self.create_subscription(
+            Float64,
+            str(self.declare_parameter('path_steer_topic',
+                                       '/steering_cmd').value),
+            self.path_steer_cb, 10)
+
         self.steer_mode = str(
             self.declare_parameter('steer_mode', 'bearing').value).lower()
         self.steer_wheelbase = float(
             self.declare_parameter('steer_wheelbase', 0.785).value)
+
+    def path_steer_cb(self, msg):
+        self.path_steer_deg = float(msg.data)
+        self.path_steer_time = self.get_clock().now().nanoseconds * 1e-9
+
+    def _path_target_deg(self):
+        """신선한 /steering_cmd 만 쓴다. 끊기면 0(직진 기준)으로 폴백."""
+        now = self.get_clock().now().nanoseconds * 1e-9
+        if now - self.path_steer_time > self.path_steer_timeout:
+            return 0.0
+        return self.path_steer_deg
 
     def _bearing_to_steer(self, deg):
         """갭 방위각[도] → 조향각[도]. steer_mode 에 따라 환산하거나 그대로."""
@@ -406,7 +429,8 @@ class ClusterPlotNode(Node):
 
         self.frame_count += 1
 
-        gap_decision = self.follow_gap_planner.plan(msg)
+        gap_decision = self.follow_gap_planner.plan(
+            msg, target_deg=self._path_target_deg())
 
         # ★ 제어팀 통합: FollowGap 결정을 **가장 먼저** 발행한다.
         # follow_gap 은 원본 msg 로 독립 계산되므로 트래커 상태와 무관하다.
