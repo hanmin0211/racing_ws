@@ -90,20 +90,29 @@ class FollowGapPlanner:
         #   aim_margin_deg: 'nearest' 에서 갭 가장자리에 딱 붙지 않게 안쪽으로
         #   더 밀어 넣는 여유각.
         #
-        # ★★ 2026-09-12 측정 — **둘 다 답이 아니다.** (학교 트랙, 장애물 3개)
-        #      center  : 접촉 없음(최소간격 0.11~0.16m) · 차선 1~2.6m **이탈**
-        #      nearest : 차선이탈 0(최대 0.18~0.32m) · 시험한 **전 배치에서 접촉**
-        #    여유각(2~16°)을 키워도, 안전여유(0.25~0.70m)를 키워도 nearest 의
-        #    접촉이 안 없어졌다. 안전여유를 키우면 버블만 커지는 게 아니라
-        #      max_center_y = track_half − veh_half − margin
-        #    도 같이 줄어 **회피에 쓸 각도 창 자체가 좁아지기 때문**이다
-        #    (margin 0.70 이면 |각| ≤ 6.8° 밖에 못 쓴다). 구조적 결합이다.
+        # ★★ 2026-09-12 측정 (학교 트랙 88m, 장애물 3개, 9가지 배치)
+        #    통과 = 완주 + 접촉 없음 + 차선(±0.96m) 안
+        #      center  : 0/9 — 접촉은 없지만 차선을 1.0~2.9m 벗어난다
+        #      nearest : 4/9 — 차선은 지키지만 촘촘하면 여전히 벗어난다
+        #      path    : **7/9** — 여유 0.28m, 최대이탈 0.39~0.86m
+        #    실패한 2건은 간격 4m(장애물 길이 1.3m 를 빼면 사이가 2.7m 뿐인
+        #    극단적 배치)뿐이다. → 기본값 'path'.
         #
-        #    진짜 원인은 플래너가 **기준 경로를 모른다**는 것이다. 차량 좌표계
-        #    에서만 판단하므로 '경로에서 얼마나 벗어났는가' 라는 개념이 없고,
-        #    그래서 '경로 이탈을 최소화하면서 안전하게 비켜간다' 를 목적으로
-        #    삼을 수가 없다. 그걸 넣는 것이 실제 수정이다.
-        #    그전까지 기본값은 'center'(접촉 없음) 다.
+        #    왜 path 가 나은가: center 는 '빈 공간의 한가운데' 라는, 경로와
+        #    아무 상관 없는 목표를 쫓아 과하게 꺾는다. nearest 는 덜 꺾지만
+        #    기준이 '직진' 이라 장애물을 지난 뒤에도 **벗어난 채로 직진**한다.
+        #    path 는 기준이 '경로가 원하는 방향' 이라 비켜가는 동안에도, 지난
+        #    뒤에도 경로로 돌아온다.
+        #
+        #    ※ 이 측정은 _apply_safety_bubble 을 '장애물의 모든 점' 에 씌우도록
+        #      고친 뒤의 값이다. 그 전에는 최근접 한 점에만 씌워서 갭 가장자리가
+        #      곧 박스 모서리였고, nearest/path 가 전 배치에서 스쳤다.
+        #   'path'    — 'nearest' 와 같되, 겨냥의 기준을 직진(0°)이 아니라
+        #               **경로 추종이 원하는 방향**으로 삼는다. plan(target_deg=)
+        #               으로 pure pursuit 의 조향 방향을 받는다. 이게 있어야
+        #               '장애물을 비켜가되 **경로로 돌아오는 쪽**으로 비켜간다'
+        #               가 된다. 0° 기준이면 장애물을 지난 뒤에도 벗어난 채로
+        #               직진해 버린다.
         self.aim = str(aim)
         self.aim_margin_deg = float(aim_margin_deg)
 
@@ -190,25 +199,29 @@ class FollowGapPlanner:
         if len(obstacle_indices) == 0:
             return safe_ranges
 
-        closest_index = obstacle_indices[
-            np.argmin(ranges[obstacle_indices])
-        ]
-
-        obstacle_distance = float(ranges[closest_index])
-        obstacle_angle = float(angles[closest_index])
-
-        ratio = self.safety_radius / max(obstacle_distance, 0.05)
-        ratio = min(ratio, 0.99)
-
-        bubble_half_angle = math.asin(ratio)
-
-        safe_ranges[
-            np.abs(angles - obstacle_angle) <= bubble_half_angle
-        ] = 0.0
+        # ★ 2026-09-12 — 버블을 **장애물의 모든 점**에 씌운다.
+        #
+        #   예전에는 '가장 가까운 한 점' 에만 씌웠다. 그러면 길이 1.3m 짜리
+        #   박스처럼 각도를 넓게 차지하는 장애물은 **나머지 부분이 보호되지
+        #   않는다.** 최근접점 기준 버블(3m 거리에서 ±12.3°)이 박스 전체를
+        #   덮지 못해, 갭의 가장자리가 곧 박스 모서리가 된다.
+        #   그래서 갭 가장자리를 겨냥하면(aim='nearest') 여유가 0 이 되어
+        #   시험한 전 배치에서 스쳤다. 갭 중앙을 겨냥할 때(aim='center')만
+        #   우연히 멀찍이 돌아 나가 접촉을 면했던 것이다.
+        #
+        #   점마다 거리가 다르므로 버블 반각도 점마다 다르다(가까울수록 넓다).
+        for index in obstacle_indices:
+            distance = float(ranges[index])
+            ratio = min(self.safety_radius / max(distance, 0.05), 0.99)
+            half_angle = math.asin(ratio)
+            safe_ranges[
+                np.abs(angles - float(angles[index])) <= half_angle
+            ] = 0.0
 
         return safe_ranges
 
-    def _find_largest_gap(self, angles, safe_ranges, original_ranges):
+    def _find_largest_gap(self, angles, safe_ranges, original_ranges,
+                          target_angle=0.0):
         free_mask = safe_ranges > 0.0
         gaps = []
         start = None
@@ -232,14 +245,17 @@ class FollowGapPlanner:
         )
 
         start, end = best_gap
-        if self.aim == 'nearest':
-            # 갭 안에서 직진(0°)에 가장 가까운 각. 단 가장자리에서
-            # aim_margin_deg 만큼은 안쪽으로 들어간다.
+        if self.aim in ('nearest', 'path'):
+            # 갭 안에서 '가고 싶은 방향' 에 가장 가까운 각.
+            #   nearest → 가고 싶은 방향 = 직진(0°)
+            #   path    → 가고 싶은 방향 = 경로 추종이 원하는 방향(target_angle)
+            # 갭 가장자리에서 aim_margin_deg 만큼은 안쪽으로 들어간다.
+            want = target_angle if self.aim == 'path' else 0.0
             m = math.radians(self.aim_margin_deg)
             lo, hi = angles[start], angles[end]
             if hi - lo > 2.0 * m:
                 lo, hi = lo + m, hi - m
-            target = min(max(0.0, lo), hi)      # 0 을 [lo, hi] 로 클램프
+            target = min(max(want, lo), hi)     # want 를 [lo, hi] 로 클램프
             best_index = int(start + np.argmin(
                 np.abs(angles[start:end + 1] - target)))
         else:
@@ -253,7 +269,8 @@ class FollowGapPlanner:
             'best_clearance': float(np.max(original_ranges[start:end + 1])),
         }
 
-    def plan(self, msg):
+    def plan(self, msg, target_deg=None):
+        """target_deg: 경로 추종이 원하는 조향 방향[도]. aim='path' 에서만 쓴다."""
         angles, ranges = self._prepare_front_scan(msg)
 
         if len(ranges) == 0:
@@ -285,7 +302,8 @@ class FollowGapPlanner:
         )
 
         gap = self._find_largest_gap(
-            angles, safe_ranges, ranges
+            angles, safe_ranges, ranges,
+            target_angle=math.radians(target_deg or 0.0)
         )
 
         if gap is None:
