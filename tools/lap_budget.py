@@ -14,7 +14,7 @@
 
 ★ 모델
   구동은 개루프 FF 다(NO_ENCODER):  PWM = STATIC_FF + VELOCITY_FF_GAIN·v
-  펌웨어 실측값 80 / 95 → v_max = (PWM − 80) / 95
+  지면 실측값 44.2 / 22.6 → v_max = (PWM − 44.2) / 22.6
   랩타임은 tracking_sim 의 폐루프 시뮬로 낸다. 2026-09-09 HIL 실측
   (648.3m, v_max 0.5, 1670초)과 시뮬이 1670초로 일치해 검증된 모델이다.
 
@@ -36,8 +36,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import tracking_sim as ts  # noqa: E402
 
 # 펌웨어 henes_firmware.ino 의 실측 FF 상수. 펌웨어를 바꾸면 여기도 바꿀 것.
-STATIC_FF = 80.0
-VELOCITY_FF_GAIN = 95.0
+# ★ 2026-09-12 지면 실측으로 교체 (tools/ff_identify.py, 학교 아스팔트).
+#   옛 값 80 / 95 는 **4배 틀렸다**. 그 값이면 0.15 m/s 명령에 PWM 94 가 나가
+#   차가 2 m/s 로 달렸고, 헤딩 캘리브가 8회 연속 깨졌다.
+#   실측 PWM 55 → 0.46 m/s · 65 → 1.11 · 94 → 1.98(calib_trace).
+#   4점 최소자승 22.6·v+44.2 와 신뢰점 2개 적합 25.7·v+43.2 가 일치한다.
+#   ⚠ 이 값은 개루프 FF 다. 지면·경사·배터리 전압에 따라 흔들린다
+#     (같은 PWM 45 가 0.00 과 0.36 m/s 로 갈렸다). 예산은 여유를 두고 볼 것.
+STATIC_FF = 44.2
+VELOCITY_FF_GAIN = 22.6
 PWM_HARD_MAX = 255            # analogWrite 물리 상한
 
 # 실제 런치/파라미터 기본값과 맞춘다. 여기가 어긋나면 표 전체가 거짓말이 된다.
@@ -79,8 +86,13 @@ def _run(job):
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument('--waypoints', required=True)
+  # ★ 2026-09-12: 기본 스윕을 160~255 → 60~90 으로 내렸다.
+  #   옛 FF(80+95·v)에서는 PWM 160 이 0.84 m/s 였지만, 실측 FF 로는 5.1 m/s 다.
+  #   즉 옛 표의 'PWM 160 이면 예산 초과' 같은 결론은 전부 무효다.
+  #   실측이 있는 범위는 PWM 55~94 (0.46~1.98 m/s) 뿐이고 그 위는 외삽이다.
+  #   ⚠ 바로 그 외삽이 2026-08-17 에 FF 를 10배 틀리게 만든 원인이었다.
   ap.add_argument('--pwms', type=int, nargs='*',
-                  default=[160, 180, 200, 213, 230, 244, 255])
+                  default=[60, 65, 70, 75, 80, 90])
   ap.add_argument('--gains', type=float, nargs='*', default=[6.0, 3.0])
   # config/mission_plan.yaml 의 expected_s 합. 기본값은 2026-09-09 시점 추정
   # (crosswalk 12 + 후진주차 45 + 급정지 12 + 경사로 12 + 신호교차로 20 +

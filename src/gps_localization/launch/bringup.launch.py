@@ -193,7 +193,13 @@ def generate_launch_description():
       # 헤딩을 모르는 개루프 전진이므로 앞을 비우고 E-stop을 쥔 채로 쓸 것.
       # control:=true 여야 실제로 움직인다(serial_bridge가 있어야 명령이 나감).
       DeclareLaunchArgument('auto_calib', default_value='false'),
-      DeclareLaunchArgument('auto_calib_speed', default_value='0.3'),
+      # ★ 2026-09-12: 0.3 → 0.5. 이 차는 개루프로 0.45 m/s 아래를 못 낸다.
+      #   지면 실측(tools/ff_identify.py): PWM 45 → 0.00 m/s · 55 → 0.46 · 65 → 1.11.
+      #   PWM 45~50 은 정지마찰조차 못 이겨 바퀴가 아예 안 돈다.
+      #   캘리브 실패 8회를 '더 느리게' 로 풀려고 0.3→0.2→0.15 로 내렸던 건
+      #   방향이 반대였다. 그 아래로는 차가 안 가거나(새 FF) 폭주한다(옛 FF).
+      #   캘리브에 필요한 직진은 10m 이고 0.5 m/s 면 20s — 최소 16.7s 를 넘는다.
+      DeclareLaunchArgument('auto_calib_speed', default_value='0.5'),
       # ★ 2026-09-12 현장 — 캘리브가 '측위 점프' 로 거부되는 일이 있어 노출한다.
       #   calib_jump_speed: 연속 fix 사이의 함축 속도가 이 값을 넘으면 GPS 점프로
       #     보고 캘리브를 무효화한다(기본 2.0 m/s). 갓 수렴한 RTK 는 몇 초간
@@ -223,6 +229,13 @@ def generate_launch_description():
       #     재빌드해야만 바꿀 수 있었다(노드가 init 에서 캐시한다).
       DeclareLaunchArgument('max_steer_deg', default_value='18.0'),
       DeclareLaunchArgument('curvature_gain', default_value='6.0'),
+      # ★ 구동 FF (2026-09-12 학교 실측). 펌웨어 FF(80+95·v)가 4배 틀려서
+      #   0.15 m/s 명령에 차가 2 m/s 로 달렸다 → 헤딩 캘리브 8회 연속 실패.
+      #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware.
+      DeclareLaunchArgument('ff_mode', default_value='ros',
+                            choices=['ros', 'firmware']),
+      DeclareLaunchArgument('ff_static', default_value='44.2'),
+      DeclareLaunchArgument('ff_gain', default_value='22.6'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
       #   ros2 launch sllidar_ros2 sllidar_a1_launch.py \
@@ -351,6 +364,11 @@ def generate_launch_description():
               'max_speed': max_speed,
               'max_steer_deg': max_steer_deg,
               'curvature_gain': curvature_gain,
+              # ★ 구동 FF — 펌웨어 상수가 틀려 있어 ROS 쪽에서 변환한다.
+              #   상세는 control.launch.py 의 ff_mode 주석 참고.
+              'ff_mode': LaunchConfiguration('ff_mode'),
+              'ff_static': LaunchConfiguration('ff_static'),
+              'ff_gain': LaunchConfiguration('ff_gain'),
           }.items(),
       ),
 

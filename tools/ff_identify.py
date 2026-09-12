@@ -65,7 +65,11 @@ class Runner(Node):
                       (self.lat - lat0) * M_PER_DEG)
 
   def send(self, pwm):
-    self.pub.publish(Int32(data=int(pwm)))
+    # 종료(Ctrl-C) 후에는 컨텍스트가 죽어 publish 가 예외를 낸다 — 조용히 무시.
+    try:
+      self.pub.publish(Int32(data=int(pwm)))
+    except Exception:  # noqa: BLE001
+      pass
 
   def hold_stop(self, sec=3.0):
     """PWM 0 을 계속 보내며 완전히 멈출 때까지 기다린다."""
@@ -95,8 +99,21 @@ class Runner(Node):
               f'{sigma_max * 100:.0f}cm) — 수렴 전 측정은 거짓이 된다')
     return False
 
+  def refresh(self, sec=1.0):
+    """위치를 최신으로 갱신한다.
+
+    ★ --pause 의 input() 은 ROS 를 안 돌린다. 그 동안 self.lat/lon 이 멈춰 있어,
+      사용자가 차를 되돌린 뒤 그 **옛 위치**를 기준점으로 잡으면 되돌린 거리가
+      통째로 '이동' 으로 잡힌다 (2026-09-12: '이동 28.30m / 0.0s').
+      단계 시작 전에 반드시 이걸 부를 것.
+    """
+    t0 = time.time()
+    while time.time() - t0 < sec:
+      rclpy.spin_once(self, timeout_sec=0.05)
+
   def run_step(self, pwm, run_dist, max_t, rate=20.0):
     """PWM 을 걸고 run_dist 를 갈 때까지(또는 max_t) 굴린다."""
+    self.refresh(1.0)          # 기준점을 최신 위치로
     lat0, lon0 = self.lat, self.lon
     t0 = time.time()
     samples = []          # (t, dist)
@@ -197,6 +214,11 @@ def main():
       print(f'  ▶ PWM {pwm} …', end='', flush=True)
       r = n.run_step(pwm, a.run_dist, a.max_t)
       rows.append(r)
+      if r['took'] < 0.5:
+        print(f' ❌ 무효 (측정시간 {r["took"]:.1f}s) — 기준점이 갱신되기 전에 '
+              '거리 조건을 넘었다. 다시 잴 것')
+        rows.pop()
+        continue
       print(f' 이동 {r["moved"]:5.2f}m / {r["took"]:4.1f}s  '
             f'정상상태 {r["v_ss"]:5.2f} m/s  최대 {r["v_peak"]:5.2f}  '
             f'관성 {r["coast"]:4.2f}m  σ {n.sig * 100:.1f}cm')
