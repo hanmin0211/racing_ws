@@ -68,6 +68,10 @@ def generate_launch_description():
       #     tools/lidar_monitor.py 로 차 정면 물체가 ~0° 로 보이는지 본다.
       #     뒤집혀 있으면 **반대로 피한다** = 이탈.
       DeclareLaunchArgument('lidar', default_value='false'),
+      # ★ 라이다가 앞뒤 두 대다. lidar_dual.launch.py 가 /scan_front 로 낸다.
+      #   한 대만(sllidar_a1_launch.py) 띄웠으면 scan_topic:=/scan 으로 줄 것.
+      #   어긋나면 조용히 라이다가 없는 것처럼 동작한다(노드가 경고는 낸다).
+      DeclareLaunchArgument('scan_topic', default_value='/scan_front'),
 
       # 맵(전역경로)
       Node(
@@ -94,7 +98,8 @@ def generate_launch_description():
           name='lidar_clustering',
           output='screen',
           condition=IfCondition(lidar),
-          parameters=[{'enable_plot': False,
+          parameters=[{'scan_topic': LaunchConfiguration('scan_topic'),
+                       'enable_plot': False,
                        'require_arm_for_steer': False}],
       ),
       # 제어 체인: pure_pursuit + longitudinal + mux + serial_bridge(→아두이노)
