@@ -102,7 +102,8 @@ def run(case_name, obstacles, y_start=0.0, v=0.6, escape_s=8.0):
       yaw_offset_deg=0.0, front_fov_deg=180.0, min_range=0.10, max_range=8.0,
       track_width=2.7, planning_lookahead=2.2, obstacle_trigger_distance=3.0,
       vehicle_width=0.775, safety_margin=0.25, straight_deadband_deg=5.0,
-      min_gap_width_deg=3.0, side_score_margin=0.20)
+      min_gap_width_deg=3.0, side_score_margin=0.20,
+      aim='center', aim_margin_deg=2.0)
   scan = FakeScan()
   L = 0.785
   max_steer = math.radians(18)

@@ -101,6 +101,13 @@ class ClusterPlotNode(Node):
             straight_deadband_deg=gp('fg_straight_deadband_deg', 5.0),
             min_gap_width_deg=gp('fg_min_gap_width_deg', 3.0),
             side_score_margin=gp('fg_side_score_margin', 0.20),
+            # 갭 안에서 겨냥점 — 'nearest' 는 '필요한 만큼만 비켜간다'.
+            # follow_gap_planner 의 self.aim 주석 참고.
+            # ⚠ 기본값은 'center' 다. 'nearest' 는 차선이탈을 완전히 없애지만
+            #   시험한 전 배치에서 **장애물을 스쳤다**(최소간격 0.00m).
+            #   측정 내역은 follow_gap_planner 의 self.aim 주석 참고.
+            aim=str(self.declare_parameter('fg_aim', 'center').value),
+            aim_margin_deg=gp('fg_aim_margin_deg', 2.0),
         )
 
         # 헤드리스 기본. 그래프가 필요할 때만(디버깅) enable_plot:=true.
