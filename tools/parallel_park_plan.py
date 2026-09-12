@@ -107,8 +107,81 @@ def cost(scene, p):
   return math.hypot(p[0] - g[0], p[1] - g[1]) + 0.03 * abs(wrapdeg(p[2] - g[2]))
 
 
+def plan_exit(scene, L, max_strokes=40, steer_deg=18.0, ds=0.02, margin=0.03,
+              beam=80, fracs=(0.34, 0.67, 1.0), res_xy=0.02, res_th=2.0):
+  """주차 자세 → **차선 복귀**. 규정은 주차로 끝나지 않는다.
+
+  항목 6·8: 뒷바퀴가 확인선을 접촉하고 **전진으로 진입확인선을 통과**하여야 함.
+  항목 10: 지정시간은 뒷바퀴가 **종료지점**을 통과할 때까지다.
+  → 들어간 뒤 다시 나와서 코스를 계속해야 하므로, 탈출 시간도 예산에 든다.
+
+  진입보다 쉽다(끝 자세를 정확히 맞출 필요가 없다). 차체가 칸을 완전히 벗어나
+  차선 안에 들어오고 헤딩이 +x 와 나란하면 성공으로 본다.
+  """
+  d = math.radians(steer_deg)
+  actions = [(v, dd) for v in (-1.0, +1.0) for dd in (-d, 0.0, +d)]
+  start = scene.goal()
+  if scene.clear(start) < margin:
+    return None, [], '주차 자세가 이미 막혔다'
+
+  def out(p):
+    # 차체가 **칸 밖(차선)** 으로 완전히 나오고 차선과 나란하면 탈출 완료다.
+    #   예전엔 '차체 전체가 칸 끝(x>S)을 넘을 것' 까지 요구했는데, 그건 탈출이
+    #   아니라 그 뒤 주행이다. 칸만 벗어나면 앞은 트여 있어 그냥 전진하면 된다.
+    c = scene.corners(p)
+    return min(q[1] for q in c) > 0.02 and abs(wrapdeg(p[2])) < 8.0
+
+  def cost_out(p):
+    # 칸에서 **횡으로** 빠져나오는 것이 본질이다. y 를 크게 본다.
+    c = scene.corners(p)
+    depth_in = max(0.0, 0.02 - min(q[1] for q in c))   # 아직 칸에 걸친 깊이
+    return depth_in * 3.0 + 0.02 * abs(wrapdeg(p[2]))
+
+  def key(p):
+    # ★ 중복제거 해상도. 끊어 넣기는 한 스트로크의 횡이동이 수 cm 라,
+    #   해상도가 굵으면 유용한 상태가 서로 뭉개져 탐색이 막힌다(2026-09-12
+    #   탈출 탐색이 이것 때문에 실패했다).
+    return (round(p[0] / res_xy), round(p[1] / res_xy),
+            round(math.degrees(p[2]) / res_th))
+
+  frontier = [(cost_out(start), start, [], [start])]
+  seen = {key(start)}
+  best = None
+  for _ in range(max_strokes):
+    nxt = []
+    for _, p, strokes, traj in frontier:
+      for v, delta in actions:
+        q, moved, pts = stroke(scene, p, v, delta, L, ds, margin)
+        if moved < ds * 3:
+          continue
+        for fr in fracs:
+          n = max(2, int(len(pts) * fr))
+          qq = pts[n - 1]
+          k = key(qq)
+          if k in seen:
+            continue
+          seen.add(k)
+          st2 = strokes + [dict(dir='후진' if v < 0 else '전진',
+                                steer=round(math.degrees(delta)),
+                                length=round(moved * fr, 3))]
+          tr2 = traj + pts[1:n]
+          if out(qq):
+            return st2, tr2, None
+          c = cost_out(qq)
+          nxt.append((c, qq, st2, tr2))
+          if best is None or c < best[0]:
+            best = (c, qq, st2, tr2)
+    if not nxt:
+      break
+    nxt.sort(key=lambda t: t[0])
+    frontier = nxt[:beam]
+  if best:
+    return None, best[3], f'탈출 실패 (최선 비용 {best[0]:.3f})'
+  return None, [start], '첫 스트로크부터 막혔다'
+
+
 def plan(scene, L, max_strokes=16, steer_deg=18.0, ds=0.02, margin=0.03,
-         beam=40, fracs=(0.34, 0.67, 1.0)):
+         beam=40, fracs=(0.34, 0.67, 1.0), res_xy=0.05, res_th=5.0):
   """스트로크 열을 **빔 탐색**으로 찾는다.
 
   ★ 왜 탐욕이 아니라 탐색인가 (2026-09-12)
@@ -128,8 +201,11 @@ def plan(scene, L, max_strokes=16, steer_deg=18.0, ds=0.02, margin=0.03,
     return None, [], '시작 자세가 이미 막혔다'
 
   def key(p):
-    return (round(p[0] / 0.05), round(p[1] / 0.05),
-            round(math.degrees(p[2]) / 5.0))
+    # ★ 중복제거 해상도. 끊어 넣기는 한 스트로크의 횡이동이 수 cm 라,
+    #   해상도가 굵으면 유용한 상태가 서로 뭉개져 탐색이 막힌다(2026-09-12
+    #   탈출 탐색이 이것 때문에 실패했다).
+    return (round(p[0] / res_xy), round(p[1] / res_xy),
+            round(math.degrees(p[2]) / res_th))
 
   frontier = [(cost(scene, start), start, [], [start])]
   seen = {key(start)}
@@ -243,6 +319,29 @@ def main():
   st, tr, err = plan(sc, a.wheelbase, a.max_strokes, a.max_steer_deg,
                      margin=a.margin, beam=a.beam)
   ok = report(sc, st, tr, err, veh, a)
+
+  # ★ 규정은 주차로 끝나지 않는다 — 항목 6·8 은 '전진으로 진입확인선 통과',
+  #   항목 10 은 '뒷바퀴가 종료지점 통과' 까지를 시간에 넣는다.
+  #   탈출 시간도 반드시 예산에 넣어야 한다.
+  ex, trx, errx = plan_exit(sc, a.wheelbase, max_strokes=60,
+                            steer_deg=a.max_steer_deg, margin=a.margin,
+                            beam=max(a.beam, 150), res_xy=0.02, res_th=2.0)
+  def secs(strokes):
+    cu = sum(1 for i in range(1, len(strokes))
+             if strokes[i]['dir'] != strokes[i - 1]['dir'])
+    return sum(x['length'] for x in strokes) / a.speed + cu * a.cusp_dwell
+  print()
+  if ex:
+    print(f'  [탈출] {len(ex)}스트로크 · 약 {secs(ex):.0f}초')
+    if st:
+      print(f'  [합계] 진입 {secs(st):.0f}s + 탈출 {secs(ex):.0f}s = '
+            f'**{secs(st) + secs(ex):.0f}초**  '
+            f'(주차 미션 예산 expected_s 45~50s 대비)')
+  else:
+    print(f'  [탈출] ❌ {errx}')
+    print('     ※ 탈출은 진입의 시간역전이라 **기하학적으로는 반드시 가능**하다.')
+    print('       여기서 실패하면 탐색 한계다 — res_xy/beam 을 조정할 것.')
+  ok = ok and bool(ex)
 
   if a.plot and tr:
     import matplotlib
