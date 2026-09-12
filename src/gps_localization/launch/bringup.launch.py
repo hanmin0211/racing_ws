@@ -194,6 +194,17 @@ def generate_launch_description():
       # control:=true 여야 실제로 움직인다(serial_bridge가 있어야 명령이 나감).
       DeclareLaunchArgument('auto_calib', default_value='false'),
       DeclareLaunchArgument('auto_calib_speed', default_value='0.3'),
+      # ★ 2026-09-12 현장 — 캘리브가 '측위 점프' 로 거부되는 일이 있어 노출한다.
+      #   calib_jump_speed: 연속 fix 사이의 함축 속도가 이 값을 넘으면 GPS 점프로
+      #     보고 캘리브를 무효화한다(기본 2.0 m/s). 갓 수렴한 RTK 는 몇 초간
+      #     좌표가 들썩여 0.2m 정도 튀는데, 0.09s 간격이면 2.2 m/s 라 걸린다.
+      #     ⚠ 이 가드는 2026-08-24 실제 충돌(점프를 직진으로 오인) 때문에 생겼다.
+      #       올리는 건 마지막 수단이고, 먼저 RTK 를 충분히 안정시킬 것.
+      #   calib_retry_radius: 캘리브 실패 후 재시작을 허용하는 시작점 반경[m].
+      #     기본 2.0 — 그보다 앞에 있으면 '차를 되돌리세요' 로 대기한다
+      #     (앞의 벽·커브 보호). 넓은 곳이면 키워도 된다.
+      DeclareLaunchArgument('calib_jump_speed', default_value='2.0'),
+      DeclareLaunchArgument('calib_retry_radius', default_value='2.0'),
       # ⚠ mission:=true 면 신호등 연동(traffic_light_bridge)이 켜진다.
       # 파이(Hailo)가 /traffic_light_state 를 쏘고 있어야 의미가 있고,
       # 정지지점은 ~/stop_points.yaml 에서 읽는다(STOP_POINTS_FILE 로 변경 가능).
@@ -284,6 +295,10 @@ def generate_launch_description():
               'auto_drive': auto_calib,
               'auto_speed': ParameterValue(auto_calib_speed,
                                           value_type=float),
+              'max_jump_speed': ParameterValue(
+                  LaunchConfiguration('calib_jump_speed'), value_type=float),
+              'retry_start_radius': ParameterValue(
+                  LaunchConfiguration('calib_retry_radius'), value_type=float),
           }],
       ),
 
