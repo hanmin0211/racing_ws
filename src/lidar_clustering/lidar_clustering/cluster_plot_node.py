@@ -158,14 +158,24 @@ class ClusterPlotNode(Node):
         #   빠져나가는 방향이 GPS 경로라는 점도 중요하다 — 경로는 기록된 주행선
         #   이므로, 과회피로 차선을 벗어나 갇힌 경우에는 이게 곧 복귀다.
         #
+        #   ★ 값 정하는 법 — **정당한 정지보다 길고, 탈락 문턱보다 훨씬 짧게.**
+        #     아래보다 짧으면 미션을 스스로 망친다:
+        #       돌발 급정지  규정 최소 3초 정지 (sudden_stop_node dwell 기본 5초)
+        #       경사로       3초 이상 정지
+        #       횡단보도     3초 대기
+        #     위로는 탈락 문턱이 60초다. 그래서 8초로 둔다.
+        #     (3초로 뒀다가 돌발 급정지의 3초 정지와 정면으로 겹치는 걸
+        #      2026-09-12 에 확인했다 — 규정 시간을 채우기 전에 출발해 버린다)
+        #     ※ 신호교차로 신호대기는 /stop_line_distance 로 서는 것이라
+        #       이 타이머와 무관하다(라이다 전방거리로만 판정한다).
         #   0 으로 두면 비활성(예전 동작 그대로).
         self.blocked_escape_s = float(
-            self.declare_parameter('blocked_escape_s', 3.0).value)
+            self.declare_parameter('blocked_escape_s', 8.0).value)
         #   라이다가 죽으면(NO_SCAN) obstacle_distance=0 이라 역시 영원히 선다.
         #   센서가 나가도 GPS 주행은 되므로, 더 오래 기다린 뒤 같은 처리를 한다.
         #   (lidar:=false 로 달리는 것과 같은 상태가 될 뿐이다)
         self.no_scan_escape_s = float(
-            self.declare_parameter('no_scan_escape_s', 5.0).value)
+            self.declare_parameter('no_scan_escape_s', 8.0).value)
         #   ★ 2026-09-12 — 고착은 BLOCKED 만이 아니다.
         #   AVOID 일 때도 obstacle_distance = front_distance 를 내보내므로,
         #   종방향이 obstacle_stop_dist(0.8m) 에서 **차를 세운다.** 라이다는
