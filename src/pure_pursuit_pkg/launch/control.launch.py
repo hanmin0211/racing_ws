@@ -41,7 +41,7 @@ def generate_launch_description():
   # ★ ROS 쪽 FF (2026-09-12) — 펌웨어를 다시 굽지 않고 구동 상수를 고친다.
   #   펌웨어 FF(80 + 95·v)는 지면 실측과 4배 어긋나 있다. 0.15 m/s 명령이
   #   PWM 94 로 나가 차가 2 m/s 로 달렸고, 그래서 헤딩 캘리브가 계속 깨졌다.
-  #   실측(tools/ff_identify.py, 학교 아스팔트): PWM = 22.6·v + 44.2
+  #   실측(tools/ff_identify.py, 학교 아스팔트): PWM = 38.8·v + 17.2
   #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware 로 되돌릴 것.
   ff_mode = LaunchConfiguration('ff_mode')
 
@@ -96,8 +96,8 @@ def generate_launch_description():
       # 그대로 두면 차가 명령의 4배 속도로 달린다(위 주석 참고).
       DeclareLaunchArgument('ff_mode', default_value='ros',
                             choices=['ros', 'firmware']),
-      DeclareLaunchArgument('ff_static', default_value='44.2'),
-      DeclareLaunchArgument('ff_gain', default_value='22.6'),
+      DeclareLaunchArgument('ff_static', default_value='17.2'),
+      DeclareLaunchArgument('ff_gain', default_value='38.8'),
 
       # 횡방향: 조향각만 발행 (속도는 종방향이 소유)
       Node(

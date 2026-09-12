@@ -234,8 +234,8 @@ def generate_launch_description():
       #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware.
       DeclareLaunchArgument('ff_mode', default_value='ros',
                             choices=['ros', 'firmware']),
-      DeclareLaunchArgument('ff_static', default_value='44.2'),
-      DeclareLaunchArgument('ff_gain', default_value='22.6'),
+      DeclareLaunchArgument('ff_static', default_value='17.2'),
+      DeclareLaunchArgument('ff_gain', default_value='38.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
       #   ros2 launch sllidar_ros2 sllidar_a1_launch.py \
