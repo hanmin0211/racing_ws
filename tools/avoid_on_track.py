@@ -145,7 +145,8 @@ def simulate(w, obstacles, a):
       track_width=a.track_width, planning_lookahead=a.planning_lookahead,
       obstacle_trigger_distance=3.0, vehicle_width=a.vehicle_width,
       safety_margin=a.safety_margin, straight_deadband_deg=5.0,
-      min_gap_width_deg=3.0, side_score_margin=0.20)
+      min_gap_width_deg=3.0, side_score_margin=0.20,
+      aim=a.aim, aim_margin_deg=a.aim_margin_deg)
   scan = FakeScan()
 
   x, y = w[0]
@@ -316,6 +317,10 @@ def main():
   ap.add_argument('--vehicle-width', type=float, default=0.775)
   ap.add_argument('--safety-margin', type=float, default=0.25)
   ap.add_argument('--escape-s', type=float, default=8.0)
+  ap.add_argument('--aim', choices=('center', 'nearest'), default='center',
+                  help="갭 안 겨냥점. center=갭 중앙(원형), "
+                       "nearest=직진에 가장 가까운 각(필요한 만큼만 비켜감)")
+  ap.add_argument('--aim-margin-deg', type=float, default=2.0)
   ap.add_argument('--steer-mode', choices=('bearing', 'pursuit'),
                   default='bearing',
                   help="회피각 처리. bearing=갭 방위각을 조향각으로 그대로(현행), "

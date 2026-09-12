@@ -40,6 +40,8 @@ class FollowGapPlanner:
         straight_deadband_deg=5.0,
         min_gap_width_deg=3.0,
         side_score_margin=0.20,
+        aim='center',
+        aim_margin_deg=2.0,
     ):
         self.yaw_offset = math.radians(yaw_offset_deg)
         self.front_half_fov = math.radians(front_fov_deg / 2.0)
@@ -70,6 +72,40 @@ class FollowGapPlanner:
         self.straight_deadband_deg = float(straight_deadband_deg)
         self.min_gap_width_deg = float(min_gap_width_deg)
         self.side_score_margin = float(side_score_margin)
+
+        # ★ 갭 안에서 **어디를 겨냥할 것인가** (2026-09-12)
+        #
+        #   'center'  — 가장 넓은 빈 구간의 한가운데. Follow-the-Gap 의 원형이고
+        #               복도 주행에는 맞다. 그런데 차선이 있는 코스에서는
+        #               **필요한 것보다 훨씬 크게 꺾는다.** 실측: 장애물을
+        #               안전여유까지 포함해 비켜가는 데 7.2° 면 되는데 13° 를 냈다
+        #               (트랙 마스크 상한 17.9° 와 장애물 가장자리의 중점).
+        #               그 결과 차선을 1~2.6m 벗어났다.
+        #   'nearest' — 갭 안에서 **직진(0°)에 가장 가까운 각**. 안전 버블이 이미
+        #               차폭+여유만큼 장애물에서 떼어 놓았으므로, 갭 안이면 어디든
+        #               안전하다. 그중 가장 덜 꺾는 곳을 고르면 '필요한 만큼만
+        #               비켜간다'가 된다. 경로를 모르는 플래너가 쓸 수 있는
+        #               가장 좋은 근사다(차가 경로 위에 있으면 직진 ≒ 경로 추종).
+        #
+        #   aim_margin_deg: 'nearest' 에서 갭 가장자리에 딱 붙지 않게 안쪽으로
+        #   더 밀어 넣는 여유각.
+        #
+        # ★★ 2026-09-12 측정 — **둘 다 답이 아니다.** (학교 트랙, 장애물 3개)
+        #      center  : 접촉 없음(최소간격 0.11~0.16m) · 차선 1~2.6m **이탈**
+        #      nearest : 차선이탈 0(최대 0.18~0.32m) · 시험한 **전 배치에서 접촉**
+        #    여유각(2~16°)을 키워도, 안전여유(0.25~0.70m)를 키워도 nearest 의
+        #    접촉이 안 없어졌다. 안전여유를 키우면 버블만 커지는 게 아니라
+        #      max_center_y = track_half − veh_half − margin
+        #    도 같이 줄어 **회피에 쓸 각도 창 자체가 좁아지기 때문**이다
+        #    (margin 0.70 이면 |각| ≤ 6.8° 밖에 못 쓴다). 구조적 결합이다.
+        #
+        #    진짜 원인은 플래너가 **기준 경로를 모른다**는 것이다. 차량 좌표계
+        #    에서만 판단하므로 '경로에서 얼마나 벗어났는가' 라는 개념이 없고,
+        #    그래서 '경로 이탈을 최소화하면서 안전하게 비켜간다' 를 목적으로
+        #    삼을 수가 없다. 그걸 넣는 것이 실제 수정이다.
+        #    그전까지 기본값은 'center'(접촉 없음) 다.
+        self.aim = str(aim)
+        self.aim_margin_deg = float(aim_margin_deg)
 
     @staticmethod
     def _normalize_angle(angle):
@@ -196,7 +232,18 @@ class FollowGapPlanner:
         )
 
         start, end = best_gap
-        best_index = int((start + end) / 2)
+        if self.aim == 'nearest':
+            # 갭 안에서 직진(0°)에 가장 가까운 각. 단 가장자리에서
+            # aim_margin_deg 만큼은 안쪽으로 들어간다.
+            m = math.radians(self.aim_margin_deg)
+            lo, hi = angles[start], angles[end]
+            if hi - lo > 2.0 * m:
+                lo, hi = lo + m, hi - m
+            target = min(max(0.0, lo), hi)      # 0 을 [lo, hi] 로 클램프
+            best_index = int(start + np.argmin(
+                np.abs(angles[start:end + 1] - target)))
+        else:
+            best_index = int((start + end) / 2)
 
         return {
             'gap_start_angle': angles[start],
