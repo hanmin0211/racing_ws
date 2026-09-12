@@ -115,8 +115,17 @@ class SerialBridgeNode(Node):
         #   ⚠ 엔코더를 살려 속도 폐루프(NO_ENCODER 0)를 복구하면 이건 꺼야 한다
         #     — 그때는 펌웨어가 실제 속도를 보고 제어하는 쪽이 옳다.
         self.declare_parameter('ff_mode', 'firmware')   # 'firmware' | 'ros'
-        self.declare_parameter('ff_static', 44.2)
-        self.declare_parameter('ff_gain', 22.6)
+        # ★★ 2026-09-12 2차 수정 — 캘리브 10m 주행 로그로 재적합.
+        #   ff_identify 의 'PWM 55 → 0.46 m/s' 는 틀린 측정이었다. 그 런은 12초에
+        #   3.6m 밖에 못 갔는데 정상상태를 0.46 으로 뽑았다(앞뒤가 안 맞는다).
+        #   반면 캘리브 10m 직진은 1m 구간 9개가 전부 1.00±0.02 m/s 로 일관됐다:
+        #     명령 0.5 m/s → PWM 56 → **실측 1.00 m/s** (정확히 2배 빨랐다)
+        #   이 점과 calib_trace 의 PWM 94 → 1.98 m/s 로 다시 그으면
+        #     PWM = 38.8·v + 17.2
+        #   ⚠ 캘리브 진행 로그('직진 중... N.N/10m')는 그 자체가 속도계다.
+        #     현장에서 노면이 바뀌면 그 로그로 상수를 다시 뽑을 것.
+        self.declare_parameter('ff_static', 17.2)
+        self.declare_parameter('ff_gain', 38.8)
         self.declare_parameter('ff_deadband', 0.05)     # 이 이하 명령은 PWM 0
         # ★ 크리프 하한 — 탈락 방지용.
         #   이 차는 개루프로 0.45 m/s 아래를 못 낸다(PWM 45 → 0.00 m/s).
@@ -125,7 +134,9 @@ class SerialBridgeNode(Node):
         #   그대로 서 버리면 '1분 이상 정지' 로 탈락이다.
         #   그래서 '멈추라(<deadband)' 가 아닌 한 최소 ff_min_pwm 은 인가해
         #   느리더라도 계속 굴러가게 한다. 실제 속도는 약 0.46 m/s 가 된다.
-        self.declare_parameter('ff_min_pwm', 55.0)
+        #   하한 50: 정지마찰을 넘기는 최소값. 이 선은 '구르는 중' 을 맞춘 것이라
+        #   출발 순간에는 부족할 수 있어 하한을 따로 둔다(PWM 45 는 안 굴렀다).
+        self.declare_parameter('ff_min_pwm', 50.0)
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)

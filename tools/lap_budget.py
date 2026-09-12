@@ -43,8 +43,8 @@ import tracking_sim as ts  # noqa: E402
 #   4점 최소자승 22.6·v+44.2 와 신뢰점 2개 적합 25.7·v+43.2 가 일치한다.
 #   ⚠ 이 값은 개루프 FF 다. 지면·경사·배터리 전압에 따라 흔들린다
 #     (같은 PWM 45 가 0.00 과 0.36 m/s 로 갈렸다). 예산은 여유를 두고 볼 것.
-STATIC_FF = 44.2
-VELOCITY_FF_GAIN = 22.6
+STATIC_FF = 17.2
+VELOCITY_FF_GAIN = 38.8
 PWM_HARD_MAX = 255            # analogWrite 물리 상한
 
 # 실제 런치/파라미터 기본값과 맞춘다. 여기가 어긋나면 표 전체가 거짓말이 된다.
