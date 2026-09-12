@@ -70,6 +70,13 @@ class SuddenStop(Node):
     super().__init__('sudden_stop')
 
     self.declare_parameter('obstacle_topic', '/obstacle_distance')
+    # ★ 2026-09-12 — 라이다의 '막힘 탈출' 과 구분하기 위해 모드도 본다.
+    #   cluster_plot_node 는 오래 막히면(blocked_escape_s, 기본 8초) 스스로
+    #   obstacle_distance 를 clear_distance(999) 로 풀어 차를 빼낸다.
+    #   그런데 **이 노드는 그걸 '더미가 치워졌다' 로 오독한다.** 더미는 그대로
+    #   있는데 재출발해서 그대로 들이받는다(규정은 '치우거나 우회' 를 요구).
+    #   라이다가 탈출 중이면 그 999 는 실제 확보가 아니므로 무시해야 한다.
+    self.declare_parameter('lidar_mode_topic', '/lidar/mode')
     self.declare_parameter('odom_topic', '/odometry/filtered')
     self.declare_parameter('arm_topic', '/sudden_stop/arm')
     self.declare_parameter('require_arm', False)
@@ -105,6 +112,7 @@ class SuddenStop(Node):
 
     self.armed = not self.require_arm
     self.obstacle = NO_CONSTRAINT
+    self.lidar_escaping = False
     self.speed = 0.0
     self.state = 'IDLE' if self.armed else 'DISARMED'
     self.hold_since = None      # HOLD 진입 시각
@@ -120,6 +128,8 @@ class SuddenStop(Node):
 
     self.create_subscription(Float64, str(g('obstacle_topic')),
                              self.obs_cb, 10)
+    self.create_subscription(String, str(g('lidar_mode_topic')),
+                             self.lidar_mode_cb, 10)
     self.create_subscription(Odometry, str(g('odom_topic')), self.odom_cb, 10)
     self.create_subscription(Bool, str(g('arm_topic')), self.arm_cb, 10)
     self.create_timer(1.0 / float(g('rate')), self.tick)
@@ -134,6 +144,9 @@ class SuddenStop(Node):
   # ------------------------------------------------------------------ 입력
   def obs_cb(self, msg):
     self.obstacle = float(msg.data)
+
+  def lidar_mode_cb(self, msg):
+    self.lidar_escaping = 'ESCAPE' in str(msg.data).upper()
 
   def odom_cb(self, msg: Odometry):
     self.speed = float(msg.twist.twist.linear.x)
@@ -241,11 +254,17 @@ class SuddenStop(Node):
 
     # ---- WAIT_CLEAR: 치워졌나? ----
     if self.state == 'WAIT_CLEAR':
-      if self.obstacle >= self.clear_dist:
+      # ★ 라이다가 '막힘 탈출' 중이면 그 거리는 실제 확보가 아니다(위 주석).
+      #   여기서 속으면 더미가 그대로 있는데 재출발한다.
+      if self.obstacle >= self.clear_dist and not self.lidar_escaping:
         self.state = 'CLEARED'
         self.get_logger().info(
             f'✅ 전방 확보({self.obstacle:.2f}m) — 재출발')
         return
+      if self.lidar_escaping:
+        self.log_once(
+            '라이다가 막힘 탈출 중 — 전방 거리를 믿지 않는다. '
+            '이 미션의 PASSING 절차로 빠져나간다.')
       self.emit(0.0)       # 아직 막혀 있다 — 계속 정지
       waited = t - self.wait_since
       self.log_once(f'전방 아직 막힘({self.obstacle:.2f}m) — '
