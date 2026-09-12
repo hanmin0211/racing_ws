@@ -200,16 +200,24 @@ def simulate(w, obstacles, a):
       escaping = True
       events.append((step / a.rate, f'막힘 탈출 발동 ({stuck:.1f}s 막힘)'))
     # cluster_plot_node._publish_decision 규약
+    def bearing_to_steer(deg):
+      if a.steer_mode != 'pursuit':
+        return float(deg)
+      al = math.radians(float(deg))
+      return math.degrees(math.atan(2.0 * L * math.sin(al)
+                                    / max(a.planning_lookahead, 0.1)))
+
     if mode == 'CLEAR':
       obs_d, avoid = a.clear_distance, float('nan')
     elif mode == 'AVOID':
-      obs_d, avoid = float(d.front_distance), float(d.best_angle_deg)
+      obs_d, avoid = float(d.front_distance), bearing_to_steer(d.best_angle_deg)
     else:                                    # BLOCKED / NO_SCAN
       obs_d, avoid = float(d.front_distance), float('nan')
     if escaping:
       # 속도만 푼다. AVOID 고착이면 **조향은 유지**해 하던 회피를 마저 시킨다.
       obs_d = a.clear_distance
-      avoid = float(d.best_angle_deg) if mode == 'AVOID' else float('nan')
+      avoid = (bearing_to_steer(d.best_angle_deg) if mode == 'AVOID'
+               else float('nan'))
 
     # ---- 횡방향: pure pursuit, AVOID 면 먹스가 통째로 갈아끼운다 ----
     ld = min(max(a.k_ld * v + a.min_ld, a.min_ld), a.max_ld)
@@ -308,6 +316,10 @@ def main():
   ap.add_argument('--vehicle-width', type=float, default=0.775)
   ap.add_argument('--safety-margin', type=float, default=0.25)
   ap.add_argument('--escape-s', type=float, default=8.0)
+  ap.add_argument('--steer-mode', choices=('bearing', 'pursuit'),
+                  default='bearing',
+                  help="회피각 처리. bearing=갭 방위각을 조향각으로 그대로(현행), "
+                       "pursuit=퓨어퍼슛 환산 δ=atan(2·L·sinα/Ld)")
   ap.add_argument('--stuck-distance', type=float, default=1.2,
                   help='AVOID 인데 전방이 이 거리 안이면 고착으로 본다. '
                        '차가 실제로 서는 거리는 obs_stop(0.8)이 아니라 1.0m 다 '

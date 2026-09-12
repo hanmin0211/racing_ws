@@ -194,6 +194,30 @@ class ClusterPlotNode(Node):
         self._stuck_since = None      # 정지 유발 상태가 시작된 시각
         self._escaping = False
 
+        # ★ 회피각을 조향각으로 어떻게 옮길 것인가 (2026-09-12)
+        #   follow-gap 이 내는 best_angle_deg 는 **갭 방향(방위각)** 이지
+        #   조향각이 아니다. 그런데 먹스는 이 값을 그대로 조향각으로 쓴다
+        #   (vehicle_cmd_mux_node: s = self.avoid_steer).
+        #   자전거 모델에서 방위각 α 를 따라가는 조향각은
+        #       δ = atan(2·L·sin α / Ld)
+        #   이고, L=0.785 · Ld=2.2 에서 α=13° → δ=9.1° 다. 즉 그대로 쓰면
+        #   **1.43배 과조향**이고, 이게 회피가 차선을 크게 벗어나는 원인 중 하나다.
+        #     'bearing' = 예전 동작(그대로 사용)
+        #     'pursuit' = 퓨어퍼슛 환산
+        self.steer_mode = str(
+            self.declare_parameter('steer_mode', 'bearing').value).lower()
+        self.steer_wheelbase = float(
+            self.declare_parameter('steer_wheelbase', 0.785).value)
+
+    def _bearing_to_steer(self, deg):
+        """갭 방위각[도] → 조향각[도]. steer_mode 에 따라 환산하거나 그대로."""
+        if self.steer_mode != 'pursuit':
+            return float(deg)
+        a = math.radians(float(deg))
+        ld = max(self.follow_gap_planner.planning_lookahead, 0.1)
+        return math.degrees(
+            math.atan(2.0 * self.steer_wheelbase * math.sin(a) / ld))
+
         # 제어팀 통합 발행
         self.obstacle_pub = self.create_publisher(
             Float64, '/obstacle_distance', 10)
@@ -277,7 +301,7 @@ class ClusterPlotNode(Node):
             steer = NO_STEER
         elif mode == 'AVOID':
             obs = float(d.front_distance)
-            steer = float(d.best_angle_deg)
+            steer = self._bearing_to_steer(d.best_angle_deg)
         else:  # BLOCKED
             obs = float(d.front_distance)
             steer = NO_STEER
@@ -310,7 +334,7 @@ class ClusterPlotNode(Node):
                 #   시킨다. GPS 조향으로 되돌리면 장애물 쪽으로 되돌아간다.
                 #   BLOCKED/NO_SCAN 은 갈 길이 안 보이는 것이라 GPS 로 맡긴다.
                 if d.mode == 'AVOID':
-                    steer = float(d.best_angle_deg)
+                    steer = self._bearing_to_steer(d.best_angle_deg)
                 else:
                     steer = NO_STEER
                 mode = f'{mode}(ESCAPE)'
