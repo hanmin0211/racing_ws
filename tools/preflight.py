@@ -180,6 +180,17 @@ def check_waypoints(path, cur, args):
         f'종점 ({pts[-1][0]:.2f}, {pts[-1][1]:.2f})  시작-끝 {gap:.2f}m '
         f'[{"열린" if gap > 2.0 else "닫힌"} 경로]')
 
+  # ★ 시작-끝이 너무 가까우면 **출발선에서 완주로 오판**한다 (2026-09-12 실제 발생)
+  #   local_path_core 의 완주 판정은 '끝점까지 남은 호길이 <= goal_tolerance' 다.
+  #   그런데 closest_index 는 prev_idx 가 없는 첫 프레임에 **전역 최근접**을 쓴다.
+  #   시작점과 종점이 가까우면 출발선에 세운 차가 종점 쪽 인덱스로 잡혀,
+  #   남은거리가 곧바로 goal_tolerance 아래로 떨어진다.
+  #   학교 트랙(시작-끝 4.26m)에서 출발도 전에 '🏁 완주 (정상 종료)' 가 떴다.
+  #   goal_tolerance 기본 1.0m + 측위오차 + 초기 굴림 여유를 보면 8m 는 필요하다.
+  if 2.0 < gap < 8.0:
+    bad(f'시작-끝이 {gap:.2f}m 로 너무 가깝다 — 출발선에서 완주로 오판한다. '
+        f'경로 끝을 잘라 8m 이상 벌릴 것')
+
   # B-1 곡률 — 최소회전반경보다 급하면 제어가 완벽해도 반드시 이탈한다
   min_r = args.min_radius
   rs = sorted(radii(pts))
