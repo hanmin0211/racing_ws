@@ -228,26 +228,6 @@ class ClusterPlotNode(Node):
         self.steer_wheelbase = float(
             self.declare_parameter('steer_wheelbase', 0.785).value)
 
-    def path_steer_cb(self, msg):
-        self.path_steer_deg = float(msg.data)
-        self.path_steer_time = self.get_clock().now().nanoseconds * 1e-9
-
-    def _path_target_deg(self):
-        """신선한 /steering_cmd 만 쓴다. 끊기면 0(직진 기준)으로 폴백."""
-        now = self.get_clock().now().nanoseconds * 1e-9
-        if now - self.path_steer_time > self.path_steer_timeout:
-            return 0.0
-        return self.path_steer_deg
-
-    def _bearing_to_steer(self, deg):
-        """갭 방위각[도] → 조향각[도]. steer_mode 에 따라 환산하거나 그대로."""
-        if self.steer_mode != 'pursuit':
-            return float(deg)
-        a = math.radians(float(deg))
-        ld = max(self.follow_gap_planner.planning_lookahead, 0.1)
-        return math.degrees(
-            math.atan(2.0 * self.steer_wheelbase * math.sin(a) / ld))
-
         # 제어팀 통합 발행
         self.obstacle_pub = self.create_publisher(
             Float64, '/obstacle_distance', 10)
@@ -282,6 +262,26 @@ class ClusterPlotNode(Node):
         self.get_logger().info(
             'Vehicle coordinate: +X forward, +Y left, -Y right.'
         )
+
+    def path_steer_cb(self, msg):
+        self.path_steer_deg = float(msg.data)
+        self.path_steer_time = self.get_clock().now().nanoseconds * 1e-9
+
+    def _path_target_deg(self):
+        """신선한 /steering_cmd 만 쓴다. 끊기면 0(직진 기준)으로 폴백."""
+        now = self.get_clock().now().nanoseconds * 1e-9
+        if now - self.path_steer_time > self.path_steer_timeout:
+            return 0.0
+        return self.path_steer_deg
+
+    def _bearing_to_steer(self, deg):
+        """갭 방위각[도] → 조향각[도]. steer_mode 에 따라 환산하거나 그대로."""
+        if self.steer_mode != 'pursuit':
+            return float(deg)
+        a = math.radians(float(deg))
+        ld = max(self.follow_gap_planner.planning_lookahead, 0.1)
+        return math.degrees(
+            math.atan(2.0 * self.steer_wheelbase * math.sin(a) / ld))
 
     def on_plot_close(self):
         if self.window_closed:
