@@ -17,6 +17,7 @@ serial_bridge_node.py
    (키보드 텔레옵이 죽거나 연결이 끊겨도 차가 계속 달리는 사고 방지)
 """
 
+import math
 import os
 import re
 import threading
@@ -100,6 +101,41 @@ class SerialBridgeNode(Node):
             self.get_parameter('openloop_timeout').value)
         self.create_subscription(Int32, '/drive_pwm_cmd',
                                  self.drive_pwm_callback, 10)
+
+        # ★ ROS 쪽 FF (2026-09-12 학교 실측) — 플래싱 없이 구동 상수를 고친다.
+        #
+        #   펌웨어의 개루프 FF 는  PWM = 80 + 95·v  인데 지면 실측과 크게 다르다:
+        #     PWM 55 → 0.46 m/s · 65 → 1.11 · 75 → 1.20   (tools/ff_identify.py)
+        #     적합:  PWM = 22.6·v + 44.2
+        #   옛 상수로는 명령 0.15 m/s 에 PWM 94 가 걸려 차가 **2 m/s 로 폭주**했고,
+        #   헤딩 캘리브가 8회 연속 실패했다(측위 점프로 오인).
+        #
+        #   ff_mode:='ros' 면 VEL: 대신 여기서 변환한 PWM: 을 보낸다. 펌웨어를
+        #   다시 굽지 않고 현장에서 상수를 고칠 수 있다.
+        #   ⚠ 엔코더를 살려 속도 폐루프(NO_ENCODER 0)를 복구하면 이건 꺼야 한다
+        #     — 그때는 펌웨어가 실제 속도를 보고 제어하는 쪽이 옳다.
+        self.declare_parameter('ff_mode', 'firmware')   # 'firmware' | 'ros'
+        self.declare_parameter('ff_static', 44.2)
+        self.declare_parameter('ff_gain', 22.6)
+        self.declare_parameter('ff_deadband', 0.05)     # 이 이하 명령은 PWM 0
+        # ★ 크리프 하한 — 탈락 방지용.
+        #   이 차는 개루프로 0.45 m/s 아래를 못 낸다(PWM 45 → 0.00 m/s).
+        #   그런데 종방향 제어는 커브에서 v = v_max/(1+6·|κ|) 로 줄인다.
+        #   T자 급커브(κ≈0.5)면 명령이 0.25 m/s → PWM 50 → **바퀴가 안 돈다**.
+        #   그대로 서 버리면 '1분 이상 정지' 로 탈락이다.
+        #   그래서 '멈추라(<deadband)' 가 아닌 한 최소 ff_min_pwm 은 인가해
+        #   느리더라도 계속 굴러가게 한다. 실제 속도는 약 0.46 m/s 가 된다.
+        self.declare_parameter('ff_min_pwm', 55.0)
+        self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
+        self.ff_static = float(self.get_parameter('ff_static').value)
+        self.ff_gain = float(self.get_parameter('ff_gain').value)
+        self.ff_deadband = float(self.get_parameter('ff_deadband').value)
+        self.ff_min_pwm = float(self.get_parameter('ff_min_pwm').value)
+        if self.ff_mode == 'ros':
+            self.get_logger().warn(
+                f'★ ROS 쪽 FF 사용: PWM = {self.ff_gain:.1f}·v + '
+                f'{self.ff_static:.1f} (펌웨어 FF 우회). '
+                '엔코더 복구 후에는 ff_mode:=firmware 로 되돌릴 것.')
 
         # ---------- 발행자: Arduino 상태를 ROS2 토픽으로 재발행 ----------
         self.status_pub = self.create_publisher(String, '/vehicle_status', 10)
@@ -269,6 +305,16 @@ class SerialBridgeNode(Node):
                 self.openloop_pwm = None      # 만료 → 폐루프 복귀
         if ol:
             cmd = f'PWM:{self.openloop_pwm},STEER:{self.target_steer:.1f}\n'
+        elif self.ff_mode == 'ros':
+            # ROS 쪽 FF — 실측 상수로 직접 PWM 을 만든다(위 주석 참고).
+            v = float(self.target_vel)
+            if abs(v) < self.ff_deadband:
+                pwm = 0
+            else:
+                mag = self.ff_static + self.ff_gain * abs(v)
+                mag = max(mag, self.ff_min_pwm)   # 크리프 하한(위 주석 참고)
+                pwm = int(round(math.copysign(min(mag, 255.0), v)))
+            cmd = f'PWM:{pwm},STEER:{self.target_steer:.1f}\n'
         else:
             cmd = f'VEL:{self.target_vel:.2f},STEER:{self.target_steer:.1f}\n'
         try:

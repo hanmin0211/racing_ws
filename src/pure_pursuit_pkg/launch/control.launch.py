@@ -38,6 +38,12 @@ def generate_launch_description():
   pp_params = LaunchConfiguration('pp_params')
   arduino_port = LaunchConfiguration('arduino_port')
   teleop = LaunchConfiguration('teleop')
+  # ★ ROS 쪽 FF (2026-09-12) — 펌웨어를 다시 굽지 않고 구동 상수를 고친다.
+  #   펌웨어 FF(80 + 95·v)는 지면 실측과 4배 어긋나 있다. 0.15 m/s 명령이
+  #   PWM 94 로 나가 차가 2 m/s 로 달렸고, 그래서 헤딩 캘리브가 계속 깨졌다.
+  #   실측(tools/ff_identify.py, 학교 아스팔트): PWM = 22.6·v + 44.2
+  #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware 로 되돌릴 것.
+  ff_mode = LaunchConfiguration('ff_mode')
 
   # ★ 타입 강제 (2026-09-09)
   #   런치 인자는 문자열이고 launch_ros 가 YAML 로 타입을 추론한다. 그래서
@@ -51,6 +57,9 @@ def generate_launch_description():
   # ★ 코너 감속 세기 (2026-09-10 추가).
   #   longitudinal_controller 가 init 에서 값을 캐시하므로 `ros2 param set` 으로는
   #   못 바꾼다. 재빌드 없이 현장에서 조정하려면 런치 인자여야 한다.
+  # 정수로 주면 노드가 즉사하므로 반드시 float 로 강제한다(런치 인자 함정).
+  ff_static = ParameterValue(LaunchConfiguration('ff_static'), value_type=float)
+  ff_gain = ParameterValue(LaunchConfiguration('ff_gain'), value_type=float)
   curv_gain = ParameterValue(LaunchConfiguration('curvature_gain'),
                              value_type=float)
 
@@ -83,6 +92,12 @@ def generate_launch_description():
       DeclareLaunchArgument('curvature_gain', default_value='6.0'),
       # teleop:=true 면 키보드 수동 제어 노드도 함께 띄운다(먹스에서 사람 우선).
       DeclareLaunchArgument('teleop', default_value='false'),
+      # 기본값을 'ros' 로 둔다 — 현재 보드에 구워져 있는 펌웨어 FF 가 틀렸고,
+      # 그대로 두면 차가 명령의 4배 속도로 달린다(위 주석 참고).
+      DeclareLaunchArgument('ff_mode', default_value='ros',
+                            choices=['ros', 'firmware']),
+      DeclareLaunchArgument('ff_static', default_value='44.2'),
+      DeclareLaunchArgument('ff_gain', default_value='22.6'),
 
       # 횡방향: 조향각만 발행 (속도는 종방향이 소유)
       Node(
@@ -122,6 +137,9 @@ def generate_launch_description():
               'baud': 57600,
               'watchdog_timeout': 0.5,
               'max_steer_deg': max_steer,
+              'ff_mode': ff_mode,
+              'ff_static': ff_static,
+              'ff_gain': ff_gain,
           }],
       ),
 
