@@ -55,14 +55,24 @@ ls -l /dev/arduino /dev/imu
 - **차량 배터리 연결** (2026-09-11 에 이게 빠져 하드웨어 검증을 통째로 날렸다)
 - E-stop 을 손에 들고 시작할 것
 
-## 1. 원점을 충주로 (지금 용인이다)
+## 1. 원점 — **이미 충주로 바꿔 뒀다** (2026-09-12)
 
 ```bash
-python3 tools/set_origin_from_fix.py            # 미리보기
-python3 tools/set_origin_from_fix.py --write    # .bak 백업 후 갱신
+bash tools/use_site.sh              # 현재 원점 + 고를 수 있는 장소 확인
+bash tools/use_site.sh chungju      # 학교 (지금 이 상태)
+bash tools/use_site.sh yongin       # 대회장
 ```
-> ⚠ **대회 전에 반드시 용인으로 되돌릴 것.** 안 되돌리면 용인 경로가 219km 밖으로
-> 판정돼 `global_path_publisher` 가 발행을 거부한다(= 차가 안 움직인다).
+
+장소별 보관본을 두고 고르는 방식이다(`config/site_origin.<장소>.yaml`).
+.bak 하나에 의존하면 두 번 바꿀 때 원본이 날아가서 그렇게 했다.
+충주 원점은 `config/chungju_school/*.yaml` 의 스탬프와 **정확히 일치**하므로
+좌표 환산 없이 그대로 쓰인다(preflight 에서 "원점 일치" 로 확인).
+
+> ⚠ **대회 전에 반드시 되돌릴 것: `bash tools/use_site.sh yongin`**
+> 안 되돌리면 용인 경로가 219km 밖으로 판정돼 `global_path_publisher` 가
+> 발행을 거부한다 (= 차가 안 움직인다).
+> 나가기 전 확인:
+> `python3 tools/preflight.py --waypoints config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml`
 
 ## 2. 라이다 마운트 방향 확인 ← **가장 중요. 차는 안 움직인다**
 
