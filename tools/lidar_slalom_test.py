@@ -97,7 +97,7 @@ class FakeScan:
     return tmin if tmin > 0 else None
 
 
-def run(case_name, obstacles, y_start=0.0, v=0.6, escape_s=3.0):
+def run(case_name, obstacles, y_start=0.0, v=0.6, escape_s=8.0):
   planner = FollowGapPlanner(
       yaw_offset_deg=0.0, front_fov_deg=180.0, min_range=0.10, max_range=8.0,
       track_width=2.7, planning_lookahead=2.2, obstacle_trigger_distance=3.0,
@@ -196,7 +196,7 @@ def main():
   ap.add_argument('--offset', type=float, default=0.65,
                   help='중심선에서 좌우 오프셋[m] — 실측할 것')
   ap.add_argument('--speed', type=float, default=0.6, help='주행 속도[m/s]')
-  ap.add_argument('--escape-s', type=float, default=3.0,
+  ap.add_argument('--escape-s', type=float, default=8.0,
                   help='이 시간 이상 BLOCKED 면 회피를 포기하고 경로로 빠져나간다 '
                        '(cluster_plot_node 의 blocked_escape_s 와 같은 값). 0=끔')
   args = ap.parse_args()

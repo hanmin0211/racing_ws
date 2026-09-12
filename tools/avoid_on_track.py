@@ -307,7 +307,7 @@ def main():
   ap.add_argument('--planning-lookahead', type=float, default=2.2)
   ap.add_argument('--vehicle-width', type=float, default=0.775)
   ap.add_argument('--safety-margin', type=float, default=0.25)
-  ap.add_argument('--escape-s', type=float, default=3.0)
+  ap.add_argument('--escape-s', type=float, default=8.0)
   ap.add_argument('--stuck-distance', type=float, default=1.2,
                   help='AVOID 인데 전방이 이 거리 안이면 고착으로 본다. '
                        '차가 실제로 서는 거리는 obs_stop(0.8)이 아니라 1.0m 다 '
