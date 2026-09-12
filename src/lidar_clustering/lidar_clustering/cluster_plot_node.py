@@ -166,7 +166,22 @@ class ClusterPlotNode(Node):
         #   (lidar:=false 로 달리는 것과 같은 상태가 될 뿐이다)
         self.no_scan_escape_s = float(
             self.declare_parameter('no_scan_escape_s', 5.0).value)
-        self._stuck_since = None      # 정지 유발 모드가 시작된 시각
+        #   ★ 2026-09-12 — 고착은 BLOCKED 만이 아니다.
+        #   AVOID 일 때도 obstacle_distance = front_distance 를 내보내므로,
+        #   종방향이 obstacle_stop_dist(0.8m) 에서 **차를 세운다.** 라이다는
+        #   조향으로 비켜가려 하는데 차가 안 나가니 스캔도 안 바뀐다 →
+        #   장애물 앞에 붙어서 영원히 정지. (2026-09-12 tools/avoid_on_track.py
+        #   로 학교 트랙에 장애물 3개를 놓았더니 400초에 7m 만 갔다)
+        #   그래서 '전방 거리가 정지 문턱 안에 머무는 상태' 도 고착으로 본다.
+        #   ★ 실제로 서는 거리는 obstacle_stop_dist(0.8) 가 아니라 **1.0m** 다.
+        #     종방향이 v_obs = v_slow·(d−obs_stop)/span 을 쓰고, 그 값이 0.05
+        #     이하면 0 으로 떨어뜨리기 때문이다:
+        #       0.8·(d−0.8)/3.2 = 0.05  →  d = 1.0
+        #     그래서 문턱을 1.0 보다 위(1.2)에 둬야 이 고착이 잡힌다.
+        #     0.9 로 뒀다가 front=0.99 에서 안 걸리는 걸 실측으로 확인했다.
+        self.stuck_distance = float(
+            self.declare_parameter('stuck_distance', 1.2).value)
+        self._stuck_since = None      # 정지 유발 상태가 시작된 시각
         self._escaping = False
 
         # 제어팀 통합 발행
@@ -258,8 +273,15 @@ class ClusterPlotNode(Node):
             steer = NO_STEER
 
         # ★ 막힘 탈출 — 위 주석(self.blocked_escape_s) 참고.
+        #   고착 두 종류를 모두 본다:
+        #     BLOCKED/NO_SCAN — 갭이 없다 / 스캔이 없다
+        #     AVOID 인데 전방이 정지 문턱 안 — 비켜가려는데 차가 안 나간다
         limit = {'BLOCKED': self.blocked_escape_s,
                  'NO_SCAN': self.no_scan_escape_s}.get(mode, 0.0)
+        if (limit <= 0.0 and mode == 'AVOID'
+                and self.blocked_escape_s > 0.0
+                and float(d.front_distance) <= self.stuck_distance):
+            limit = self.blocked_escape_s
         if limit > 0.0:
             now = self.get_clock().now().nanoseconds * 1e-9
             if self._stuck_since is None:
@@ -273,18 +295,22 @@ class ClusterPlotNode(Node):
                         '감속을 푼다(GPS 경로로 빠져나간다).\n'
                         '   장애물 접촉은 감점이지만 1분 이상 정지는 탈락이다.')
                 obs = self.clear_distance
-                steer = NO_STEER
+                # ★ AVOID 고착이면 **조향은 유지한다.** 갭은 보이는데 속도가
+                #   묶여 못 나가는 상황이므로, 속도만 풀어 하던 회피를 마저
+                #   시킨다. GPS 조향으로 되돌리면 장애물 쪽으로 되돌아간다.
+                #   BLOCKED/NO_SCAN 은 갈 길이 안 보이는 것이라 GPS 로 맡긴다.
+                if d.mode == 'AVOID':
+                    steer = float(d.best_angle_deg)
+                else:
+                    steer = NO_STEER
                 mode = f'{mode}(ESCAPE)'
                 self.get_logger().warn(
                     f'막힘 탈출 중 — 전방 감속 없음 ({stuck_for:.0f}s)',
                     throttle_duration_sec=1.0)
         else:
             self._stuck_since = None
-        if mode.startswith(('CLEAR', 'AVOID')):
-            # 길이 다시 보이면 즉시 정상 복귀
             if self._escaping:
                 self.get_logger().info('✅ 막힘 해소 — 정상 동작 복귀')
-            self._stuck_since = None
             self._escaping = False
         # ★ 감속(obstacle)은 언제나 내보낸다 — 안전 기능이다.
         #   조향 override 만 arm 구간에서만 내보낸다.

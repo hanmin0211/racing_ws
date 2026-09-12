@@ -25,6 +25,7 @@ show() {
     [ -e "$f" ] || continue
     n=$(basename "$f"); n=${n#site_origin.}; n=${n%.yaml}
     [ "$n" = "yaml" ] && continue
+    [ "$n" = "prev" ] && continue        # 직전 값 보관본 — 장소가 아니다
     s=$(grep -E '^site:' "$f" | sed 's/^site: *//')
     printf '  %-10s %s\n' "$n" "$s"
   done
