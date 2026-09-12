@@ -74,6 +74,27 @@ class Runner(Node):
       self.send(0)
       rclpy.spin_once(self, timeout_sec=0.05)
 
+  def wait_rtk(self, sigma_max, timeout=120.0):
+    """RTK 수렴을 기다린다.
+
+    ★ 이걸 안 해서 1회차 측정이 통째로 거짓이었다 (2026-09-12).
+      σ=15.6cm 상태로 재니 PWM 30 에서 '1.52m 이동' 이 나왔는데, 차는 가만히
+      있었고 **GPS 가 수렴하며 떠다닌 거리**를 이동으로 센 것이었다.
+      같은 PWM 을 σ=0.0cm 에서 다시 재니 0.00m 였다.
+      위치로 속도를 재는 도구는 측위 품질을 먼저 확인해야 한다.
+    """
+    t0 = time.time()
+    warned = False
+    while time.time() - t0 < timeout:
+      rclpy.spin_once(self, timeout_sec=0.1)
+      if self.sig == self.sig and self.sig <= sigma_max:
+        return True
+      if not warned and time.time() - t0 > 3.0:
+        warned = True
+        print(f'  RTK 수렴 대기 중 (σ={self.sig * 100:.1f}cm > '
+              f'{sigma_max * 100:.0f}cm) — 수렴 전 측정은 거짓이 된다')
+    return False
+
   def run_step(self, pwm, run_dist, max_t, rate=20.0):
     """PWM 을 걸고 run_dist 를 갈 때까지(또는 max_t) 굴린다."""
     lat0, lon0 = self.lat, self.lon
@@ -99,11 +120,17 @@ class Runner(Node):
     v_ss = 0.0
     if len(half) >= 2:
       v_ss = (half[-1][1] - half[0][1]) / max(half[-1][0] - half[0][0], 1e-3)
+    # 최대속도 — 0.5초 창으로 본다.
+    # (예전엔 '연속 두 샘플의 dt > 0.2s' 를 봤는데 샘플이 0.02s 간격이라
+    #  그 조건이 절대 참이 안 돼 항상 0.00 이 찍혔다)
     v_peak = 0.0
-    for i in range(1, len(samples)):
-      dt = samples[i][0] - samples[i - 1][0]
-      if dt > 0.2:
-        v_peak = max(v_peak, (samples[i][1] - samples[i - 1][1]) / dt)
+    j = 0
+    for i in range(len(samples)):
+      while samples[i][0] - samples[j][0] > 0.5:
+        j += 1
+      dt = samples[i][0] - samples[j][0]
+      if dt >= 0.3:
+        v_peak = max(v_peak, (samples[i][1] - samples[j][1]) / dt)
     return dict(pwm=pwm, moved=samples[-1][1] if samples else 0.0,
                 took=took, v_mean=(samples[-1][1] / took) if took > 0 else 0.0,
                 v_ss=v_ss, v_peak=v_peak, coast=d_end - (samples[-1][1]
@@ -122,6 +149,8 @@ def main():
                   help='단계 사이에 Enter 를 기다린다 (차를 되돌릴 때)')
   ap.add_argument('--breakaway', action='store_true',
                   help='움직이기 시작하는 PWM 만 낮은 값부터 탐색')
+  ap.add_argument('--sigma-max', type=float, default=0.05,
+                  help='이 수평정확도[m] 안으로 수렴해야 측정한다 (기본 5cm)')
   ap.add_argument('--yes', action='store_true')
   a = ap.parse_args()
 
@@ -146,7 +175,13 @@ def main():
     print('❌ /fix 수신 없음 — bringup 이 떠 있는지 확인할 것')
     rclpy.shutdown()
     return 1
-  print(f'GPS 수신 확인 (σ={n.sig * 100:.1f}cm)\n')
+  print(f'GPS 수신 (σ={n.sig * 100:.1f}cm) — RTK 수렴을 기다린다…')
+  if not n.wait_rtk(a.sigma_max):
+    print(f'❌ RTK 가 {a.sigma_max * 100:.0f}cm 안으로 수렴하지 않았다. '
+          '수렴 전 측정은 거짓이 된다 — 기다렸다 다시 할 것.')
+    rclpy.shutdown()
+    return 1
+  print(f'✅ RTK 수렴 (σ={n.sig * 100:.1f}cm) — 측정 시작\n')
 
   rows = []
   try:
@@ -164,7 +199,10 @@ def main():
       rows.append(r)
       print(f' 이동 {r["moved"]:5.2f}m / {r["took"]:4.1f}s  '
             f'정상상태 {r["v_ss"]:5.2f} m/s  최대 {r["v_peak"]:5.2f}  '
-            f'관성 {r["coast"]:4.2f}m')
+            f'관성 {r["coast"]:4.2f}m  σ {n.sig * 100:.1f}cm')
+      if n.sig > a.sigma_max:
+        print(f'     ⚠ 측정 중 σ 가 {n.sig * 100:.1f}cm 로 올라갔다 — '
+              '이 단계는 믿지 말 것')
       if a.breakaway and r['moved'] > 0.3:
         print(f'\n  → 이 차/이 지면의 **브레이크어웨이 PWM ≈ {pwm}**')
         break
