@@ -98,6 +98,26 @@ def generate_launch_description():
                             choices=['ros', 'firmware']),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
+      # ★ 크리프 하한 (2026-09-13 노출). serial_bridge 가 init 에서 캐시하므로
+      #   런치 인자가 아니면 현장에서 못 바꾼다.
+      #   ⚠ 이 값이 곧 **차의 최저 속도**다. PWM = 38.8·v + 17.2 를 뒤집으면
+      #     50 → 0.85 m/s 다. max_speed 0.7 을 줘도 PWM 44 가 50 으로 올라가
+      #     **max_speed 가 통째로 무력화된다.** 커브 감속(v/(1+6|κ|))도 같이
+      #     무력화된다 — 어느 명령이든 PWM 은 50 이다.
+      #   ⚠ 더 나쁜 것: 장애물 감속 램프(4.0m→0.8m)도 무력화된다. 차는
+      #     하한 속도 그대로 다가가다 0.8m 에서 동력만 끊는다. 브레이크가
+      #     없으므로 그 뒤는 관성이다(0.85 m/s → 1.35m).
+      #   그럼에도 하한이 필요한 이유는 커브에서 바퀴가 멈추면 '1분 정지 =
+      #   탈락' 이기 때문이다. 낮추려면 **정지마찰을 넘는 최소값**을 실측할 것.
+      #   ※ PWM 50 의 실제 속도는 아직 실측이 없다. 45→0.00, 56→1.00 사이의
+      #     스틱슬립 구간이라 직선 적합(0.85)을 그대로 믿으면 안 된다.
+      #     캘리브 10m 주행이 그 자체로 PWM 50 속도계다(명령 0.5 → PWM 36.6
+      #     → 하한 50). 진행 로그의 소요시간으로 환산할 것.
+      DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
+      # ★ 장애물 정지거리 (2026-09-13 노출). 브레이크가 없어서 이 값은
+      #   '멈출 거리' 가 아니라 '동력을 끊을 거리' 다. 실제 정지점은
+      #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
+      DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
 
       # 횡방향: 조향각만 발행 (속도는 종방향이 소유)
       Node(
@@ -114,7 +134,12 @@ def generate_launch_description():
           executable='longitudinal_controller',
           name='longitudinal_controller',
           output='screen',
-          parameters=[{'v_max': max_speed, 'curvature_gain': curv_gain}],
+          parameters=[{
+              'v_max': max_speed,
+              'curvature_gain': curv_gain,
+              'obstacle_stop_dist': ParameterValue(
+                  LaunchConfiguration('obstacle_stop_dist'),
+                  value_type=float)}],
       ),
 
       # 명령 먹스: 단일 /cmd_vel 출구 + 최종 안전 클램프
@@ -140,6 +165,8 @@ def generate_launch_description():
               'ff_mode': ff_mode,
               'ff_static': ff_static,
               'ff_gain': ff_gain,
+              'ff_min_pwm': ParameterValue(
+                  LaunchConfiguration('ff_min_pwm'), value_type=float),
           }],
       ),
 
