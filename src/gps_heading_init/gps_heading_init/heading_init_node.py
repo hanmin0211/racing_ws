@@ -398,6 +398,26 @@ class HeadingInitNode(Node):
     new_center = self.steer_center - delta_deg * cpd
     return h, delta_deg, new_center
 
+
+  def _rtk_why(self, msg, h_std):
+    """RTK 판정의 **실제 근거**를 문장으로 만든다.
+
+    ⚠ 2026-09-13 — 예전엔 무조건 '수평 σ=N.Ncm > 5cm' 로 찍었다. 그런데
+      공분산이 UNKNOWN(type 0)일 때는 σ 가 의미 없는 0.0 이고 판정은
+      status>=2 로 한다. 그날 현장에서 `σ=0.0cm > 5cm` 라는 **자기모순
+      메시지**가 계속 떴고(0.0 은 5 보다 크지 않다), 진짜 원인인
+      'status 가 1 이라 RTK Fixed 가 아니다' 를 못 봤다. 원인은 ublox 가
+      degraded mode 로 떠서 CFG_USBINPROT_RTCM3X 가 안 먹은 것이었다 —
+      NTRIP 이 RTCM 을 보내도 수신기가 안 받으니 Fixed 가 될 리 없다.
+    """
+    if msg.position_covariance_type == 0:
+      return (f'공분산 없음 → status={msg.status.status} 로 판정 '
+              f'(RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 '
+              f'안 먹으면 여기서 안 올라간다 — ublox 로그에 '
+              f'"degraded mode" 가 있는지 볼 것')
+    return (f'수평 σ={h_std * 100:.1f}cm '
+            f'(상한 {self.max_h_std * 100:.0f}cm), '
+            f'status={msg.status.status}')
   def _rtk_ready(self, msg: NavSatFix) -> bool:
     """RTK 가 수렴했는가. 수렴 전에는 시작점조차 잡지 않는다.
 
@@ -420,14 +440,13 @@ class HeadingInitNode(Node):
       if not self._rtk_ok:
         self._rtk_ok = True
         self.get_logger().info(
-            f'RTK 수렴 (수평 σ={h_std * 100:.1f}cm) — 헤딩 캘리브를 시작한다.')
+            f'RTK 수렴 ({self._rtk_why(msg, h_std)}) — 헤딩 캘리브를 시작한다.')
       return True
     self._rtk_ok = False
     if t - self._last_rtk_log > 2.0:
       self._last_rtk_log = t
       self.get_logger().warn(
-          f'RTK 수렴 대기 중 (수평 σ={h_std * 100:.1f}cm > '
-          f'{self.max_h_std * 100:.0f}cm) — 출발하지 않는다. '
+          f'RTK 수렴 대기 중 — {self._rtk_why(msg, h_std)}. 출발하지 않는다. '
           f'⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다'
           f'(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.')
     return False
