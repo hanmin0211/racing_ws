@@ -103,7 +103,14 @@ def main():
       print(f'\n관측 최저 {lo} mV → {tag}{note}')
     if f:
       f.close()
-    rclpy.shutdown()
+    # ⚠ Ctrl-C 로 빠져나올 때 rclpy 가 이미 내려가 있으면 shutdown() 이
+    #   RuntimeError 를 던진다. 감시 도구가 종료하면서 역추적을 뱉으면
+    #   화면이 지저분해지고 '또 뭐가 깨졌나' 로 읽힌다(9/13 현장).
+    try:
+      if rclpy.ok():
+        rclpy.shutdown()
+    except Exception:  # noqa: BLE001
+      pass
   return 0
 
 
