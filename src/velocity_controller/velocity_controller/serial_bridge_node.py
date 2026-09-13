@@ -155,8 +155,16 @@ class SerialBridgeNode(Node):
         #   엔코더가 없어서 '실제로 움직였는가' 를 알 수 없다. 그래서
         #   시간으로 끊는다 — 정지(PWM 0)에서 출발할 때만 breakaway_ms 동안
         #   높은 PWM 을 인가하고 그 뒤 평소 하한으로 내린다.
+        #   ⚠ 시간은 **펌웨어 램프를 감안해서** 잡아야 한다. 펌웨어의
+        #     OPENLOOP_RATE 가 증가 방향으로 3/10ms 제한을 걸어서, 0 → 60 에
+        #     실측 **390ms** 가 걸린다(9/13 breakaway_check). 600ms 로 두면
+        #     실제로 60 이 나가는 건 260ms 뿐이고, 앞의 390ms 동안 모터는
+        #     문턱(55~56) 아래에서 **잠긴 채 전류만 빤다.** 전원을 지키려고
+        #     만든 램프가 오히려 스톨을 길게 만드는 셈이다.
+        #     1200ms 면 램프를 빼고도 810ms 가 남는다.
+        #     (내리는 방향은 램프가 없어 60 → 50 은 즉시다)
         self.declare_parameter('ff_breakaway_pwm', 60.0)
-        self.declare_parameter('ff_breakaway_ms', 600.0)
+        self.declare_parameter('ff_breakaway_ms', 1200.0)
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)

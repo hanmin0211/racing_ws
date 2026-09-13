@@ -272,7 +272,7 @@ def generate_launch_description():
       #   9/13 실측: PWM 50 은 출발을 못 하고(모터 잠김, VMIN 2938mV),
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
       DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
-      DeclareLaunchArgument('ff_breakaway_ms', default_value='600.0'),
+      DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
       DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
