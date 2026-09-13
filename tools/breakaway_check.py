@@ -73,7 +73,8 @@ def _motion_verdict(trace):
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument('--speed', type=float, default=0.5, help='명령 속도[m/s]')
-  ap.add_argument('--secs', type=float, default=1.0, help='굴릴 시간[s]')
+  ap.add_argument('--secs', type=float, default=2.0,
+                  help='굴릴 시간[s]. 펌웨어 램프가 0→60 에 약 400ms 를 쓰므로 너무 짧게 잡지 말 것')
   ap.add_argument('--settle', type=float, default=1.0, help='정지 관측[s]')
   a = ap.parse_args()
 
@@ -93,7 +94,32 @@ def main():
                                m.linear_acceleration.z)),
       qos_profile_sensor_data)
 
-  print('⚠ 바퀴를 들었는지 확인할 것. 3초 뒤 시작한다.')
+  # ★ 텔레메트리를 기다린다 (2026-09-13)
+  #   이걸 안 기다렸다가 시험을 통째로 날렸다. serial_bridge 가 아두이노에
+  #   붙는 데 1.6초가 걸렸는데 그 전에 명령을 내보내서, PWM 이 램프를 다
+  #   오르기도 전에 시험이 끝났다. 'breakaway 가 안 나갔다' 로 보였지만
+  #   실제로는 **볼 기회가 없었던** 것이다.
+  print('아두이노 텔레메트리를 기다린다...')
+  t = time.time()
+  while time.time() - t < 15.0 and st['pwm'] is None:
+    rclpy.spin_once(n, timeout_sec=0.1)
+  if st['pwm'] is None:
+    print('❌ /drive_pwm 이 15초 안에 안 왔다.')
+    print('   control.launch.py 가 떠 있는지, 아두이노(/dev/arduino)가 '
+          '붙었는지 확인할 것.')
+    rclpy.shutdown()
+    return 1
+  print(f'  ✅ 텔레메트리 수신 (PWM={st["pwm"]})')
+
+  if st['acc'] is None:
+    print('  ⚠ /handsfree/imu 가 안 온다 — control.launch.py 는 IMU 노드를 '
+          '띄우지 않는다.')
+    print('     움직임을 자동 판정하려면 별 터미널에서:')
+    print('       ros2 run handsfree_ros2_imu hfi_a9_ros2 '
+          '--ros-args -p port:=/dev/imu')
+    print('     없이 진행하면 움직임은 눈으로 볼 것.')
+
+  print('\n⚠ 앞이 비었는지 확인할 것. 3초 뒤 시작한다.')
   for i in (3, 2, 1):
     print(f'  {i}...')
     t = time.time()
