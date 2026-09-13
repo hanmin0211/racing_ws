@@ -15,6 +15,13 @@
 #   bash tools/drive_school.sh --no-avoid   # 회피 조향 끄고 **경로추종만** 본다
 #   bash tools/drive_school.sh --missions   # 회피 + 돌발정지 시퀀서까지
 #   bash tools/drive_school.sh --speed 0.5
+#   bash tools/drive_school.sh --min-pwm 55   # 크리프 하한을 직접 지정
+#
+# ★ --min-pwm 을 쓰는 경우 (2026-09-13)
+#   breakaway(출발용 60)는 정지마찰을 뚫는 값이고, ff_min_pwm(크리프)은
+#   **구르는 중** 을 유지하는 값이다. 후자가 50 으로 충분한지는 아직 실측이
+#   없다 — 출발은 뚫었는데 1.2초 뒤 다시 설 수 있다. PWM 55 는 9/12 캘리브
+#   에서 1.00 m/s 로 구른 실측이 있으므로, 확실히 굴려야 할 때 지정한다.
 #
 # ★ --no-avoid 를 먼저 쓰는 이유 (2026-09-13)
 #   그날 차가 가드레일을 박고 경로를 못 따라갔다. 로그를 보니 라이다가
@@ -30,11 +37,12 @@ set -u
 WS=/home/han/racing_ws
 WP=$WS/config/chungju_school/wp_school_track_0.5.yaml
 PLAN=$WS/config/chungju_school/mission_plan_school.yaml
-MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0
+MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0; FORCE_PWM=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --missions) MISSIONS=1; shift;;
     --no-avoid) NOAVOID=1; shift;;
+    --min-pwm) FORCE_PWM="$2"; shift 2;;
     --speed) SPEED="$2"; shift 2;;
     --yaw-offset) YAW="$2"; shift 2;;
     *) echo "모르는 인자: $1" >&2; exit 1;;
@@ -124,6 +132,12 @@ print(pwm, auto)")"
 else
   echo
   echo "  ⚠ 전압을 못 읽었다 (포트 사용 중?). 기본값으로 간다."
+fi
+
+# --min-pwm 으로 직접 지정했으면 전압 보정을 덮어쓴다.
+if [ -n "$FORCE_PWM" ]; then
+  PWM="$FORCE_PWM"
+  echo "  → ff_min_pwm=$PWM  (--min-pwm 으로 직접 지정, 전압 보정 무시)"
 fi
 
 LOG=/tmp/run_$(date +%H%M).log
