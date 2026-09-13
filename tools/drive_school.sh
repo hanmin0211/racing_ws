@@ -66,6 +66,29 @@ echo "────────────────────────�
 echo " 출발 전 점검"
 echo "──────────────────────────────────────────────────────────"
 
+# ★ 중복 실행 차단 (2026-09-13 밤)
+#   이전 스택을 안 끄고 새로 띄우면 **모든 노드가 두 개씩** 돈다. 그날 밤
+#   한 시간을 여기에 썼다. 증상이 전부 다른 얼굴로 나타나서 원인을 못 봤다:
+#     · serial_bridge 2개가 /dev/arduino 를 두고 싸움
+#       → "시리얼 전송 실패: port that is not open" → 재연결 반복
+#     · NTRIP 서버는 **계정당 1세션**이라 두 번째가 401 Unauthorized
+#       → RTCM 0프레임 → RTK 안 붙음
+#     · hfi_a9_ros2 2개가 /dev/imu 경합 → IMU 무발행
+#       → /odometry/filtered 끊김 → /curvature 끊김 → 차가 선다
+#     · vehicle_cmd_mux 2개가 서로 덮어써 먹스 모드가 깜빡임
+#   하나라도 남아 있으면 아예 시작하지 않는다.
+LEFT=$(pgrep -f 'install/[a-z_]+/lib/' 2>/dev/null | head -20)
+if [ -n "$LEFT" ]; then
+  echo "  ❌ 이미 돌고 있는 노드가 있다 — 두 벌이 돌면 서로 망가뜨린다."
+  ps -o pid=,cmd= -p $LEFT 2>/dev/null | sed 's|/home/han/racing_ws/install/||' \
+      | cut -c1-100 | sed 's/^/     /'
+  echo
+  echo "  먼저 그 터미널에서 Ctrl-C 하거나, 전부 정리하려면:"
+  echo "     pgrep -f 'install/[a-z_]+/lib/' | xargs -r kill -9"
+  echo "  그 뒤 'ros2 node list' 가 비었는지 확인하고 다시 실행할 것."
+  exit 1
+fi
+
 fail=0
 for n in arduino ldlidar_front imu; do
   if [ -e "/dev/$n" ]; then echo "  ✅ /dev/$n"
