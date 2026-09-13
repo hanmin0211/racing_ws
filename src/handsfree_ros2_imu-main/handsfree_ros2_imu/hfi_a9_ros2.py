@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import serial
 import struct
+import time
 import math
 import platform
 import serial.tools.list_ports
@@ -23,6 +24,13 @@ class IMUNode(Node):
         )
         port = self.get_parameter('port').value
         baudrate = self.get_parameter('baudrate').value
+        # ★ 재연결용으로 보관 (2026-09-13) — 아래 read_serial 주석 참고.
+        self.port = port
+        self.baudrate = baudrate
+        self.reconnect_count = 0
+        # 이 시간 동안 유효한 바이트가 한 개도 없으면 파이프가 멈춘 것으로 본다.
+        self.declare_parameter('stall_timeout', 1.5)
+        self.stall_timeout = float(self.get_parameter('stall_timeout').value)
         self.gra_normalization = self.get_parameter('gra_normalization').value
 
         self.imu_pub = self.create_publisher(Imu, 'handsfree/imu', 10)
@@ -56,15 +64,73 @@ class IMUNode(Node):
         self.serial_thread.start()
 
     def read_serial(self):
+        """IMU 시리얼 읽기 — **끊겨도 스스로 복구한다.**
+
+        ★ 왜 고쳤나 (2026-09-13 밤, 학교)
+          주행 중 IMU 가 끊기면 direct_localization 이 위치 발행을 멈추고,
+          로컬경로가 사라져 **차가 그 자리에 선다.** 대회에서 1분 이상
+          정지는 탈락이다. 그날 밤 주행마다 다른 장치가 돌아가며 끊겼고,
+          IMU 가 끊긴 판은 매번 거기서 끝났다.
+
+          원래 코드에는 결함이 둘 있었다:
+            ① `except: exit(1)` — 읽기 오류 한 번에 노드가 죽는다.
+            ② **파이프가 멈추면 예외가 안 난다.** CP210x 가
+               `urb stopped: -32` 로 멈추면 in_waiting 이 영원히 0 이고
+               read 도 예외를 안 던진다. 노드는 "opened successfully" 를
+               찍어 놓고 조용히 아무것도 안 읽는다 — 그날 그 상태로
+               한참을 헤맸다. 겉으로는 멀쩡해 보여서 더 나쁘다.
+
+          그래서 예외뿐 아니라 **무데이터 시간**으로도 끊김을 판정하고,
+          포트를 닫았다 다시 연다. /dev/imu 는 udev 심볼릭 링크라 장치가
+          다른 ttyUSB 로 재열거돼도 같은 경로로 다시 잡힌다.
+          (serial_bridge 가 /dev/arduino 에 대해 하는 것과 같은 방식이다)
+        """
+        last_data = time.time()
         while rclpy.ok():
             try:
                 if self.hf_imu.in_waiting > 0:
                     data = self.hf_imu.read_all()
-                    for byte in data:
-                        self.handle_serial_data(byte)
-            except Exception as e:
-                self.get_logger().error(f"Serial read error: {str(e)}")
-                exit(1)
+                    if data:
+                        last_data = time.time()
+                        for byte in data:
+                            self.handle_serial_data(byte)
+                else:
+                    # 바쁜 대기를 막는다(원래는 CPU 를 한 코어 다 먹었다).
+                    time.sleep(0.002)
+
+                if time.time() - last_data > self.stall_timeout:
+                    self._reconnect(f'{self.stall_timeout:.1f}초간 데이터 없음')
+                    last_data = time.time()
+            except Exception as e:  # noqa: BLE001
+                self._reconnect(f'읽기 예외: {e}')
+                last_data = time.time()
+
+    def _reconnect(self, why):
+        """포트를 닫았다 다시 연다. 실패해도 죽지 않고 계속 재시도한다."""
+        self.reconnect_count += 1
+        self.get_logger().warn(
+            f'⚠ IMU 시리얼 끊김 ({why}) — 재연결 시도 {self.reconnect_count}회: '
+            f'{self.port}')
+        try:
+            self.hf_imu.close()
+        except Exception:  # noqa: BLE001
+            pass
+        for _ in range(20):
+            if not rclpy.ok():
+                return
+            time.sleep(0.3)
+            try:
+                self.hf_imu = serial.Serial(
+                    port=self.port, baudrate=self.baudrate, timeout=5.0)
+                self.get_logger().info(
+                    f'✅ IMU 시리얼 재연결 성공: {self.port} '
+                    f'(총 {self.reconnect_count}회)')
+                return
+            except Exception:  # noqa: BLE001
+                continue
+        self.get_logger().error(
+            f'❌ IMU 재연결 6초간 실패 — USB 를 뺐다 꽂을 것 ({self.port}). '
+            '계속 시도한다.')
 
     def check_sum(self, list_data, check_data):
         data = bytearray(list_data)
