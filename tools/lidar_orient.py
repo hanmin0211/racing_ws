@@ -143,6 +143,98 @@ def find_moving(a, topic=DEFAULT_TOPIC):
     return 0
 
 
+
+def find_body(a):
+  """차체 가려짐으로 마운트 방향을 잰다 — **사람도 기준물도 필요 없다.**
+
+  ★ 왜 이게 제일 믿을 만한가 (2026-09-13 학교에서 확인)
+    라이다를 차량 정면에 달면 **차체가 라이다 뒤를 넓게 가린다.** 그 구간은
+    차에 고정된 강체라 주변이 바뀌어도 안 움직인다. 중심을 재면 그게 '뒤'
+    이고, 반대가 정면이다.
+
+    그날 --check 는 +119.1°, --moving 은 -149.7° 를 내놨다(20° 넘게 차이).
+    둘 다 **가려짐의 가장자리**를 집은 것이었다 — 그 경계에서는 사람이 조금만
+    움직여도 거리가 크게 튀어서 '변화량' 기준 두 방법이 나란히 속는다.
+    반면 차체 중심은 전혀 다른 두 장면(벽 앞 / 열린 곳)에서 +10.0° 와 +7.05°
+    로 재현됐고, 가려짐 범위가 중심 대비 -59°~+60° 로 **대칭**이었다.
+    대칭성 자체가 '차량 중심선을 맞췄다' 는 증거다.
+
+  ⚠ 라이다가 차체에 안 가리는 위치(범퍼 위 등)면 이 방법은 못 쓴다.
+    차체 빈이 5% 미만이면 그렇게 알려주고 --moving 으로 보낸다.
+  """
+  ang, med, valid, n = _grab_valid(a.topic, secs=10.0, n_max=80)
+  m = len(ang)
+  body = (valid < a.body_valid) & (np.nan_to_num(med, nan=9.0) < a.body_range)
+  frac = body.sum() / max(m, 1)
+  print('=' * 62)
+  print(f'차체 빈 {int(body.sum())}개 / {m} ({frac*100:.0f}%), {n}스캔')
+  if frac < 0.05:
+    print('-' * 62)
+    print('❌ 차체 가려짐이 거의 없다 — 이 방법을 쓸 수 없다.')
+    print('   라이다가 차체에 안 가리는 위치인 것 같다(범퍼 위 등).')
+    print('   → python3 tools/lidar_orient.py --moving 8 을 쓸 것.')
+    print('=' * 62)
+    return 1
+  th = np.radians(ang[body])
+  c = math.degrees(math.atan2(float(np.sin(th).mean()),
+                              float(np.cos(th).mean())))
+  d = np.degrees(np.angle(np.exp(1j * (th - math.radians(c)))))
+  front = ((c + 180.0 + 180.0) % 360.0) - 180.0
+  off = -front
+  print(f'차체 중심(=뒤) {c:+.2f}°   범위 {d.min():+.0f}~{d.max():+.0f}°'
+        f'   비대칭 {abs(d.min()+d.max()):.1f}°')
+  if abs(d.min() + d.max()) > 20.0:
+    print('  ⚠ 가려짐이 좌우 비대칭이다 — 라이다가 차량 중심선에서 벗어났거나'
+          ' 한쪽만 가린다. 값을 그대로 믿지 말고 --moving 으로 교차검증할 것.')
+  print('-' * 62)
+  print(f'→ 기하학적 정면 {front:+.2f}°')
+  print(f'→ fg_yaw_offset_deg := {off:.1f}')
+  print('-' * 62)
+  corr = ((ang + off + 180.0) % 360.0) - 180.0
+  print('보정 후 전방 시야 (여기가 깨끗해야 회피가 산다):')
+  for lo, hi, name in [(-15, 15, '정면 ±15°'), (-30, 30, '정면 ±30°'),
+                       (-60, -30, '좌 30~60°'), (30, 60, '우 30~60°')]:
+    sel = (corr >= lo) & (corr < hi)
+    if sel.sum() == 0:
+      continue
+    vr = float(valid[sel].mean()) * 100.0
+    mark = '  ⚠ 가려져 있다' if vr < 80.0 else ''
+    print(f'  {name:<11} 유효율 {vr:5.1f}%   '
+          f'중앙거리 {np.nanmedian(med[sel]):.2f}m{mark}')
+  print('=' * 62)
+  return 0
+
+
+def _grab_valid(topic, secs=10.0, n_max=80):
+  """평균 거리와 함께 **유효율**(반사가 돌아온 비율)도 돌려준다."""
+  buf, meta = [], {}
+
+  def cb(msg):
+    r = np.array(msg.ranges, dtype=float)
+    r[(r <= msg.range_min) | (r >= msg.range_max) | ~np.isfinite(r)] = np.nan
+    buf.append(r)
+    meta.setdefault('a0', msg.angle_min)
+    meta.setdefault('ai', msg.angle_increment)
+
+  rclpy.init()
+  node = rclpy.create_node('lidar_orient_body')
+  node.create_subscription(LaserScan, topic, cb, qos_profile_sensor_data)
+  t0 = time.time()
+  while time.time() - t0 < secs and len(buf) < n_max:
+    rclpy.spin_once(node, timeout_sec=0.2)
+  node.destroy_node()
+  rclpy.shutdown()
+  if len(buf) < 5:
+    raise RuntimeError(f'스캔을 못 받았다 ({len(buf)}개) — 드라이버 확인')
+  m = min(len(b) for b in buf)
+  arr = np.vstack([b[:m] for b in buf])
+  with np.errstate(invalid='ignore'):
+    med = np.nanmedian(arr, axis=0)
+  valid = np.isfinite(arr).mean(axis=0)
+  ang = np.degrees(meta['a0'] + np.arange(m) * meta['ai'])
+  return ang, med, valid, len(buf)
+
+
 def _verdict(bearing):
     cand = min((0.0, 180.0, -180.0), key=lambda c: abs(
         math.degrees(math.atan2(math.sin(math.radians(bearing - c)),
@@ -177,6 +269,14 @@ def main():
                          '기준 저장이 필요 없고 주변이 복잡해도 걸린다')
     ap.add_argument('--min-drop', type=float, default=0.30,
                     help='이만큼 가까워진 빈을 "새로 생긴 것"으로 본다[m]')
+    ap.add_argument('--body', action='store_true',
+                    help='차체 가려짐으로 방향을 잰다 — 기준물도 사람도 '
+                         '필요 없고 제일 재현성이 좋다. 라이다가 차체에 '
+                         '가리는 위치(정면 마운트)일 때 쓴다')
+    ap.add_argument('--body-valid', type=float, default=0.15, metavar='F',
+                    help='유효율이 이보다 낮은 빈을 가려진 것으로 본다')
+    ap.add_argument('--body-range', type=float, default=0.40, metavar='M',
+                    help='가려진 빈에서 가끔 돌아오는 반사의 거리 상한')
     ap.add_argument('--min-range', type=float, default=0.30,
                     metavar='M',
                     help='이보다 가까운 반사는 무시 (기본 0.30 = 라이다 '
@@ -190,6 +290,9 @@ def main():
 
     if a.moving > 0.0:
         return find_moving(a, a.topic)
+
+    if a.body:
+        return find_body(a)
 
     ang, med, n = grab(topic=a.topic)
     if a.baseline or not a.check:

@@ -27,13 +27,13 @@ from std_msgs.msg import Float64, String
 
 class Monitor(Node):
 
-  def __init__(self, yaw_offset_deg):
+  def __init__(self, yaw_offset_deg, topic='/scan_front'):
     super().__init__('lidar_monitor')
     self.yaw = math.radians(yaw_offset_deg)
     self.mode = '-'
     self.steer = float('nan')
     self.obs = None
-    self.create_subscription(LaserScan, '/scan', self.scan_cb,
+    self.create_subscription(LaserScan, topic, self.scan_cb,
                              qos_profile_sensor_data)
     self.create_subscription(String, '/lidar/mode',
                              lambda m: setattr(self, 'mode', m.data), 10)
@@ -85,11 +85,13 @@ class Monitor(Node):
 
 def main():
   ap = argparse.ArgumentParser()
+  ap.add_argument('--topic', default='/scan_front',
+                  help='스캔 토픽 (기본 /scan_front — 앞뒤 분리 후)')
   ap.add_argument('--yaw-offset', type=float, default=180.0,
                   help='원본 scan 해석용 yaw offset[도] (cluster 노드와 맞출 것)')
   args = ap.parse_args()
   rclpy.init()
-  n = Monitor(args.yaw_offset)
+  n = Monitor(args.yaw_offset, args.topic)
   print('라이다 모니터 시작 — 차 정면에 물체를 놓고 "최근접(차량기준)" 각이')
   print('~0°면 마운트 정상. ~±180°면 fg_yaw_offset_deg 를 뒤집을 것. Ctrl-C 종료.\n')
   try:
