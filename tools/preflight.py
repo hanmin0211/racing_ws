@@ -114,6 +114,78 @@ def read_pts(d, key='waypoints'):
 
 
 # ---------------------------------------------------------------- 검사 A
+
+def check_supply(args):
+  """공급전압 — **차를 세워둔 채로 5초 만에 오늘 같은 하루를 막는다.**
+
+  ★ 왜 preflight 에 전압이 들어왔나 (2026-09-13)
+    그날 학교에서 차가 안 움직였다. 명령도 경로도 라이다도 PWM 상수도 전부
+    맞았다(git 으로 확인했다). 다른 건 **공급전압 하나**였다:
+        전날 무부하 5115mV  →  그날 무부하 4030mV
+    PWM 은 전압이 아니라 **비율**이다. `PWM 50` 은 "걸 수 있는 전압의
+    50/255 를 걸어라" 는 뜻이고, 얼마가 걸릴지는 전원이 정한다. 1V 가 빠지자
+    같은 PWM 이 정지마찰을 못 넘었고, **모터가 잠긴 채 전류만 빨아** VMIN 이
+    2938mV 까지 무너졌다. 로그에는 "PWM 50 이 나가는데 좌표가 1cm 도 안 변함"
+    으로 남았다. 원인을 찾는 데 세 시간이 걸렸다.
+
+    원인은 차량 쪽 전원이었다. USB 만 연결하면 5091mV, 차량 전원을 물리면
+    4030mV 로 끌려 내려갔다(VIN 이 낮아 레귤레이터가 드롭아웃한 모양).
+
+  판정선은 tools/vcc_check.py 와 같다. 무부하에서 재는 값이라는 점이 중요하다
+  — 주행 중에는 이보다 훨씬 내려간다(실측: 직선 4262 · 커브+조향 3215mV,
+  과거 리셋 발생선 3483mV). 무부하가 4700 을 못 넘으면 주행은 가망이 없다.
+  """
+  head('F. 공급전압 — 아두이노 5V 레일')
+  if args.skip_supply:
+    print('  (--skip-supply 로 건너뜀)')
+    return
+  mv = _read_vcc(args.arduino_port, args.supply_secs)
+  if mv is None:
+    warn('전압을 못 읽었다 — 아두이노가 안 붙었거나 포트를 다른 프로세스가 '
+         '쓰고 있다. bringup 이 떠 있으면 정상이다(그때는 tools/vcc_watch.py). '
+         '차를 움직이기 전에 반드시 확인할 것.')
+    return
+  lo, hi, n = mv
+  print(f'  무부하 {lo}~{hi} mV ({n}샘플, 포트 {args.arduino_port})')
+  if lo >= 4700:
+    ok(f'정상 — 주행 가능 (최저 {lo}mV)')
+  elif lo >= 4300:
+    warn(f'낮다 ({lo}mV) — 마진이 없다. 주행 중 커브에서 리셋선(3483mV)을 '
+         '밑돌 수 있다. 배터리 충전 권장.')
+  else:
+    bad(f'브라운아웃 위험 ({lo}mV < 4300) — **이대로 주행하면 안 된다.** '
+        '같은 PWM 이 정지마찰을 못 넘어 모터가 잠기고, 전압이 더 무너진다. '
+        '차량 배터리/전원 공급원을 먼저 볼 것 (USB 만 연결해 재보면 '
+        '차량 쪽인지 바로 갈린다).')
+
+
+def _read_vcc(port, secs):
+  """STATUS 텔레메트리의 VCC= 를 secs 초 동안 읽어 (최저, 최고, 개수)."""
+  try:
+    import serial  # noqa: PLC0415
+  except ImportError:
+    return None
+  import re as _re  # noqa: PLC0415
+  import time as _time  # noqa: PLC0415
+  vals = []
+  try:
+    with serial.Serial(port, 57600, timeout=0.5) as sp:
+      t0 = _time.time()
+      buf = b''
+      while _time.time() - t0 < secs:
+        buf += sp.read(256)
+        while b'\n' in buf:
+          line, buf = buf.split(b'\n', 1)
+          m = _re.search(rb'VCC=(\d+)', line)
+          if m:
+            vals.append(int(m.group(1)))
+  except Exception:  # noqa: BLE001
+    return None
+  if not vals:
+    return None
+  return min(vals), max(vals), len(vals)
+
+
 def check_origin(cur):
   head('A. 원점 (config/site_origin.yaml)')
   epsg, ox, oy, site = cur
@@ -441,6 +513,12 @@ def main():
   ap.add_argument('--plan-r-rev-max', type=float, default=5.0)
   ap.add_argument('--plan-back-max', type=float, default=3.0)
   ap.add_argument('--skip-parking', action='store_true')
+  ap.add_argument('--arduino-port', default='/dev/arduino',
+                  help='전압을 읽을 아두이노 포트 (기본 /dev/arduino)')
+  ap.add_argument('--supply-secs', type=float, default=3.0,
+                  help='전압을 몇 초 동안 볼지')
+  ap.add_argument('--skip-supply', action='store_true',
+                  help='전압 검사를 건너뛴다 (차가 없을 때)')
   ap.add_argument('--mission-plan',
                   default='/home/han/racing_ws/config/mission_plan.yaml')
   args = ap.parse_args()
@@ -456,6 +534,7 @@ def main():
   if not args.skip_parking:
     check_parking(wp, cur, args)
   check_mission_plan(args.mission_plan, wp, args)
+  check_supply(args)
 
   head('요약')
   if FAILS:
