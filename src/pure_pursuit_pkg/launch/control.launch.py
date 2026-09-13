@@ -118,7 +118,7 @@ def generate_launch_description():
       #   9/13 실측: PWM 50 은 출발을 못 하고(모터 잠김, VMIN 2938mV),
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
       DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
-      DeclareLaunchArgument('ff_breakaway_ms', default_value='600.0'),
+      DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
       # ★ 장애물 정지거리 (2026-09-13 노출). 브레이크가 없어서 이 값은
       #   '멈출 거리' 가 아니라 '동력을 끊을 거리' 다. 실제 정지점은
       #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
