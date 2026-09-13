@@ -250,6 +250,9 @@ def generate_launch_description():
       DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
       DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
       DeclareLaunchArgument('fg_prefer_path_gap', default_value='true'),
+      # true 면 라이다 **조향 회피만** 끈다(감속·정지는 그대로).
+      # 돌발 급정지 단독 시험처럼 '피하지 말고 서야' 하는 경우에 쓴다.
+      DeclareLaunchArgument('no_avoid_steer', default_value='false'),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
@@ -442,7 +445,20 @@ def generate_launch_description():
               # 콘 사이로 '통과' 할 것인가(True) 바깥으로 돌 것인가(False).
               'fg_prefer_path_gap': ParameterValue(
                   LaunchConfiguration('fg_prefer_path_gap'), value_type=bool),
-              'require_arm_for_steer': ParameterValue(sequencer, value_type=bool)}],
+              # ★ 2026-09-13 — 회피 '조향' 만 따로 끌 수 있어야 한다.
+              #   돌발 급정지는 **서야** 성공이고 피하면 실패(10점)다. 그런데
+              #   sudden_stop_node 는 HOLD 에서 /stop_line_distance=0 만 내고
+              #   회피를 막지 않는다. 막는 건 미션계획의 inhibits 인데 그건
+              #   시퀀서가 있어야 돈다. 시퀀서 없이 돌발정지만 시험하려면
+              #   no_avoid_steer:=true 로 조향 override 를 꺼야 한다.
+              #   ⚠ 감속·정지(/obstacle_distance)는 안전 기능이라 이 값과
+              #     무관하게 **항상** 나간다(cluster_plot_node 의 arm_cb 주석).
+              'require_arm_for_steer': ParameterValue(
+                  PythonExpression(
+                      ["'", sequencer, "'.lower() == 'true' or '",
+                       LaunchConfiguration('no_avoid_steer'),
+                       "'.lower() == 'true'"]),
+                  value_type=bool)}],
       ),
 
       # 7-b. 신호등 → 정지선거리 (mission:=true 일 때만)
