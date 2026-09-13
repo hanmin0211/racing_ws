@@ -114,6 +114,11 @@ def generate_launch_description():
       #     캘리브 10m 주행이 그 자체로 PWM 50 속도계다(명령 0.5 → PWM 36.6
       #     → 하한 50). 진행 로그의 소요시간으로 환산할 것.
       DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
+      # ★ 정지마찰 하한 — '구르는 중' 하한(ff_min_pwm)과 다른 값이어야 한다.
+      #   9/13 실측: PWM 50 은 출발을 못 하고(모터 잠김, VMIN 2938mV),
+      #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
+      DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
+      DeclareLaunchArgument('ff_breakaway_ms', default_value='600.0'),
       # ★ 장애물 정지거리 (2026-09-13 노출). 브레이크가 없어서 이 값은
       #   '멈출 거리' 가 아니라 '동력을 끊을 거리' 다. 실제 정지점은
       #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
@@ -167,6 +172,10 @@ def generate_launch_description():
               'ff_gain': ff_gain,
               'ff_min_pwm': ParameterValue(
                   LaunchConfiguration('ff_min_pwm'), value_type=float),
+              'ff_breakaway_pwm': ParameterValue(
+                  LaunchConfiguration('ff_breakaway_pwm'), value_type=float),
+              'ff_breakaway_ms': ParameterValue(
+                  LaunchConfiguration('ff_breakaway_ms'), value_type=float),
           }],
       ),
 
