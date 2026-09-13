@@ -30,6 +30,7 @@
 
 import math
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -150,13 +151,57 @@ class OffsetWatch(Node):
     self.got = float(msg.data)
 
 
+_case_idx = [0]
+
+
+def _kill_group(proc):
+  """`ros2 run` 래퍼와 그 자식 노드를 **그룹째** 죽인다.
+
+  terminate() 로는 노드가 남는다(위 Popen 주석 참고). 남은 노드는 다음
+  테스트까지 오염시키므로 SIGTERM → 1초 → SIGKILL 로 확실히 정리한다.
+  """
+  try:
+    pgid = os.getpgid(proc.pid)
+  except (ProcessLookupError, PermissionError):
+    return
+  # ⚠ proc.wait() 는 **래퍼**가 죽은 것만 알려준다. heading_init_node 는
+  #   SIGTERM 을 무시하므로 래퍼만 죽고 노드는 살아남는데, wait() 가 곧바로
+  #   돌아와 '죽었다' 고 오인하게 된다. 그래서 wait() 결과와 무관하게
+  #   **항상 SIGKILL 까지 보낸다.**
+  try:
+    os.killpg(pgid, signal.SIGTERM)
+  except (ProcessLookupError, PermissionError):
+    return
+  try:
+    proc.wait(timeout=1.0)
+  except subprocess.TimeoutExpired:
+    pass
+  try:
+    os.killpg(pgid, signal.SIGKILL)
+  except (ProcessLookupError, PermissionError):
+    pass
+  try:
+    proc.wait(timeout=3.0)
+  except subprocess.TimeoutExpired:
+    pass
+
+
 def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
         timeout=45.0):
   print('=' * 72)
   print(f'▶ {name}')
   print('=' * 72)
 
-  env = dict(os.environ, ROS_DOMAIN_ID=TEST_DOMAIN)
+  # ★ 케이스마다 다른 도메인을 쓴다.
+  #   /heading/yaw_offset 은 **TRANSIENT_LOCAL(래치)** 토픽이라, 앞 케이스의
+  #   노드가 하나라도 살아남아 있으면 그 값이 새 구독자에게 **즉시** 배달된다.
+  #   그러면 차가 0.00m 움직였는데도 '캘리브 확정' 으로 읽혀 거부 케이스가
+  #   전부 거짓 통과한다(2026-09-13 에 실제로 4케이스 모두 +37.0° 로 나왔다).
+  #   프로세스 정리를 고쳐도, 도메인을 가르는 것이 마지막 방어선이다.
+  domain = str(int(TEST_DOMAIN) + _case_idx[0])
+  _case_idx[0] += 1
+  os.environ['ROS_DOMAIN_ID'] = domain      # rclpy.init 이 이 값을 읽는다
+  env = dict(os.environ, ROS_DOMAIN_ID=domain)
   params = [
       '-p', f'calib_distance:={CALIB_D}',
       '-p', 'auto_drive:=true',
@@ -164,11 +209,19 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
       '-p', f'auto_countdown:={COUNTDOWN}',
       '-p', 'max_calib_retries:=1',      # 실패하면 곧바로 포기 — 판정이 명확해진다
   ] + extra_params
+  # ★ start_new_session — 프로세스 **그룹**으로 죽이기 위해서다.
+  #   `ros2 run` 은 래퍼이고 실제 노드는 그 자식이다. proc.terminate() 는
+  #   래퍼만 죽이고 노드는 살아남아 stdout 파이프를 계속 잡는다. 그러면
+  #   아래 communicate() 가 영원히 블록되고, 테스트는 A 케이스에서 멈춘 채
+  #   **노드를 도메인에 남긴다**. 남은 노드는 다음 케이스(그리고 다음 테스트)
+  #   에 같은 토픽으로 끼어들어 엉뚱한 실패를 만든다.
+  #   (2026-09-13: 실제로 이렇게 540초를 넘겼고, 남은 노드는 SIGTERM 을
+  #    무시해 SIGKILL 이 필요했다.)
   proc = subprocess.Popen(
       ['ros2', 'run', 'gps_heading_init', 'heading_init_node',
        '--ros-args'] + params,
       env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-      text=True, bufsize=1)
+      text=True, bufsize=1, start_new_session=True)
 
   rclpy.init()
   veh = FakeVehicle(jump_at, jump_m, rtk_at)
@@ -176,6 +229,16 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
   ex = rclpy.executors.SingleThreadedExecutor()
   ex.add_node(veh)
   ex.add_node(watch)
+
+  # 노드가 뭔가 발행하기 전에 이미 값이 잡히면 그건 **남의 값**이다.
+  for _ in range(20):
+    ex.spin_once(timeout_sec=0.05)
+  if watch.got is not None:
+    print(f'   ⚠ 시작 전에 이미 yaw_offset 이 잡혔다 (도메인 {domain}). '
+          '이전 노드가 살아 있다 — 결과를 믿을 수 없다.')
+    _kill_group(proc)
+    veh.destroy_node(); watch.destroy_node(); rclpy.shutdown()
+    return False
 
   t_end = time.time() + timeout
   while time.time() < t_end and watch.got is None and proc.poll() is None:
@@ -188,12 +251,13 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
   veh.destroy_node()
   watch.destroy_node()
   rclpy.shutdown()
-  proc.terminate()
+  _kill_group(proc)
   try:
     out = proc.communicate(timeout=8)[0]
   except subprocess.TimeoutExpired:
-    proc.kill()
-    out = proc.communicate()[0]
+    # 그룹 SIGKILL 뒤에도 파이프가 안 닫히면 읽기를 포기한다.
+    # 로그를 못 읽는 것보다 테스트가 멈추는 것이 나쁘다.
+    out = ''
 
   for line in (out or '').splitlines():
     if any(k in line for k in ('✅', '❌', '무효', '점프', 'RTK', '완료',
