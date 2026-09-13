@@ -38,10 +38,16 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 
+# ★ 2026-09-13 — 앞뒤 라이다를 분리하면서(lidar_dual.launch.py) 전방 스캔이
+#   /scan → **/scan_front** 로 바뀌었다. 이 도구는 계속 /scan 을 구독하고
+#   있어서 그 뒤로 **아무것도 못 받았다**(조용히 타임아웃만 났다).
+#   마운트를 바꿨을 때 제일 먼저 써야 하는 도구가 고장나 있던 셈이다.
+DEFAULT_TOPIC = '/scan_front'
+
 STORE = '/tmp/lidar_orient_baseline.json'
 
 
-def grab(n_avg=10, timeout=20.0):
+def grab(n_avg=10, timeout=20.0, topic=DEFAULT_TOPIC):
     """여러 스캔을 모아 각도 빈별 **중앙값** 거리를 만든다(순간 노이즈 제거)."""
     rclpy.init()
     node = Node('lidar_orient')
@@ -56,7 +62,7 @@ def grab(n_avg=10, timeout=20.0):
         meta.setdefault('angle_min', m.angle_min)
         meta.setdefault('angle_increment', m.angle_increment)
 
-    node.create_subscription(LaserScan, '/scan', cb, qos_profile_sensor_data)
+    node.create_subscription(LaserScan, topic, cb, qos_profile_sensor_data)
     t0 = time.time()
     while time.time() - t0 < timeout and len(buf) < n_avg:
         rclpy.spin_once(node, timeout_sec=0.2)
@@ -72,7 +78,7 @@ def grab(n_avg=10, timeout=20.0):
     return ang, med, len(buf)
 
 
-def find_moving(a):
+def find_moving(a, topic=DEFAULT_TOPIC):
     """시간에 따라 거리가 가장 많이 변한 방향 = 움직이는 사람.
 
     기준 스캔이 필요 없다. 주변이 복잡해도, 조명이 바뀌어도, **움직이는 것은
@@ -91,7 +97,7 @@ def find_moving(a):
         meta.setdefault('amin', m.angle_min)
         meta.setdefault('ainc', m.angle_increment)
 
-    node.create_subscription(LaserScan, '/scan', cb, qos_profile_sensor_data)
+    node.create_subscription(LaserScan, topic, cb, qos_profile_sensor_data)
     print(f'{a.moving:.0f}초간 측정한다 — **정면에 선 사람이 좌우로 흔들어** 주세요.')
     t0 = time.time()
     while time.time() - t0 < a.moving:
@@ -160,6 +166,9 @@ def _verdict(bearing):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--topic', default=DEFAULT_TOPIC,
+                    help=f'스캔 토픽 (기본 {DEFAULT_TOPIC}). '
+                         '앞뒤 분리 전 런치를 쓰면 /scan')
     ap.add_argument('--baseline', action='store_true', help='빈 상태 저장')
     ap.add_argument('--check', action='store_true', help='물체 놓고 비교')
     ap.add_argument('--moving', type=float, default=0.0, metavar='SEC',
@@ -173,9 +182,9 @@ def main():
     a = ap.parse_args()
 
     if a.moving > 0.0:
-        return find_moving(a)
+        return find_moving(a, a.topic)
 
-    ang, med, n = grab()
+    ang, med, n = grab(topic=a.topic)
     if a.baseline or not a.check:
         json.dump({'ang': ang.tolist(), 'med': np.nan_to_num(med, nan=-1).tolist()},
                   open(STORE, 'w'))

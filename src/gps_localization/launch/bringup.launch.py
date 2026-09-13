@@ -246,6 +246,14 @@ def generate_launch_description():
       #   실측 비교 (연석만 / 장애물 4.0·3.0·2.5·2.0m):
       #     2.7 AVOID·전부 BLOCKED  2.6 AVOID·전부 BLOCKED
       #     2.4 CLEAR · -10.5 → -14.7  ✓     2.0 CLEAR 이지만 2.0m 에서 BLOCKED
+      # ★ 2026-09-13 노출 — 라이다 **마운트 방향** 보정.
+      #   cluster_plot_node 가 이 값으로 스캔을 차량 좌표계(+x 전방)에 맞춘다.
+      #   ⚠ 틀리면 **회피가 장애물 쪽으로 꺾는다** = 이탈 = 탈락이다.
+      #   라이다를 옮기거나 개체를 바꾸면 반드시 다시 잴 것:
+      #     python3 tools/lidar_orient.py --baseline   (정면 비우고)
+      #     python3 tools/lidar_orient.py --check      (정면 1~2m 에 물체)
+      #   지금까지 런치 인자가 없어서 재봐야 적용할 방법이 없었다(재빌드 필요).
+      DeclareLaunchArgument('fg_yaw_offset_deg', default_value='180.0'),
       DeclareLaunchArgument('fg_track_width', default_value='2.4'),
       DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
       DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
@@ -444,6 +452,8 @@ def generate_launch_description():
           parameters=[{
               'scan_topic': LaunchConfiguration('scan_topic'),
               'enable_plot': False,
+              'fg_yaw_offset_deg': ParameterValue(
+                  LaunchConfiguration('fg_yaw_offset_deg'), value_type=float),
               'fg_track_width': ParameterValue(
                   LaunchConfiguration('fg_track_width'), value_type=float),
               'fg_planning_lookahead': ParameterValue(
