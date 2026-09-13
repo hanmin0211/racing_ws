@@ -327,7 +327,14 @@ float target_steer_angle = 0.0;  // ROS 목표 조향각(도)
 bool openloop_active = false;
 int openloop_target_pwm = 0;
 int openloop_pwm = 0;            // 레이트 제한이 적용된 실제 인가값
-#define OPENLOOP_RATE     3      // 사이클(10ms)당 최대 변화 → 급가속 방지
+// ★ 레이트 제한은 **올릴 때만** 건다 (2026-09-13).
+//   이 제한은 급가속으로 전원이 무너지는 걸 막으려고 넣은 것이다. 그런데
+//   내릴 때까지 같이 묶어 두면 PWM 56 → 0 에 187ms 가 걸리고, 그 동안 차는
+//   계속 달린다. 돌발 급정지(규정 항목 7)는 어린이 더미가 **좌우에서 이동해
+//   들어와** 도로 중앙에 서는 미션이라 그 187ms 가 그대로 정지거리가 된다.
+//   동력을 끊는 방향은 전원에 부담이 없으므로 제한할 이유가 없다.
+#define OPENLOOP_RATE      3     // 사이클(10ms)당 **증가** 한도 → 급가속 방지
+#define OPENLOOP_RATE_DOWN 255   // 감소는 제한 없음 (한 사이클에 0 까지)
 // 식별용 상한 (MAX_DRIVE_PWM 과 별개).
 // ★ 2026-08-17: 140 이면 지면에서 약 0.5 m/s 까지만 측정된다. 그 위를 쓰려면
 //   외삽해야 하는데, 바로 그 외삽이 FF 를 10배 틀리게 만든 원인이었다.
@@ -424,7 +431,15 @@ const float VELOCITY_DT = CONTROL_DT_MS / 1000.0;
 // 지상 실측(PWM 111→0.33, 150→0.74)의 역관계 PWM=80+95*v 를 FF 로 그대로.
 // (예전 200 상향 후 리셋은 USB 버스충돌이었고 FF 문제가 아니었다 — 버스분리로
 //  해결됨. 이제 제대로 올려도 된다.)
-const float STATIC_FF = 80.0, VELOCITY_FF_GAIN = 95.0;
+// ★ 2026-09-13 지면 실측으로 교체. 옛 값 80 / 95 는 **4배 틀렸다**.
+//   그 값이면 0.15 m/s 명령에 PWM 94 가 나가 차가 2 m/s 로 달렸고,
+//   헤딩 캘리브가 8회 연속 '측위 점프' 로 거부됐다.
+//   근거: 캘리브 10m 직진 로그의 1m 구간 9개가 전부 1.00±0.02 m/s
+//         (명령 0.5 m/s → PWM 56) + calib_trace 의 PWM 94 → 1.98 m/s.
+//   ⚠ 평소 주행은 ROS 쪽 FF 를 쓴다(serial_bridge 의 ff_mode:=ros → PWM: 명령).
+//     현장에서 노면이 바뀌면 펌웨어를 다시 굽지 않고 고칠 수 있기 때문이다.
+//     여기 값은 ff_mode:=firmware 로 되돌렸을 때의 **폴백**이다.
+const float STATIC_FF = 17.2, VELOCITY_FF_GAIN = 38.8;
 
 // 조향 위치 PID
 float steering_kp = 1.0, steering_ki = 0.0, steering_kd = 0.2;
@@ -570,9 +585,17 @@ float hold_isum   = 0.0;
 void velocity_pid_control() {
   // 개루프 모드: PID를 건너뛰고 지정 PWM을 레이트 제한만 걸어 인가한다.
   if (openloop_active) {
-    int d = openloop_target_pwm - openloop_pwm;
-    if (d >  OPENLOOP_RATE) d =  OPENLOOP_RATE;
-    if (d < -OPENLOOP_RATE) d = -OPENLOOP_RATE;
+    // 크기가 커지는 쪽만 제한한다(위 OPENLOOP_RATE 주석 참고).
+    int tgt = openloop_target_pwm;
+    // 방향이 바뀌는 명령은 **0 을 거쳐서** 간다. 한 사이클에 +40 → -40 으로
+    // 뒤집으면 전류 스파이크가 난다. 0 까지는 감속이라 제한 없이 내려가고,
+    // 반대 방향 가속은 다음 사이클부터 OPENLOOP_RATE 로 붙는다.
+    if ((long)tgt * (long)openloop_pwm < 0) tgt = 0;
+    int d = tgt - openloop_pwm;
+    bool speeding_up = (abs(tgt) > abs(openloop_pwm));
+    int lim_rate = speeding_up ? OPENLOOP_RATE : OPENLOOP_RATE_DOWN;
+    if (d >  lim_rate) d =  lim_rate;
+    if (d < -lim_rate) d = -lim_rate;
     openloop_pwm += d;
     velocity_pwm_output = constrain(openloop_pwm,
                                     -MAX_OPENLOOP_PWM, MAX_OPENLOOP_PWM);
