@@ -37,12 +37,13 @@ set -u
 WS=/home/han/racing_ws
 WP=$WS/config/chungju_school/wp_school_track_0.5.yaml
 PLAN=$WS/config/chungju_school/mission_plan_school.yaml
-MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0; FORCE_PWM=""
+MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0; FORCE_PWM=""; MINRANGE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --missions) MISSIONS=1; shift;;
     --no-avoid) NOAVOID=1; shift;;
     --min-pwm) FORCE_PWM="$2"; shift 2;;
+    --min-range) MINRANGE="$2"; shift 2;;
     --speed) SPEED="$2"; shift 2;;
     --yaw-offset) YAW="$2"; shift 2;;
     *) echo "모르는 인자: $1" >&2; exit 1;;
@@ -178,6 +179,7 @@ ARGS=(control:=true lidar:=true auto_calib:=true
       "waypoints:=$WP" "max_speed:=$SPEED"
       "ff_min_pwm:=$PWM" "auto_calib_speed:=$CALIB")
 [ -n "$YAW" ] && ARGS+=("fg_yaw_offset_deg:=$YAW")
+[ -n "$MINRANGE" ] && ARGS+=("fg_min_range:=$MINRANGE")
 [ "$NOAVOID" = 1 ] && ARGS+=(no_avoid_steer:=true)
 [ "$MISSIONS" = 1 ] && ARGS+=(sequencer:=true sudden_stop:=true "mission_plan:=$PLAN")
 if [ "$NOAVOID" = 1 ]; then

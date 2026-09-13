@@ -254,6 +254,17 @@ def generate_launch_description():
       #     python3 tools/lidar_orient.py --check      (정면 1~2m 에 물체)
       #   지금까지 런치 인자가 없어서 재봐야 적용할 방법이 없었다(재빌드 필요).
       DeclareLaunchArgument('fg_yaw_offset_deg', default_value='180.0'),
+      # ★ 2026-09-13 노출 — 이보다 가까운 반사는 버린다.
+      #   라이다를 범퍼 위 → 차량 정면으로 옮긴 뒤, **차체/마운트 일부가
+      #   시야에 들어와** 매 프레임 같은 자리에 잡혔다:
+      #       ID=58 X=0.31 Y=-0.20 Width=0.02 Distance=0.37m
+      #   폭 2cm 짜리가 항상 front=0.37m 를 만들어 follow-gap 이 **영구
+      #   BLOCKED** 가 됐다. 차는 서고 → 8초 뒤 막힘탈출로 감속을 풀고 →
+      #   그대로 박는다. 그날 실제로 박았다.
+      #   ⚠ 올리면 그만큼 가까운 진짜 장애물도 안 보인다. 다만 정지거리가
+      #     0.8m + 관성이라 0.5m 안쪽은 어차피 늦었다.
+      #   ★ 근본 해결은 물리적으로 치우는 것이다. 이건 현장 임시방편이다.
+      DeclareLaunchArgument('fg_min_range', default_value='0.30'),
       DeclareLaunchArgument('fg_track_width', default_value='2.4'),
       DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
       DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
@@ -461,6 +472,8 @@ def generate_launch_description():
               'enable_plot': False,
               'fg_yaw_offset_deg': ParameterValue(
                   LaunchConfiguration('fg_yaw_offset_deg'), value_type=float),
+              'fg_min_range': ParameterValue(
+                  LaunchConfiguration('fg_min_range'), value_type=float),
               'fg_track_width': ParameterValue(
                   LaunchConfiguration('fg_track_width'), value_type=float),
               'fg_planning_lookahead': ParameterValue(
