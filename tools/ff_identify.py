@@ -46,8 +46,27 @@ class Runner(Node):
     self.lat = None
     self.lon = None
     self.sig = float('nan')
+    # ★ 2026-09-13 — 공급전압을 같이 기록한다.
+    #   같은 PWM 55 에서 0.46 m/s(ff_identify) 와 1.00 m/s(캘리브 10m 주행)가
+    #   나왔다. 둘 다 GPS 실측이라 '측정이 틀린' 게 아니라 **조건이 달랐다**.
+    #   가장 유력한 건 모터 전압이다 — 이 프로젝트에서 '배터리 연결 안 함' 으로
+    #   측정 하나가 통째로 무효가 된 적이 이미 있다.
+    #   전압을 안 남기면 나중에 어느 런이 유효한지 판별할 방법이 없다.
+    self.vcc = None
+    self.vmin = None
+    self.vmin_seen = None          # 스텝 동안 본 최저값
+    # ⚠ 토픽 이름은 /vcc_mv · /vcc_min_mv 다(serial_bridge_node 에서 확인).
+    #   /vcc · /vmin 으로 적으면 **조용히 아무것도 안 들어온다**.
+    self.create_subscription(Int32, '/vcc_mv',
+                             lambda m: setattr(self, 'vcc', m.data), 10)
+    self.create_subscription(Int32, '/vcc_min_mv', self._vmin, 10)
     self.create_subscription(NavSatFix, '/fix', self._fix,
                              qos_profile_sensor_data)
+
+  def _vmin(self, m):
+    self.vmin = m.data
+    if m.data > 0 and (self.vmin_seen is None or m.data < self.vmin_seen):
+      self.vmin_seen = m.data
 
   def _fix(self, m):
     self.lat, self.lon = m.latitude, m.longitude
@@ -114,6 +133,7 @@ class Runner(Node):
   def run_step(self, pwm, run_dist, max_t, rate=20.0):
     """PWM 을 걸고 run_dist 를 갈 때까지(또는 max_t) 굴린다."""
     self.refresh(1.0)          # 기준점을 최신 위치로
+    self.vmin_seen = None      # 이 스텝 동안의 최저 공급전압
     lat0, lon0 = self.lat, self.lon
     t0 = time.time()
     samples = []          # (t, dist)
@@ -148,10 +168,23 @@ class Runner(Node):
       dt = samples[i][0] - samples[j][0]
       if dt >= 0.3:
         v_peak = max(v_peak, (samples[i][1] - samples[j][1]) / dt)
+    # ★ 덜컹거린 런은 '정상상태' 를 뽑으면 안 된다.
+    #   PWM 55 런이 12초에 3.60m(평균 0.30) 를 가 놓고 정상상태 0.46, 최대 0.77
+    #   이었다. 정지마찰 근처에서 섰다 굴렀다 한 것이라 어떤 한 숫자로도
+    #   대표할 수 없다. 그런데 그 0.46 이 그대로 FF 상수가 됐다.
+    #   평균과 정상상태가 크게 어긋나면 그 스텝은 신뢰할 수 없다고 표시한다.
+    v_mean = (samples[-1][1] / took) if took > 0 else 0.0
+    steady = True
+    if v_ss > 0.05 and v_mean > 0.05:
+      # 가속 구간이 있으니 v_ss > v_mean 은 정상. 반대로 벌어지거나
+      # 최대속도가 정상상태의 1.5배를 넘으면 덜컹댄 것이다.
+      if v_peak > v_ss * 1.5 or v_mean > v_ss * 1.2:
+        steady = False
     return dict(pwm=pwm, moved=samples[-1][1] if samples else 0.0,
-                took=took, v_mean=(samples[-1][1] / took) if took > 0 else 0.0,
-                v_ss=v_ss, v_peak=v_peak, coast=d_end - (samples[-1][1]
-                                                         if samples else 0.0))
+                took=took, v_mean=v_mean,
+                v_ss=v_ss, v_peak=v_peak, steady=steady,
+                vmin=self.vmin_seen,
+                coast=d_end - (samples[-1][1] if samples else 0.0))
 
 
 def main():
@@ -219,9 +252,20 @@ def main():
               '거리 조건을 넘었다. 다시 잴 것')
         rows.pop()
         continue
+      vtxt = f'{r["vmin"]}mV' if r['vmin'] else '전압?'
       print(f' 이동 {r["moved"]:5.2f}m / {r["took"]:4.1f}s  '
             f'정상상태 {r["v_ss"]:5.2f} m/s  최대 {r["v_peak"]:5.2f}  '
-            f'관성 {r["coast"]:4.2f}m  σ {n.sig * 100:.1f}cm')
+            f'관성 {r["coast"]:4.2f}m  σ {n.sig * 100:.1f}cm  {vtxt}')
+      if not r['steady']:
+        print(f'     ⚠ 덜컹거렸다 (평균 {r["v_mean"]:.2f} · 정상상태 '
+              f'{r["v_ss"]:.2f} · 최대 {r["v_peak"]:.2f}). 정지마찰 근처라 '
+              'FF 적합에서 **제외**한다')
+      if r['vmin'] and r['vmin'] < 4300:
+        print(f'     ⚠ 공급전압이 {r["vmin"]}mV 까지 떨어졌다 — 배터리 상태를 '
+              '확인할 것. 전압이 다르면 같은 PWM 이 다른 속도를 낸다')
+      if r['vmin'] is None:
+        print('     ⚠ 공급전압 텔레메트리가 없다 — 배터리가 연결돼 있는지 '
+              '확인할 것 (연결 안 하고 잰 측정이 과거에 통째로 무효였다)')
       if n.sig > a.sigma_max:
         print(f'     ⚠ 측정 중 σ 가 {n.sig * 100:.1f}cm 로 올라갔다 — '
               '이 단계는 믿지 말 것')
@@ -239,14 +283,28 @@ def main():
     if rclpy.ok():
       rclpy.shutdown()
 
-  moved = [r for r in rows if r['moved'] > 0.3 and r['v_ss'] > 0.02]
+  # 덜컹거린 스텝은 적합에서 뺀다 — 그 한 점이 FF 를 통째로 흔든다.
+  moved = [r for r in rows
+           if r['moved'] > 0.3 and r['v_ss'] > 0.02 and r['steady']]
+  dropped = [r for r in rows
+             if r['moved'] > 0.3 and r['v_ss'] > 0.02 and not r['steady']]
   print('\n' + '=' * 70)
-  print(f"{'PWM':>5} {'이동':>7} {'시간':>6} {'정상상태':>9} {'최대':>7} {'관성':>6}")
+  print(f"{'PWM':>5} {'이동':>7} {'시간':>6} {'정상상태':>9} {'최대':>7} "
+        f"{'관성':>6} {'최저전압':>9} {'판정':>6}")
   print('-' * 70)
   for r in rows:
+    v = f'{r["vmin"]}mV' if r['vmin'] else '—'
     print(f'{r["pwm"]:5d} {r["moved"]:6.2f}m {r["took"]:5.1f}s '
-          f'{r["v_ss"]:8.2f} {r["v_peak"]:6.2f} {r["coast"]:5.2f}m')
+          f'{r["v_ss"]:8.2f} {r["v_peak"]:6.2f} {r["coast"]:5.2f}m '
+          f'{v:>9} {"OK" if r["steady"] else "덜컹":>6}')
   print('-' * 70)
+  if dropped:
+    print(f'  덜컹거려 제외한 단계: '
+          f'{", ".join(str(r["pwm"]) for r in dropped)}')
+  vs = [r['vmin'] for r in rows if r['vmin']]
+  if vs and (max(vs) - min(vs)) > 300:
+    print(f'  ⚠ 단계별 공급전압이 {min(vs)}~{max(vs)}mV 로 벌어졌다. '
+          '전압이 다르면 같은 PWM 이 다른 속도를 낸다 — 이 적합은 믿을 수 없다.')
   if len(moved) >= 2:
     # v = (PWM - b) / a  →  PWM = a·v + b  로 최소제곱
     xs = [r['v_ss'] for r in moved]
@@ -258,13 +316,13 @@ def main():
     aa = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den if den else 0.0
     bb = my - aa * mx
     print(f'  실측 적합:  PWM = {aa:.1f}·v + {bb:.1f}')
-    print(f'  현재 펌웨어: PWM = 95.0·v + 80.0   '
-          f'(henes_firmware.ino STATIC_FF / VELOCITY_FF_GAIN)')
+    print(f'  현재 ROS 쪽 FF: PWM = 38.8·v + 17.2   '
+          f'(bringup 의 ff_gain / ff_static, ff_mode:=ros)')
     print()
-    print('  → 펌웨어를 이렇게 고칠 것:')
-    print(f'       #define STATIC_FF          {bb:.1f}')
-    print(f'       #define VELOCITY_FF_GAIN   {aa:.1f}')
-    print('     그 뒤 tools/lap_budget.py 의 STATIC_FF/VELOCITY_FF_GAIN 도 맞출 것')
+    print('  → 펌웨어를 굽지 않고 런치 인자로 바로 적용할 수 있다:')
+    print(f'       ff_static:={bb:.1f} ff_gain:={aa:.1f}')
+    print('     굳히려면 bringup.launch.py 의 기본값과')
+    print('     tools/lap_budget.py 의 STATIC_FF/VELOCITY_FF_GAIN 도 맞출 것')
     print('     (랩타임·8분 예산 계산이 이 상수 위에 서 있다)')
   else:
     print('  ⚠ 유효한 단계가 부족하다 — PWM 범위를 넓히거나 거리를 늘릴 것')
