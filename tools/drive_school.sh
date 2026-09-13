@@ -102,6 +102,25 @@ if [ "$fail" = 1 ]; then
   exit 1
 fi
 
+# ★ 장치가 **실제로 데이터를 흘리는지** 본다 (2026-09-13 밤)
+#   파일이 있다고 살아 있는 게 아니다. CP210x 는 USB 파이프가 멈춰도
+#   (`urb stopped: -32`) /dev 노드가 그대로 남는다. 그 상태로 스택을 띄우면
+#   노드는 "opened successfully" 를 찍고 조용히 아무것도 안 읽는다.
+#   그날 밤 그 상태로 몇 번을 띄웠다 — 겉보기엔 정상이라 더 나빴다.
+#   여기서 바이트를 직접 확인하면 5초 만에 걸러진다.
+for dev in imu ldlidar_front; do
+  n=$(timeout 2 head -c 64 "/dev/$dev" 2>/dev/null | wc -c)
+  if [ "${n:-0}" -gt 0 ]; then
+    echo "  ✅ /dev/$dev 데이터 흐름 (${n}바이트)"
+  else
+    echo "  ❌ /dev/$dev — 장치 파일은 있는데 **데이터가 안 나온다**"
+    echo "     USB 파이프가 멈춘 상태다. 뽑고 10초 뒤 다시 꽂을 것."
+    echo "     (바로 꽂으면 칩이 리셋 안 된다)"
+    echo "     확인:  timeout 2 head -c 64 /dev/$dev | xxd | head -2"
+    exit 1
+  fi
+done
+
 # ── 전압을 재서 ff_min_pwm 을 정한다 ──────────────────────────
 MV=$(timeout 8 python3 - <<'PY'
 import re, sys
