@@ -236,7 +236,17 @@ def generate_launch_description():
       DeclareLaunchArgument('ff_mode', default_value='ros',
                             choices=['ros', 'firmware']),
       # 회피 기하 — 근거는 아래 cluster_plot_node 주석의 비교표.
-      DeclareLaunchArgument('fg_track_width', default_value='3.0'),
+      # ★ 2026-09-13 규정 도면 대조 (차량규격 PDF p6) 로 확정.
+      #   실제 도로 폭은 **2700mm** (중앙선 위 1400 + 아래 1300) 이지만
+      #   track_width 에 2.7 을 그대로 넣으면 **연석이 장애물로 잡힌다**:
+      #     연석만 보이는 상태에서 AVOID 가 떠서 경로조향을 통째로 버리고,
+      #     경로가 +15° 를 원하는 커브에서 +7.8° 만 내 밖으로 밀린다 = 이탈 = 탈락.
+      #     게다가 장애물까지 있으면 연석+장애물이 다 막아 BLOCKED 가 된다.
+      #   → 연석(±1.35m)을 창 밖으로 빼는 2.4 (반폭 1.2m, 여유 0.15m).
+      #   실측 비교 (연석만 / 장애물 4.0·3.0·2.5·2.0m):
+      #     2.7 AVOID·전부 BLOCKED  2.6 AVOID·전부 BLOCKED
+      #     2.4 CLEAR · -10.5 → -14.7  ✓     2.0 CLEAR 이지만 2.0m 에서 BLOCKED
+      DeclareLaunchArgument('fg_track_width', default_value='2.4'),
       DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
       DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
       DeclareLaunchArgument('fg_prefer_path_gap', default_value='true'),

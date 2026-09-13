@@ -30,7 +30,7 @@ sys.path.insert(0, '/home/han/racing_ws/src/lidar_clustering')
 from lidar_clustering.follow_gap_planner import FollowGapPlanner  # noqa: E402
 
 # bringup.launch.py 가 넘기는 값과 같아야 한다.
-TRACK_WIDTH = 3.0
+TRACK_WIDTH = 2.4      # 규정 도로폭 2.7 − 연석 제외 여유
 PLANNING_LOOKAHEAD = 1.5
 OBSTACLE_TRIGGER = 4.0
 MAX_STEER_DEG = 18.0      # vehicle_cmd_mux 의 클램프
@@ -76,29 +76,40 @@ def main():
   window = math.degrees(math.atan(pl.max_center_y / PLANNING_LOOKAHEAD))
   print(f'조준 창 ±{window:.1f}°  (max_center_y {pl.max_center_y:.3f}m / '
         f'lookahead {PLANNING_LOOKAHEAD}m)')
-  if window < 25.0:
-    fails.append(f'조준 창이 {window:.1f}° 로 좁다 — 25° 이상이어야 '
-                 f'2m 정면 장애물에서 갭이 남는다')
+  if window < 18.0:
+    fails.append(f'조준 창이 {window:.1f}° 로 좁다 — 조향 클램프 '
+                 f'{MAX_STEER_DEG:.0f}° 를 채울 수 없다')
 
-  print('\n정면 장애물(폭 0.5m) — AVOID 가 유지되고 각이 충분한가')
-  for d in (3.5, 3.0, 2.5, 2.0):
-    dec = pl.plan(make_scan([(d, 0.0, 0.5)]), target_deg=0.0)
-    clipped = max(-MAX_STEER_DEG, min(MAX_STEER_DEG, dec.best_angle_deg))
-    ok = dec.mode == 'AVOID' and abs(dec.best_angle_deg) >= 15.0
-    print(f'   {d:.1f}m  {dec.mode:>8}  요구 {dec.best_angle_deg:+6.1f}° '
-          f'→ 클램프 {clipped:+6.1f}°  {"OK" if ok else "✗"}')
+  # ★ 정중앙 장애물은 BLOCKED 가 **올바른 답**이다.
+  #   통로 2.4m 에 폭 0.5m 가 정중앙이면 양옆 0.95m 인데, 지나가려면
+  #   차폭 0.775 + 안전여유 0.25×2 = 1.275m 가 필요하다. 물리적으로 못 간다.
+  #   억지로 통과시키면 스친다 — 접촉 10점이다. 서서 감속하는 게 맞고,
+  #   교착은 cluster_plot_node 의 blocked_escape_s(8초)가 푼다.
+  #   규정 배치(아래)는 장애물이 중앙선에 걸쳐 있어 이 경우가 아니다.
+
+  # 규정 도로폭 2700mm → 연석은 ±1.35m 에 있다.
+  # 여기서 AVOID 가 뜨면 커브에서 경로조향을 버려 밖으로 밀린다 = 이탈 = 탈락.
+  print('\n규정 연석(±1.35m)만 보일 때 — 장애물로 오인하면 커브에서 이탈한다')
+  walls = ([(x, 1.35, 0.1) for x in np.arange(0.8, 5.0, 0.1)]
+           + [(x, -1.35, 0.1) for x in np.arange(0.8, 5.0, 0.1)])
+  for target in (0.0, 15.0, -15.0):
+    dec = pl.plan(make_scan(walls), target_deg=target)
+    ok = dec.mode != 'AVOID'
+    print(f'   연석만 · 경로 {target:+5.1f}°  {dec.mode:>8}  '
+          f'{"OK" if ok else "✗ 오탐"}')
     if not ok:
-      fails.append(f'{d:.1f}m 정면: mode={dec.mode} '
-                   f'각={dec.best_angle_deg:+.1f}° (AVOID·15° 이상이어야 함)')
+      fails.append(f'연석에 {dec.mode}(경로 {target:+.0f}°) — '
+                   f'track_width 가 너무 넓다')
 
-  print('\n좌우 1.6m 벽만 있을 때 — 연석을 장애물로 오인하면 안 된다')
-  walls = ([(x, 1.6, 0.1) for x in np.arange(1.0, 5.0, 0.15)]
-           + [(x, -1.6, 0.1) for x in np.arange(1.0, 5.0, 0.15)])
-  dec = pl.plan(make_scan(walls), target_deg=0.0)
-  ok = dec.mode != 'AVOID'
-  print(f'   벽 양쪽  {dec.mode:>8}  {"OK" if ok else "✗ 오탐"}')
-  if not ok:
-    fails.append(f'옆 벽에 {dec.mode} — track_width 가 너무 넓다(연석 오탐)')
+  print('\n규정 S코스 장애물 — 연석과 함께 있어도 회피해야 한다')
+  print('   (장애물 중심 +0.45m, 폭 0.5m = 중앙선 넘어 200mm 돌출)')
+  for d in (3.0, 2.5, 2.0):
+    dec = pl.plan(make_scan(walls + [(d, 0.45, 0.5)]), target_deg=0.0)
+    ok = dec.mode == 'AVOID'
+    print(f'   {d:.1f}m  {dec.mode:>8}  {dec.best_angle_deg:+6.1f}°  '
+          f'{"OK" if ok else "✗"}')
+    if not ok:
+      fails.append(f'연석+장애물 {d:.1f}m: {dec.mode} — 회피해야 한다')
 
   print('\n콘/의자 두 개가 만든 문 — 바깥으로 돌지 말고 사이로 지나야 한다')
   print('   (차폭 0.775 + 안전여유 0.25×2 = 안쪽 틈 1.275m 이상이어야 물리적으로 가능)')
