@@ -225,7 +225,12 @@ def _grab_valid(topic, secs=10.0, n_max=80):
   node.destroy_node()
   rclpy.shutdown()
   if len(buf) < 5:
-    raise RuntimeError(f'스캔을 못 받았다 ({len(buf)}개) — 드라이버 확인')
+    raise RuntimeError(
+        f'스캔을 못 받았다 ({len(buf)}개, 토픽 {topic}).\n'
+        '  라이다 드라이버가 안 떠 있다. 별 터미널에서 먼저:\n'
+        '    ros2 launch lidar_clustering lidar_dual.launch.py rear:=false\n'
+        '  그래도 안 오면 라이다 USB 를 뺐다 꽂을 것 '
+        '(9/13: 재삽입만으로 살아난 적이 있다).')
   m = min(len(b) for b in buf)
   arr = np.vstack([b[:m] for b in buf])
   with np.errstate(invalid='ignore'):
