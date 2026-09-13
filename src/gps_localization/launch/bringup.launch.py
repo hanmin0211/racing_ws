@@ -235,6 +235,10 @@ def generate_launch_description():
       #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware.
       DeclareLaunchArgument('ff_mode', default_value='ros',
                             choices=['ros', 'firmware']),
+      # 회피 기하 — 근거는 아래 cluster_plot_node 주석의 비교표.
+      DeclareLaunchArgument('fg_track_width', default_value='3.0'),
+      DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
+      DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
@@ -393,9 +397,37 @@ def generate_launch_description():
           name='lidar_clustering',
           output='screen',
           condition=IfCondition(lidar),
+          # ★ 2026-09-13 — '회피는 하는데 조향각이 부족하다' 의 원인과 처방.
+          #
+          #   원인은 조향 클램프(18°)가 아니라 **플래너가 큰 각을 요구할 수
+          #   없는 구조**였다. 갭을 겨냥할 수 있는 각도 창은
+          #       atan(max_center_y / planning_lookahead),
+          #       max_center_y = track_width/2 − 차폭/2 − safety_margin
+          #   이고 옛 값(2.7 / 2.2)에서는 **±17.9°** 뿐이었다. 여기서 aim_margin
+          #   2° 를 빼면 실제로 나올 수 있는 최대가 ±16° 다.
+          #   그런데 정면 장애물이 안전버블로 막는 각은 2.0m 에서 ±25.7° 라
+          #   창보다 넓다 → 남는 갭이 없어 **AVOID 가 아니라 BLOCKED(정지)** 가 된다.
+          #
+          #   track_width 를 3.5 로 넓히면 창은 커지지만 **옆 1.6m 벽에 AVOID 를
+          #   내서**(연석 오탐) 못 쓴다. 실측 비교표:
+          #       tw2.7 ld2.2 : 3.5m −14.5° 이후 전부 BLOCKED   · 벽 CLEAR
+          #       tw3.5 ld1.8 : 2.0m 까지 ±20° 나옴              · 벽 AVOID ✗
+          #       tw3.0 ld1.5 : 3.5m −16.5 → 2.0m −20.0 (부호유지) · 벽 CLEAR ✓
+          #   lookahead 를 줄이면 장애물 탐지 폭은 그대로 두고 **조준 창만** 넓어진다.
+          #
+          #   trigger 는 3.0 → 4.0. 3.0 이면 3.0m 에서도 아직 CLEAR 라 회피 시작이
+          #   너무 늦다. 5.0 은 4.5m(−13.5°) → 4.0m(+14.8°) 로 좌우가 뒤집혀
+          #   차가 갈지자로 흔들린다.
           parameters=[{
               'scan_topic': LaunchConfiguration('scan_topic'),
               'enable_plot': False,
+              'fg_track_width': ParameterValue(
+                  LaunchConfiguration('fg_track_width'), value_type=float),
+              'fg_planning_lookahead': ParameterValue(
+                  LaunchConfiguration('fg_planning_lookahead'),
+                  value_type=float),
+              'fg_obstacle_trigger': ParameterValue(
+                  LaunchConfiguration('fg_obstacle_trigger'), value_type=float),
               'require_arm_for_steer': ParameterValue(sequencer, value_type=bool)}],
       ),
 
