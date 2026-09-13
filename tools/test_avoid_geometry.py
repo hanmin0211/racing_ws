@@ -100,6 +100,21 @@ def main():
   if not ok:
     fails.append(f'옆 벽에 {dec.mode} — track_width 가 너무 넓다(연석 오탐)')
 
+  print('\n콘/의자 두 개가 만든 문 — 바깥으로 돌지 말고 사이로 지나야 한다')
+  print('   (차폭 0.775 + 안전여유 0.25×2 = 안쪽 틈 1.275m 이상이어야 물리적으로 가능)')
+  for spacing, want_pass in ((1.8, False), (2.0, True), (2.5, True)):
+    dec = pl.plan(make_scan([(3.0, +spacing / 2, 0.45),
+                             (3.0, -spacing / 2, 0.45)]), target_deg=0.0)
+    passed = dec.mode == 'AVOID' and abs(dec.best_angle_deg) < 5.0
+    ok = passed == want_pass
+    verdict = '사이로 통과' if passed else f'{dec.mode}(우회/정지)'
+    print(f'   중심간격 {spacing:.1f}m (안쪽 {spacing - 0.45:.2f}m)  '
+          f'{verdict:<16} {"OK" if ok else "✗"}')
+    if not ok:
+      fails.append(
+          f'문 간격 {spacing:.1f}m: {verdict} — '
+          f'{"통과해야" if want_pass else "막혀야"} 한다')
+
   print()
   if fails:
     print('❌ 실패')

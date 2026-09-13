@@ -42,6 +42,7 @@ class FollowGapPlanner:
         side_score_margin=0.20,
         aim='center',
         aim_margin_deg=2.0,
+        prefer_path_gap=True,
     ):
         self.yaw_offset = math.radians(yaw_offset_deg)
         self.front_half_fov = math.radians(front_fov_deg / 2.0)
@@ -66,6 +67,10 @@ class FollowGapPlanner:
             raise ValueError(
                 'Track width is too narrow for vehicle width and safety margin.'
             )
+
+        # 목표 방향을 품은 갭을 가장 넓은 갭보다 우선할 것인가
+        # (라바콘 사이로 '통과' 하려면 True. 근거는 _find_largest_gap 주석).
+        self.prefer_path_gap = bool(prefer_path_gap)
 
         self.safety_radius = self.vehicle_half_width + self.safety_margin
         self.obstacle_trigger_distance = float(obstacle_trigger_distance)
@@ -239,10 +244,32 @@ class FollowGapPlanner:
         if not gaps:
             return None
 
-        best_gap = max(
-            gaps,
-            key=lambda gap: angles[gap[1]] - angles[gap[0]],
-        )
+        # ★ 2026-09-13 — '가장 넓은 갭' 이 늘 옳지는 않다.
+        #
+        #   원래는 max(폭) 으로만 골랐다. 그러면 라바콘 두 개가 만든 **문**을
+        #   지날 때, 문 사이(좁음)가 아니라 문 바깥(넓음)으로 돌아 나간다.
+        #   S코스는 콘 사이를 통과해야 하는 구간이라 이건 미션 실패다.
+        #
+        #   그래서 prefer_path_gap 이면 **가고 싶은 방향을 품은 갭**을 먼저
+        #   고르고, 그런 갭이 없을 때만 가장 넓은 갭으로 떨어진다.
+        #
+        #   ⚠ 좁아서 위험하지 않은가 — 안 그렇다. 안전버블이 이미 모든 장애물
+        #     점 둘레 safety_radius(차폭/2 + 여유) 를 0 으로 지웠다. 그러고도
+        #     남아 있는 광선은 **양옆으로 safety_radius 이상 비어 있다**는 뜻이다.
+        #     즉 살아남은 갭은 어느 것이든 물리적으로 통과 가능하다.
+        #     문 폭이 모자라면 버블이 겹쳐 갭이 아예 사라지고 BLOCKED 가 된다.
+        widest = max(gaps, key=lambda g: angles[g[1]] - angles[g[0]])
+        best_gap = widest
+        if self.prefer_path_gap:
+            m = math.radians(self.aim_margin_deg)
+            for g in gaps:
+                lo, hi = angles[g[0]], angles[g[1]]
+                if hi - lo < math.radians(self.min_gap_width_deg):
+                    continue
+                # 가장자리 여유를 뺀 안쪽에 목표 방향이 들어와야 '품었다'.
+                if lo + m <= target_angle <= hi - m:
+                    best_gap = g
+                    break
 
         start, end = best_gap
         if self.aim in ('nearest', 'path'):
