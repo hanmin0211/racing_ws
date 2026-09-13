@@ -120,7 +120,11 @@ def simulate(wps, args):
   #   시뮬에 이걸 넣을 방법이 없어 판단을 못 했다.
   #   여기서는 '차는 실제로 yaw 를 향하는데 컨트롤러는 yaw+bias 로 안다' 로
   #   모델링한다. 자전거 모델 적분은 참 yaw 로, 경로 계산만 편향된 yaw 로.
-  bias = math.radians(args.heading_bias)
+  # ⚠ getattr — lap_budget.py 처럼 **자체 Namespace 를 만들어** simulate() 를
+  #   부르는 호출자가 있다. 새 인자를 args 로만 읽으면 그런 호출자가 전부
+  #   AttributeError 로 죽는다(2026-09-13 에 실제로 lap_budget 을 깨뜨렸다).
+  #   시뮬 인자를 추가할 때는 항상 기본값을 갖는 getattr 로 읽을 것.
+  bias = math.radians(getattr(args, 'heading_bias', 0.0))
 
   for step in range(int(args.max_time * args.rate)):
     out = build_local_path(wps, x, y, yaw + bias, p, prev_idx=prev_idx,
