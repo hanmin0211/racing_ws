@@ -24,7 +24,12 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src',
                                 'mission_perception'))
 
-from mission_perception.parking_node import pursuit_steer, split_segments  # noqa: E402
+# ⚠ 2026-09-13 — 이 임포트가 parking_node 를 가리키고 있어서 **테스트가
+#   임포트 단계에서 죽어 있었다.** 두 함수는 parking_follower 로 옮겨졌는데
+#   테스트가 안 따라갔다. 죽은 테스트는 통과도 실패도 아니라 '검증 없음' 이다.
+#   (test_parking_plan.py 는 이미 parking_follower 를 보고 있었다)
+from mission_perception.parking_follower import (  # noqa: E402
+    pursuit_steer, split_segments)
 
 L = 0.785
 MAX_STEER = math.radians(18.0)
