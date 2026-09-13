@@ -177,6 +177,13 @@ def main():
                          '기준 저장이 필요 없고 주변이 복잡해도 걸린다')
     ap.add_argument('--min-drop', type=float, default=0.30,
                     help='이만큼 가까워진 빈을 "새로 생긴 것"으로 본다[m]')
+    ap.add_argument('--min-range', type=float, default=0.30,
+                    metavar='M',
+                    help='이보다 가까운 반사는 무시 (기본 0.30 = 라이다 '
+                         'min_range). 라이다가 차체를 보면 올릴 것')
+    ap.add_argument('--min-points', type=int, default=5, metavar='N',
+                    help='덩어리가 이 점수 미만이면 물체로 안 본다 (기본 5). '
+                         '점 하나로 방향을 정하는 것을 막는다')
     ap.add_argument('--max-range', type=float, default=3.0,
                     help='이 거리 안의 변화만 본다[m]')
     a = ap.parse_args()
@@ -205,30 +212,70 @@ def main():
 
     # 기준보다 가까워진(= 뭔가 생긴) 빈
     drop = base - cur
-    new = (np.isfinite(cur) & (cur < a.max_range)
+    new = (np.isfinite(cur) & (cur < a.max_range) & (cur >= a.min_range)
            & (~np.isfinite(base) | (drop > a.min_drop)))
     if new.sum() < 3:
         print(f'새로 생긴 것을 못 찾았다 (변화 {int(new.sum())}점).')
         print('물체를 더 가까이(1~2m) 놓거나 --min-drop 을 낮출 것.')
         return 1
 
-    # 가장 가까운 덩어리의 방위 = 물체 방향
+    # ★ 2026-09-13 — '가장 가까운 점' 으로 고르던 것을 **가장 큰 덩어리** 로 바꿨다.
+    #   그날 학교에서 이 도구가 `원본각 -49.9° · 거리 0.16m · **폭 1점**` 을
+    #   내놨다. 1~2m 에 놓은 물체가 아니라 라이다 바로 옆(16cm)의 잡음 점
+    #   하나였다. 라이다를 범퍼 위에서 차량 정면으로 옮긴 뒤라 **차체가
+    #   스캔에 들어오고** 있었다. 점 하나가 이기는 구조였던 것이다.
+    #   이 값은 틀리면 회피가 장애물 쪽으로 꺾는 값이다 — 점 하나로 정하면 안 된다.
     idx = np.where(new)[0]
-    closest = idx[np.argmin(cur[idx])]
-    # 그 주변 연속 구간의 무게중심
-    lo = hi = closest
-    while lo - 1 in set(idx.tolist()) and lo > 0:
-        lo -= 1
-    while hi + 1 in set(idx.tolist()) and hi < m - 1:
-        hi += 1
-    sel = np.arange(lo, hi + 1)
-    w = 1.0 / np.maximum(cur[sel], 0.05)
-    bearing = math.degrees(float(np.sum(ang[sel] * w) / np.sum(w)))
-    dist = float(np.min(cur[sel]))
+
+    # 연속 구간(덩어리)으로 나눈다
+    runs = []
+    start = idx[0]
+    prev = idx[0]
+    for i in idx[1:]:
+        if i == prev + 1:
+            prev = i
+            continue
+        runs.append((start, prev))
+        start = prev = i
+    runs.append((start, prev))
+
+    def run_info(r):
+        lo, hi = r
+        sel = np.arange(lo, hi + 1)
+        w = 1.0 / np.maximum(cur[sel], 0.05)
+        b = math.degrees(float(np.sum(ang[sel] * w) / np.sum(w)))
+        return {'lo': lo, 'hi': hi, 'n': hi - lo + 1,
+                'bearing': b, 'dist': float(np.min(cur[sel]))}
+
+    cands = sorted((run_info(r) for r in runs),
+                   key=lambda c: (-c['n'], c['dist']))
 
     print('=' * 62)
-    print(f'새로 생긴 물체: 센서 원본각 {bearing:+.1f}° · 거리 {dist:.2f}m '
-          f'· 폭 {hi - lo + 1}점')
+    print('후보 덩어리 (큰 것부터):')
+    for c in cands[:5]:
+        mark = ''
+        if c['n'] < a.min_points:
+            mark = f"  ← {a.min_points}점 미만, 무시"
+        print(f"   폭 {c['n']:3d}점  원본각 {c['bearing']:+7.1f}°  "
+              f"거리 {c['dist']:5.2f}m{mark}")
+
+    good = [c for c in cands if c['n'] >= a.min_points]
+    if not good:
+        print('-' * 62)
+        print(f'❌ {a.min_points}점 이상인 덩어리가 없다 — 측정 실패다.')
+        print('   이 결과로 fg_yaw_offset_deg 를 정하지 말 것.')
+        print('   · 물체를 더 크게(사람이 서는 것이 제일 낫다) 1~2m 에 놓을 것')
+        print('   · 라이다가 차체를 보고 있으면 --min-range 를 올릴 것'
+              f' (지금 {a.min_range:.2f}m)')
+        print('   · 그래도 안 되면 --moving 8 로 "사람이 정면에서 좌우로'
+              ' 흔드는" 방식을 쓸 것 (기준 저장 불필요)')
+        print('=' * 62)
+        return 1
+
+    best = good[0]
+    bearing, dist = best['bearing'], best['dist']
+    print('-' * 62)
+    print(f"채택: 원본각 {bearing:+.1f}° · 거리 {dist:.2f}m · 폭 {best['n']}점")
     print('-' * 62)
     _verdict(bearing)
     print('확인: 이 값으로 cluster_plot_node 를 띄우고 tools/lidar_monitor.py 에서')
