@@ -149,6 +149,10 @@ class HeadingInitNode(Node):
     self.declare_parameter('require_rtk', True)
     self.declare_parameter('max_h_std', 0.05)       # 수평 σ 상한[m]
     self.declare_parameter('max_jump_speed', 2.0)   # 이 속도 초과 이동 = 점프[m/s]
+    # 점프 판정에 쓸 **최소 측정 간격**[s]. 이보다 짧은 간격은 속도를 판정할
+    # 근거가 못 된다(수신기 5~10Hz 인데 10ms 간격이 찍히는 것은 메시지가
+    # 몰려 도착했다는 뜻이지 차가 순간이동했다는 뜻이 아니다).
+    self.declare_parameter('min_fix_dt', 0.05)
     # 완료 판정 시 최대 편차 하드 상한[도]. 지속편차 검사를 빠져나온 큰 peak 도
     # 여기서 막는다 (사고 때 36° 가 그대로 통과했다).
     self.declare_parameter('max_peak_dev_deg', 25.0)
@@ -219,6 +223,7 @@ class HeadingInitNode(Node):
     self.require_rtk = bool(self.get_parameter('require_rtk').value)
     self.max_h_std = float(self.get_parameter('max_h_std').value)
     self.max_jump_speed = float(self.get_parameter('max_jump_speed').value)
+    self.min_fix_dt = float(self.get_parameter('min_fix_dt').value)
     self.max_peak_dev = math.radians(
         float(self.get_parameter('max_peak_dev_deg').value))
     self._last_fix = None        # (t, east, north) — 점프 검사용
@@ -519,12 +524,36 @@ class HeadingInitNode(Node):
     # ② 점프 게이트 — 연속한 두 fix 사이의 '함축 속도'가 물리적으로 불가능하면
     #    차가 움직인 게 아니라 측위 해가 튄 것이다.
     #    사고 당시 0.38초에 7.3m(=19m/s)가 그대로 적분됐다.
-    t_now = self.get_clock().now().nanoseconds * 1e-9
+    # ⚠ 2026-09-13 — 여기서 **도착 시각**을 쓰던 것이 정상 주행을 점프로
+    #   오인하게 만들었다. 현장 로그:
+    #       ❌ 주행 중 측위 점프 0.1m/0.01s = 5.9m/s (상한 2.0m/s)
+    #   0.01초는 GPS 측정 간격이 아니다(이 수신기는 5~10Hz). fix 메시지가
+    #   실행기 지연으로 **몰려서 도착**하면 도착 간격만 10ms 가 되고, 실제
+    #   200ms 동안 간 0.1m(=0.5m/s, 지극히 정상)가 20배로 부풀려진다.
+    #   가드가 `dt > 1e-3` 뿐이라 이걸 전혀 못 막았다.
+    #
+    #   고친 방법 두 가지:
+    #     ① 측정 시각(header.stamp)이 있으면 그걸 쓴다. 도착 시각이 아니라
+    #        **언제 측정된 값인지**가 속도의 분모다.
+    #     ② 그래도 간격이 min_fix_dt 보다 짧으면 **판정을 미룬다.** 기준점을
+    #        갱신하지 않고 다음 fix 를 기다려 충분히 긴 구간에서 본다.
+    #        너무 짧은 구간은 속도를 판정할 근거가 못 된다.
+    #   사고 사례(7.3m/0.38s = 19m/s)는 dt 가 충분히 커서 그대로 걸린다.
+    stamp = msg.header.stamp
+    t_meas = stamp.sec + stamp.nanosec * 1e-9
+    t_now = (t_meas if t_meas > 0.0
+             else self.get_clock().now().nanoseconds * 1e-9)
     if self._last_fix is not None:
       lt, le, ln = self._last_fix
       dt = t_now - lt
       step = math.hypot(east - le, north - ln)
-      if dt > 1e-3 and step / dt > self.max_jump_speed:
+      if 0.0 < dt < self.min_fix_dt:
+        # 간격이 너무 짧다 — 기준점을 그대로 두고 다음 fix 를 기다린다.
+        # (track 누적과 직진성 검증은 아래에서 정상적으로 이어진다)
+        if len(self.track) < 2000:
+          self.track.append((east, north))
+        return
+      if dt >= self.min_fix_dt and step / dt > self.max_jump_speed:
         v_imp = step / dt
         if self.drive_started_t is None:
           # 아직 굴러가기 전이다. 차는 가만히 있는데 좌표만 튄 것이므로

@@ -112,8 +112,19 @@ def simulate(wps, args):
   goal = False
   stop_reason = None
 
+  # ★ 지속 헤딩 편향 (2026-09-13 추가)
+  #   --init-heading-err 는 **초기** 오차라 컨트롤러가 몇 미터 안에 잡는다.
+  #   그런데 yaw_offset 이 틀린 것은 성격이 다르다 — 측위가 내내 틀린 헤딩을
+  #   보고하므로 **끝까지 안 없어진다.** 9/13 학교에서 캘리브가 런마다 다른
+  #   yaw_offset(81.6 / 83.4 / 73.0)을 냈고, 그 편차가 경로 이탈의 후보였는데
+  #   시뮬에 이걸 넣을 방법이 없어 판단을 못 했다.
+  #   여기서는 '차는 실제로 yaw 를 향하는데 컨트롤러는 yaw+bias 로 안다' 로
+  #   모델링한다. 자전거 모델 적분은 참 yaw 로, 경로 계산만 편향된 yaw 로.
+  bias = math.radians(args.heading_bias)
+
   for step in range(int(args.max_time * args.rate)):
-    out = build_local_path(wps, x, y, yaw, p, prev_idx=prev_idx, closed=closed)
+    out = build_local_path(wps, x, y, yaw + bias, p, prev_idx=prev_idx,
+                           closed=closed)
     prev_idx = out['closest']
 
     if out.get('goal_reached'):
@@ -314,6 +325,10 @@ def main():
                   help='조향 캘리브 오차[도] — 중심이 틀어진 경우')
   ap.add_argument('--steer-scale', type=float, default=1.0,
                   help='조향 스케일 오차 — COUNTS_PER_DEG 어긋남 (1.0=정확)')
+  ap.add_argument('--heading-bias', type=float, default=0.0, metavar='DEG',
+                  help='측위가 내내 틀리게 보고하는 헤딩 편향[도]. '
+                       'yaw_offset 캘리브 오차를 모델링한다. '
+                       '--init-heading-err 와 달리 **사라지지 않는다**')
   ap.add_argument('--init-heading-err', type=float, default=0.0,
                   help='출발 시 헤딩 오차[도]')
   ap.add_argument('--plot', default=None)
