@@ -239,6 +239,7 @@ def generate_launch_description():
       DeclareLaunchArgument('fg_track_width', default_value='3.0'),
       DeclareLaunchArgument('fg_planning_lookahead', default_value='1.5'),
       DeclareLaunchArgument('fg_obstacle_trigger', default_value='4.0'),
+      DeclareLaunchArgument('fg_prefer_path_gap', default_value='true'),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
@@ -428,6 +429,9 @@ def generate_launch_description():
                   value_type=float),
               'fg_obstacle_trigger': ParameterValue(
                   LaunchConfiguration('fg_obstacle_trigger'), value_type=float),
+              # 콘 사이로 '통과' 할 것인가(True) 바깥으로 돌 것인가(False).
+              'fg_prefer_path_gap': ParameterValue(
+                  LaunchConfiguration('fg_prefer_path_gap'), value_type=bool),
               'require_arm_for_steer': ParameterValue(sequencer, value_type=bool)}],
       ),
 

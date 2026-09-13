@@ -106,6 +106,13 @@ class ClusterPlotNode(Node):
             # 기본 'path' — 측정 근거는 follow_gap_planner 의 self.aim 주석.
             aim=str(self.declare_parameter('fg_aim', 'path').value),
             aim_margin_deg=gp('fg_aim_margin_deg', 2.0),
+            # ★ 콘/의자 두 개가 만든 '문' 을 바깥으로 돌지 말고 **사이로 지나라**.
+            #   가장 넓은 갭만 고르면 문 바깥이 넓을 때 그리로 새 나간다.
+            #   S코스는 콘 사이 통과가 미션이라 그러면 실패다.
+            #   좁아서 위험하지 않다 — 안전버블이 통과 불가한 문은 이미 지워서
+            #   BLOCKED 로 만든다(follow_gap_planner 의 _find_largest_gap 주석).
+            prefer_path_gap=bool(
+                self.declare_parameter('fg_prefer_path_gap', True).value),
         )
 
         # 헤드리스 기본. 그래프가 필요할 때만(디버깅) enable_plot:=true.

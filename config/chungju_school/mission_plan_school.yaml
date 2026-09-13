@@ -1,0 +1,57 @@
+# mission_plan_school.yaml — 학교 트랙 리허설용 (충주 캠퍼스)
+#
+# 왜 이 파일이 있나
+#   대회에서 실제로 해야 하는 것은 "직선에서 돌발정지 → 3초 이상 서 있다가
+#   재출발" 과 "S자에서 경로를 따라가면서 장애물 회피" 다. 그런데 지금까지
+#   검증한 것은 **빈 아스팔트에서 장애물 하나** 뿐이고, 미션 체인
+#   (시퀀서 → arm → 미션 노드 → done → 다음) 은 실차에서 한 번도 안 돌았다.
+#
+#   용인 s 값은 9/19 현장에서만 잴 수 있다. 그 전에 **체인 자체**는 학교
+#   73m 트랙으로 검증할 수 있다 — s 값만 학교 것으로 바꾸면 구조는 같다.
+#
+# 학교 트랙 곡률 실측 (tools 로 계산):
+#     0~20m  직선   ← 돌발정지를 여기 둔다
+#    20~40m  완만한 커브 ← S자 대용, 회피를 여기 둔다
+#    40~60m  직선
+#    60~73m  완만
+#
+# ⚠ 이 파일은 **학교 전용**이다. 대회 때는 config/mission_plan.yaml 을 쓴다.
+#   시퀀서가 course 블록으로 대조하므로 용인에서 이 파일을 쓰면 즉시 거부된다.
+
+course:
+  site: "충주 캠퍼스 학교 트랙 (리허설 전용)"
+  waypoints: "config/chungju_school/wp_school_track_0.5.yaml"
+  path_length_m: 73.0
+
+missions:
+  # ── 돌발 급정지 (직선 구간) ───────────────────────────────────────
+  # 규정: 더미 감지 → 완전정지 → **3초 이상** → 재출발.
+  #   sudden_stop_node 의 dwell 기본값은 5.0 (규정 3.0 + 여유).
+  #   회피로 빠져나가면 미션 실패라 inhibits 로 lidar_avoid 를 막는다.
+  - name: sudden_stop
+    enabled: true
+    arm_topic: /sudden_stop/arm
+    done_topic: /sudden_stop/done
+    inhibits: [lidar_avoid]
+    trigger:
+      type: course_s
+      s_enter: 8.0
+      s_exit:  18.0
+    timeout_s: 25.0
+    expected_s: 12.0
+    critical: false
+
+  # ── 라이다 조향 회피 (커브 구간 = S자 대용) ───────────────────────
+  # ★ exclusive: false — 배경 기능. done 도 타임아웃도 없다.
+  #   ⚠ sequencer:=true 면 require_arm_for_steer 가 켜지므로, 이 항목이
+  #     arm 하지 않는 구간에서는 **조향 회피가 아예 안 나간다**.
+  #     (감속·정지는 안전 기능이라 arm 과 무관하게 항상 동작한다)
+  - name: lidar_avoid
+    enabled: true
+    arm_topic: /lidar/arm
+    exclusive: false
+    trigger:
+      type: course_s
+      s_enter: 22.0
+      s_exit:  42.0
+    critical: false
