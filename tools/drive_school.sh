@@ -140,6 +140,33 @@ if [ -n "$FORCE_PWM" ]; then
   echo "  → ff_min_pwm=$PWM  (--min-pwm 으로 직접 지정, 전압 보정 무시)"
 fi
 
+# ★ 라이다 드라이버를 여기서 띄운다 (2026-09-13)
+#   bringup 의 lidar:=true 는 **판단 노드(cluster_plot_node)만** 띄운다.
+#   드라이버(sllidar)는 lidar_dual.launch.py 가 따로 띄워야 한다. 이걸
+#   빼먹으면 "스캔이 한 번도 안 왔다" 로 끝난다 — 9/13 밤에 실제로 밟았다.
+#   (9/12 에는 아예 lidar:=false 로 띄워 의자를 그대로 박았다. 같은 종류의
+#    실수가 두 번 났으니 사람이 기억하게 두지 않는다)
+if ros2 topic list 2>/dev/null | grep -q '^/scan_front$'; then
+  echo "  ✅ /scan_front 이미 발행 중 — 드라이버를 새로 띄우지 않는다"
+else
+  echo "  · 라이다 드라이버를 띄운다 (lidar_dual.launch.py, 전방만)"
+  ros2 launch lidar_clustering lidar_dual.launch.py rear:=false \
+      > /tmp/lidar_$(date +%H%M).log 2>&1 &
+  LIDAR_PID=$!
+  trap 'kill $LIDAR_PID 2>/dev/null' EXIT
+  for _ in $(seq 1 20); do
+    sleep 0.5
+    ros2 topic list 2>/dev/null | grep -q '^/scan_front$' && break
+  done
+  if ros2 topic list 2>/dev/null | grep -q '^/scan_front$'; then
+    echo "  ✅ /scan_front 올라왔다"
+  else
+    echo "  ❌ /scan_front 이 안 올라온다. 라이다 USB 를 뺐다 꽂을 것."
+    echo "     (9/13: 같은 포트에 재삽입만으로 살아난 적이 있다)"
+    exit 1
+  fi
+fi
+
 LOG=/tmp/run_$(date +%H%M).log
 echo
 echo "  로그: $LOG"
