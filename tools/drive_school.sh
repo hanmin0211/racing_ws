@@ -12,16 +12,29 @@
 #
 # 사용:
 #   bash tools/drive_school.sh              # 완주만 (어제 형태)
+#   bash tools/drive_school.sh --no-avoid   # 회피 조향 끄고 **경로추종만** 본다
 #   bash tools/drive_school.sh --missions   # 회피 + 돌발정지 시퀀서까지
 #   bash tools/drive_school.sh --speed 0.5
+#
+# ★ --no-avoid 를 먼저 쓰는 이유 (2026-09-13)
+#   그날 차가 가드레일을 박고 경로를 못 따라갔다. 로그를 보니 라이다가
+#   `Width=7.89m` 짜리 물체(가드레일)를 잡아 AVOID 가 계속 떴고, 회피가
+#   뜨면 **먹스가 경로조향을 통째로 버린다**(§2-5). best_angle 이 −18°
+#   풀락까지 갔다. 차는 경로가 아니라 회피각을 따라간 것이다.
+#   라이다를 범퍼 위 → 차량 정면으로 옮기면서 **스캔 평면이 낮아진** 것이
+#   원인으로 보인다. 위에 있을 땐 가드레일 위를 지나갔다.
+#   경로추종이 되는지부터 확인하려면 회피 조향을 꺼야 한다.
+#   ⚠ 전방 감속·정지(/obstacle_distance)는 안전 기능이라 이 옵션과 무관하게
+#     계속 동작한다. 앞에 뭐가 있으면 여전히 선다.
 set -u
 WS=/home/han/racing_ws
 WP=$WS/config/chungju_school/wp_school_track_0.5.yaml
 PLAN=$WS/config/chungju_school/mission_plan_school.yaml
-MISSIONS=0; SPEED=0.7; YAW=""
+MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --missions) MISSIONS=1; shift;;
+    --no-avoid) NOAVOID=1; shift;;
     --speed) SPEED="$2"; shift 2;;
     --yaw-offset) YAW="$2"; shift 2;;
     *) echo "모르는 인자: $1" >&2; exit 1;;
@@ -29,10 +42,16 @@ while [ $# -gt 0 ]; do
 done
 
 cd "$WS" || exit 1
+# ⚠ set -u 를 켠 채로 ROS setup.bash 를 source 하면 **조용히 죽는다.**
+#   setup.bash 가 AMENT_TRACE_SETUP_FILES 같은 미설정 변수를 참조하는데,
+#   -u 면 그 순간 셸이 종료된다. 에러 메시지도 안 나와서 '스크립트가 아무것도
+#   안 한다' 로 보인다(2026-09-13 에 실제로 이걸로 한참 헤맸다).
+set +u
 # shellcheck disable=SC1091
 source /opt/ros/humble/setup.bash 2>/dev/null
 # shellcheck disable=SC1091
 source install/setup.bash 2>/dev/null
+set -u
 
 echo "──────────────────────────────────────────────────────────"
 echo " 출발 전 점검"
@@ -118,7 +137,13 @@ ARGS=(control:=true lidar:=true auto_calib:=true
       "waypoints:=$WP" "max_speed:=$SPEED"
       "ff_min_pwm:=$PWM" "auto_calib_speed:=$CALIB")
 [ -n "$YAW" ] && ARGS+=("fg_yaw_offset_deg:=$YAW")
+[ "$NOAVOID" = 1 ] && ARGS+=(no_avoid_steer:=true)
 [ "$MISSIONS" = 1 ] && ARGS+=(sequencer:=true sudden_stop:=true "mission_plan:=$PLAN")
+if [ "$NOAVOID" = 1 ]; then
+  echo "  ⚠ 회피 조향 꺼짐 — 경로추종만 본다."
+  echo "    전방 감속·정지는 그대로 동작한다(안전 기능)."
+  echo
+fi
 
 echo "ros2 launch gps_localization bringup.launch.py ${ARGS[*]}"
 echo
