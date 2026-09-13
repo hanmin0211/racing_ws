@@ -149,14 +149,58 @@ def check_supply(args):
   print(f'  무부하 {lo}~{hi} mV ({n}샘플, 포트 {args.arduino_port})')
   if lo >= 4700:
     ok(f'정상 — 주행 가능 (최저 {lo}mV)')
-  elif lo >= 4300:
+    return
+  if lo >= 4300:
     warn(f'낮다 ({lo}mV) — 마진이 없다. 주행 중 커브에서 리셋선(3483mV)을 '
          '밑돌 수 있다. 배터리 충전 권장.')
   else:
-    bad(f'브라운아웃 위험 ({lo}mV < 4300) — **이대로 주행하면 안 된다.** '
-        '같은 PWM 이 정지마찰을 못 넘어 모터가 잠기고, 전압이 더 무너진다. '
-        '차량 배터리/전원 공급원을 먼저 볼 것 (USB 만 연결해 재보면 '
-        '차량 쪽인지 바로 갈린다).')
+    msg = (f'브라운아웃 위험 ({lo}mV < 4300). 같은 PWM 이 정지마찰을 못 넘어 '
+           '모터가 잠기고, 잠긴 모터는 전류를 더 빨아 전압을 더 떨어뜨린다.')
+    if args.allow_low_voltage:
+      warn(msg + ' (--allow-low-voltage 로 주행을 허용했다)')
+    else:
+      bad(msg + ' 차량 배터리/전원 공급원을 먼저 볼 것. '
+                '그래도 달려야 하면 --allow-low-voltage 를 주면 '
+                '보정값을 계산해준다.')
+  _low_voltage_advice(lo)
+
+
+def _low_voltage_advice(mv):
+  """저전압에서 **그래도 달려야 할 때** 무엇을 올려야 하는가.
+
+  ★ 근거 (2026-09-13 학교 실측)
+    PWM 은 전압이 아니라 비율이다. 전압이 내려가면 같은 PWM 이 만드는 힘이
+    그만큼 줄어든다. 그날 4030mV 에서:
+      ff_min_pwm 50 → 정지마찰을 못 넘음. 좌표 1cm 도 안 변하고 VMIN 2938mV
+      ff_min_pwm 60 → **굴렀다.** 출발에 8.0초, 그 뒤 1.07 m/s
+    (FF 식 PWM = 38.8·v + 17.2 의 예측 1.10 m/s 와 일치했다)
+
+    그래서 하한을 5.1V 기준값의 (5100/실측) 배로 올린다. 역설적이지만
+    **PWM 을 올리는 쪽이 전압에 이롭다** — 도는 모터는 역기전력이 생겨
+    잠긴 모터보다 전류를 훨씬 적게 먹는다. 스톨을 못 벗어나는 것이
+    최악이다.
+  """
+  base_pwm, base_mv = 50.0, 5100.0
+  need = int(math.ceil(base_pwm * base_mv / max(mv, 1)))
+  need = max(50, min(need, 90))
+  print()
+  print(f'  → 이 전압에서 굴리려면: ff_min_pwm:={need}'
+        f'  (5.1V 기준 50 을 {base_mv/mv:.2f}배)')
+  print('     ros2 launch gps_localization bringup.launch.py ... '
+        f'ff_min_pwm:={need} auto_calib_speed:=0.9')
+  print('     ⚠ auto_calib_speed 를 같이 올려야 한다 — 캘리브 최소시간 게이트가')
+  print('       10m ÷ (auto_speed×2) 라, 빨라진 차가 "측위 점프" 로 거부된다.')
+  # ⚠ 주행 중 강하를 '무부하 − 고정값' 으로 예측하지 않는다. 강하는 부하와
+  #   전원 내부저항에 함께 달려 있어 고정 오프셋이 아니다. 실제로 아래 두
+  #   실측 쌍은 강하 폭이 서로 다르다. 예측 대신 **실측 쌍을 보여주고**
+  #   판단은 사람이 하게 한다.
+  print('  → 주행 중에는 이보다 훨씬 내려간다 (실측 쌍):')
+  print('       무부하 5100mV → 커브+조향 3215mV   (2026-09-07)')
+  print('       무부하 4030mV → 주행 중   2938mV   (2026-09-13)')
+  print('     과거 리셋 발생선 3483mV. 무부하가 낮을수록 이 선을 쉽게 뚫는다.')
+  print('  → 커브에서 구동·조향이 **동시에** 걸릴 때가 가장 위험하다.')
+  print('     max_speed 를 낮추면 동시 부하가 줄어 리셋 확률이 내려간다.')
+  print('  → 주행 중 실제 값은 tools/vcc_watch.py 로 볼 것 (bringup 과 동시 실행 가능).')
 
 
 def _read_vcc(port, secs):
@@ -517,6 +561,9 @@ def main():
                   help='전압을 읽을 아두이노 포트 (기본 /dev/arduino)')
   ap.add_argument('--supply-secs', type=float, default=3.0,
                   help='전압을 몇 초 동안 볼지')
+  ap.add_argument('--allow-low-voltage', action='store_true',
+                  help='전압이 낮아도 주행하겠다 — 치명을 경고로 낮추고 '
+                       '필요한 ff_min_pwm 을 계산해준다')
   ap.add_argument('--skip-supply', action='store_true',
                   help='전압 검사를 건너뛴다 (차가 없을 때)')
   ap.add_argument('--mission-plan',
