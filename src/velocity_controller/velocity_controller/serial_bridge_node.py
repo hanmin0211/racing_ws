@@ -137,11 +137,36 @@ class SerialBridgeNode(Node):
         #   하한 50: 정지마찰을 넘기는 최소값. 이 선은 '구르는 중' 을 맞춘 것이라
         #   출발 순간에는 부족할 수 있어 하한을 따로 둔다(PWM 45 는 안 굴렀다).
         self.declare_parameter('ff_min_pwm', 50.0)
+        # ★ 정지마찰 하한 (2026-09-13) — cbf75ee 가 "따로 둔다" 고 써 놓고
+        #   **실제로는 만들지 않은** 것이다. 그래서 유일한 하한이 55→50 으로
+        #   내려간 채 남았고, 9/13 학교에서 차가 출발을 못 했다.
+        #     PWM 45 → 0.00 m/s (안 구름)
+        #     PWM 50 → 9/13 실측 **안 구름** (좌표 1cm 도 안 변하고 VMIN 2938mV)
+        #     PWM 55 → 덜컹(스틱슬립)
+        #     PWM 56 → 1.00 m/s ✓   (9/12 캘리브가 이 값으로 굴렀다)
+        #     PWM 60 → 9/13 실측 1.07 m/s ✓
+        #   즉 **정지마찰 문턱이 PWM 55~56 사이**다. 하한 50 은 그 아래다.
+        #
+        #   '구르는 중' 의 하한(ff_min_pwm)과 '출발' 의 하한은 다른 값이어야
+        #   한다. 잠긴 모터는 역기전력이 없어 전류를 최대로 빨고(9/13 VMIN
+        #   2938mV), 그 상태로 버티면 전압이 더 무너진다. **빨리 굴리는 것이
+        #   전원에도 이롭다.**
+        #
+        #   엔코더가 없어서 '실제로 움직였는가' 를 알 수 없다. 그래서
+        #   시간으로 끊는다 — 정지(PWM 0)에서 출발할 때만 breakaway_ms 동안
+        #   높은 PWM 을 인가하고 그 뒤 평소 하한으로 내린다.
+        self.declare_parameter('ff_breakaway_pwm', 60.0)
+        self.declare_parameter('ff_breakaway_ms', 600.0)
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
         self.ff_deadband = float(self.get_parameter('ff_deadband').value)
         self.ff_min_pwm = float(self.get_parameter('ff_min_pwm').value)
+        self.ff_breakaway_pwm = float(
+            self.get_parameter('ff_breakaway_pwm').value)
+        self.ff_breakaway_s = float(
+            self.get_parameter('ff_breakaway_ms').value) / 1000.0
+        self._moving_since = None      # 정지→출발 전환 시각 (None = 정지 중)
         if self.ff_mode == 'ros':
             self.get_logger().warn(
                 f'★ ROS 쪽 FF 사용: PWM = {self.ff_gain:.1f}·v + '
@@ -321,9 +346,20 @@ class SerialBridgeNode(Node):
             v = float(self.target_vel)
             if abs(v) < self.ff_deadband:
                 pwm = 0
+                self._moving_since = None      # 섰다 — 다음 출발은 다시 breakaway
             else:
                 mag = self.ff_static + self.ff_gain * abs(v)
                 mag = max(mag, self.ff_min_pwm)   # 크리프 하한(위 주석 참고)
+                # 정지마찰 구간: 정지에서 막 출발했으면 잠깐 더 세게 민다.
+                now = self.get_clock().now().nanoseconds * 1e-9
+                if self._moving_since is None:
+                    self._moving_since = now
+                    self.get_logger().info(
+                        f'출발 — 정지마찰 하한 {self.ff_breakaway_pwm:.0f} 을 '
+                        f'{self.ff_breakaway_s * 1000:.0f}ms 인가한다',
+                        throttle_duration_sec=2.0)
+                if now - self._moving_since < self.ff_breakaway_s:
+                    mag = max(mag, self.ff_breakaway_pwm)
                 pwm = int(round(math.copysign(min(mag, 255.0), v)))
             cmd = f'PWM:{pwm},STEER:{self.target_steer:.1f}\n'
         else:
