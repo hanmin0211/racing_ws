@@ -255,6 +255,12 @@ def generate_launch_description():
       DeclareLaunchArgument('no_avoid_steer', default_value='false'),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
+      # ★ 2026-09-13 노출 — 상세 주석은 control.launch.py 에 있다.
+      #   ff_min_pwm 은 **차의 최저 속도**이고, 이 하한이 max_speed·커브
+      #   감속·장애물 감속 램프를 전부 덮어쓴다(PWM 50 이면 어느 명령이든 50).
+      #   obstacle_stop_dist 는 '동력을 끊을 거리' 지 '멈출 거리' 가 아니다.
+      DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
+      DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
       #   ros2 launch sllidar_ros2 sllidar_a1_launch.py \
@@ -386,6 +392,9 @@ def generate_launch_description():
               # ★ 구동 FF — 펌웨어 상수가 틀려 있어 ROS 쪽에서 변환한다.
               #   상세는 control.launch.py 의 ff_mode 주석 참고.
               'ff_mode': LaunchConfiguration('ff_mode'),
+              'ff_min_pwm': LaunchConfiguration('ff_min_pwm'),
+              'obstacle_stop_dist':
+                  LaunchConfiguration('obstacle_stop_dist'),
               'ff_static': LaunchConfiguration('ff_static'),
               'ff_gain': LaunchConfiguration('ff_gain'),
           }.items(),
