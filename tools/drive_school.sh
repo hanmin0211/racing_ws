@@ -200,20 +200,27 @@ fi
 #   빼먹으면 "스캔이 한 번도 안 왔다" 로 끝난다 — 9/13 밤에 실제로 밟았다.
 #   (9/12 에는 아예 lidar:=false 로 띄워 의자를 그대로 박았다. 같은 종류의
 #    실수가 두 번 났으니 사람이 기억하게 두지 않는다)
-if ros2 topic list 2>/dev/null | grep -q '^/scan_front$'; then
-  echo "  ✅ /scan_front 이미 발행 중 — 드라이버를 새로 띄우지 않는다"
+#   ⚠ **토픽 목록으로 판정하면 안 된다.** `ros2 topic list` 는 구독자만
+#     있어도 토픽을 보여준다. 이전 스택의 노드가 /scan_front 를 구독 중이면
+#     '이미 발행 중' 으로 오판하고 드라이버를 안 띄운다 — 그러면 스캔이
+#     영원히 안 온다(9/15 00:40 에 실제로 이걸 밟았다).
+#     **발행자 수**를 봐야 한다.
+pubs() { ros2 topic info /scan_front 2>/dev/null \
+         | sed -n 's/.*Publisher count: *//p' | head -1; }
+if [ "$(pubs)" -gt 0 ] 2>/dev/null; then
+  echo "  ✅ /scan_front 발행자 $(pubs)개 — 드라이버를 새로 띄우지 않는다"
 else
   echo "  · 라이다 드라이버를 띄운다 (lidar_dual.launch.py, 전방만)"
   ros2 launch lidar_clustering lidar_dual.launch.py rear:=false \
       > /tmp/lidar_$(date +%H%M).log 2>&1 &
   LIDAR_PID=$!
   trap 'kill $LIDAR_PID 2>/dev/null' EXIT
-  for _ in $(seq 1 20); do
+  for _ in $(seq 1 24); do
     sleep 0.5
-    ros2 topic list 2>/dev/null | grep -q '^/scan_front$' && break
+    [ "$(pubs)" -gt 0 ] 2>/dev/null && break
   done
-  if ros2 topic list 2>/dev/null | grep -q '^/scan_front$'; then
-    echo "  ✅ /scan_front 올라왔다"
+  if [ "$(pubs)" -gt 0 ] 2>/dev/null; then
+    echo "  ✅ /scan_front 발행 시작 (발행자 $(pubs)개)"
   else
     echo "  ❌ /scan_front 이 안 올라온다. 라이다 USB 를 뺐다 꽂을 것."
     echo "     (9/13: 같은 포트에 재삽입만으로 살아난 적이 있다)"
