@@ -119,6 +119,14 @@ def generate_launch_description():
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
       DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
       DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
+      # ★ 능동 제동 — **기본 0 = 꺼짐**. 돌발정지에서 관성거리를 줄인다.
+      #   `PWM 0` 은 동력을 끊을 뿐이라 그 뒤는 관성이다(9/15 실측 제동거리
+      #   1.96m, 더미 0.30m 앞에서 v=0.85m/s). 역토크를 걸면 1.15m/s 에서
+      #   1.18m → 0.4~0.55m 로 준다(펌웨어 램프 200~400ms 감안).
+      #   ⚠ 엔코더가 없어 정지를 직접 못 본다. 측정속도(/odometry/filtered)와
+      #     시간상한이 안전장치다. 검증 전에는 켜지 말 것.
+      DeclareLaunchArgument('ff_brake_pwm', default_value='0.0'),
+      DeclareLaunchArgument('ff_brake_ms', default_value='800.0'),
       # ★ 장애물 정지거리 (2026-09-13 노출). 브레이크가 없어서 이 값은
       #   '멈출 거리' 가 아니라 '동력을 끊을 거리' 다. 실제 정지점은
       #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
@@ -176,6 +184,10 @@ def generate_launch_description():
                   LaunchConfiguration('ff_breakaway_pwm'), value_type=float),
               'ff_breakaway_ms': ParameterValue(
                   LaunchConfiguration('ff_breakaway_ms'), value_type=float),
+              'ff_brake_pwm': ParameterValue(
+                  LaunchConfiguration('ff_brake_pwm'), value_type=float),
+              'ff_brake_ms': ParameterValue(
+                  LaunchConfiguration('ff_brake_ms'), value_type=float),
           }],
       ),
 
