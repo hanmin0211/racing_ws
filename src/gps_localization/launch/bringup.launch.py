@@ -284,6 +284,9 @@ def generate_launch_description():
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
       DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
       DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
+      # 능동 제동 — 기본 0=꺼짐. 상세는 control.launch.py 주석 참고.
+      DeclareLaunchArgument('ff_brake_pwm', default_value='0.0'),
+      DeclareLaunchArgument('ff_brake_ms', default_value='800.0'),
       DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
       # ⚠ lidar:=true 면 라이다 장애물 회피(cluster_plot_node)를 켠다. 별도로
       # sllidar 드라이버가 /scan 을 쏘고 있어야 한다:
@@ -419,6 +422,8 @@ def generate_launch_description():
               'ff_min_pwm': LaunchConfiguration('ff_min_pwm'),
               'ff_breakaway_pwm': LaunchConfiguration('ff_breakaway_pwm'),
               'ff_breakaway_ms': LaunchConfiguration('ff_breakaway_ms'),
+              'ff_brake_pwm': LaunchConfiguration('ff_brake_pwm'),
+              'ff_brake_ms': LaunchConfiguration('ff_brake_ms'),
               'obstacle_stop_dist':
                   LaunchConfiguration('obstacle_stop_dist'),
               'ff_static': LaunchConfiguration('ff_static'),

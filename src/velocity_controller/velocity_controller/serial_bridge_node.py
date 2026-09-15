@@ -165,6 +165,38 @@ class SerialBridgeNode(Node):
         #     (내리는 방향은 램프가 없어 60 → 50 은 즉시다)
         self.declare_parameter('ff_breakaway_pwm', 60.0)
         self.declare_parameter('ff_breakaway_ms', 1200.0)
+        # ★ 능동 제동 (2026-09-16) — **기본 OFF(0)**. 인자로만 켜진다.
+        #
+        #   왜 필요한가: `PWM 0` 은 '동력 끊기' 지 '멈추기' 가 아니다. 그 뒤는
+        #   관성이다. 9/15 실측 — 돌발 더미 앞에서
+        #       장애물 1.77m v=1.42 → 0.30m v=0.85 → 제동거리 1.96m / 2.5초
+        #   더미 30cm 앞에서도 0.85m/s 로 굴러가고 있었다. 조금만 달라도 박는다.
+        #   실측 가속능력(상위10%) 0.87m/s² · 관성감속 0.56m/s² 기준,
+        #   역토크를 걸면 1.15m/s 에서 제동거리 1.18m → 0.4~0.55m 로 준다.
+        #
+        #   ⚠ 엔코더가 없어 '멈췄다' 를 직접 못 본다. 그래서 안전장치 셋:
+        #     ① ff_brake_ms 시간 상한 — 측정이 없어도 이건 항상 건다
+        #     ② 측정속도(/odometry/filtered)가 ff_brake_min_v 밑이면 즉시 해제
+        #     ③ ff_brake_trigger_v 이상으로 달리다 선 경우에만 건다
+        #        (주차처럼 느린 기동에서 덜컹거리지 않게)
+        #   ⚠ 펌웨어가 방향전환을 0 경유로 막고 역토크를 3/10ms 로 올린다.
+        #     즉 제동이 200~400ms 에 걸쳐 붙는다. 그만큼 효과가 깎인다.
+        self.declare_parameter('ff_brake_pwm', 0.0)
+        # ★ 상한은 '제동력' 이 아니라 **뒤로 밀리지 않게 하는 안전장치**다.
+        #   돌발정지는 최대한 빨리 서는 게 목적이므로 이 값이 제동을 중간에
+        #   끊으면 안 된다. 1.15m/s 에서 실효감속 1.4m/s² 면 정지까지 0.82초다.
+        #   800ms 는 그걸 덮는다. 실제로 멈추면 아래 측정속도 연동이 먼저 끊는다.
+        self.declare_parameter('ff_brake_ms', 800.0)
+        self.declare_parameter('ff_brake_min_v', 0.15)
+        self.declare_parameter('ff_brake_trigger_v', 0.40)
+        # 제동 지속시간을 **속도에 맞춰** 잡는다. 느린 정지에 400ms 를 통째로
+        # 걸면 이미 선 차에 역토크가 계속 걸려 뒤로 밀린다.
+        #   t = min(ff_brake_ms, |직전속도| / ff_brake_decel)
+        # 기본 1.4 m/s² 는 실측 가속능력(0.87)+관성감속(0.56) 에서 왔다.
+        #   ⚠ **보수적으로(낮게) 잡는다.** 이 값이 실제보다 높으면 차가 서기
+        #     전에 제동을 끊는다(급정지 실패). 낮으면 더 오래 걸되, 멈추는
+        #     순간 측정속도 연동이 끊는다. 급정지에서는 후자가 안전하다.
+        self.declare_parameter('ff_brake_decel', 1.0)
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -175,6 +207,28 @@ class SerialBridgeNode(Node):
         self.ff_breakaway_s = float(
             self.get_parameter('ff_breakaway_ms').value) / 1000.0
         self._moving_since = None      # 정지→출발 전환 시각 (None = 정지 중)
+        self.ff_brake_pwm = float(self.get_parameter('ff_brake_pwm').value)
+        self.ff_brake_s = float(self.get_parameter('ff_brake_ms').value) / 1000.0
+        self.ff_brake_min_v = float(
+            self.get_parameter('ff_brake_min_v').value)
+        self.ff_brake_trigger_v = float(
+            self.get_parameter('ff_brake_trigger_v').value)
+        self.ff_brake_decel = max(
+            0.1, float(self.get_parameter('ff_brake_decel').value))
+        self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
+        self._brake_sign = 0           # 직전 진행 방향 (+1 전진 / -1 후진)
+        self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
+        self._meas_v = None            # 측정 속도 (없으면 None → 시간상한만)
+        self._meas_v_t = 0.0
+        if self.ff_brake_pwm > 0.0:
+            from nav_msgs.msg import Odometry  # noqa: PLC0415
+            self.create_subscription(Odometry, '/odometry/filtered',
+                                     self._odom_cb, 10)
+            self.get_logger().warn(
+                f'★ 능동 제동 켜짐: 역 PWM {self.ff_brake_pwm:.0f} 을 최대 '
+                f'{self.ff_brake_s * 1000:.0f}ms. '
+                f'측정속도 {self.ff_brake_min_v:.2f}m/s 밑이면 즉시 해제. '
+                f'{self.ff_brake_trigger_v:.2f}m/s 이상에서 선 경우에만 건다.')
         if self.ff_mode == 'ros':
             self.get_logger().warn(
                 f'★ ROS 쪽 FF 사용: PWM = {self.ff_gain:.1f}·v + '
@@ -337,6 +391,66 @@ class SerialBridgeNode(Node):
         self.last_cmd_time = self.openloop_time
 
     # ------------------------------------------------------------------
+    def _odom_cb(self, msg):
+        """측정 속도 — 제동을 **언제 멈출지** 판단하는 유일한 근거다.
+
+        ⚠ 이 토픽은 IMU 가 끊기면 같이 멈춘다(9/15 에 32번 났다). 그때는
+          self._meas_v 가 낡은 값으로 남으므로 **시간 상한만 믿는다**.
+          아래 _brake_pwm() 에서 수신 시각을 같이 본다.
+        """
+        self._meas_v = float(msg.twist.twist.linear.x)
+        self._meas_v_t = self.get_clock().now().nanoseconds * 1e-9
+
+    def _brake_pwm(self, cmd_v, now):
+        """능동 제동 상태기계. 제동 중이면 인가할 PWM, 아니면 None.
+
+        진입:  직전에 ff_brake_trigger_v 이상으로 달리다가
+               이번 주기에 '멈추라'(|cmd_v| < deadband) 가 온 순간
+        해제:  ① 시간 상한 초과  ② 측정속도가 ff_brake_min_v 밑
+               ③ 다시 가라는 명령이 옴
+        """
+        if self.ff_brake_pwm <= 0.0:
+            return None
+
+        stop_cmd = abs(cmd_v) < self.ff_deadband
+        was_fast = abs(self._last_cmd_v) >= self.ff_brake_trigger_v
+
+        # ① 진입 판정
+        if self._brake_until is None:
+            if stop_cmd and was_fast:
+                self._brake_sign = 1 if self._last_cmd_v > 0 else -1
+                dur = min(self.ff_brake_s,
+                          abs(self._last_cmd_v) / self.ff_brake_decel)
+                self._brake_until = now + dur
+                self.get_logger().info(
+                    f'제동 — 역 PWM {self.ff_brake_pwm:.0f} 을 '
+                    f'{dur * 1000:.0f}ms (직전 {self._last_cmd_v:+.2f}m/s, '
+                    f'상한 {self.ff_brake_s * 1000:.0f}ms)')
+            else:
+                return None
+
+        # ③ 다시 가라는 명령이면 즉시 해제
+        if not stop_cmd:
+            self._brake_until = None
+            return None
+
+        # ① 시간 상한
+        if now >= self._brake_until:
+            self._brake_until = None
+            return None
+
+        # ② 측정속도 — **신선할 때만** 믿는다(IMU 끊기면 낡은 값이 남는다)
+        if self._meas_v is not None and (now - self._meas_v_t) < 0.5:
+            if abs(self._meas_v) < self.ff_brake_min_v:
+                self._brake_until = None
+                self.get_logger().info(
+                    f'제동 해제 — 측정속도 {self._meas_v:+.2f}m/s '
+                    f'({self.ff_brake_min_v:.2f} 미만)')
+                return None
+
+        return -self._brake_sign * self.ff_brake_pwm
+
+    # ------------------------------------------------------------------
     def send_command(self):
         """0.05초(20Hz)마다 실행. 현재 목표값을 Arduino로 전송."""
         # 개루프 요청이 살아있으면 PWM 명령, 아니면 평소대로 VEL 명령
@@ -352,8 +466,10 @@ class SerialBridgeNode(Node):
         elif self.ff_mode == 'ros':
             # ROS 쪽 FF — 실측 상수로 직접 PWM 을 만든다(위 주석 참고).
             v = float(self.target_vel)
+            now_s = self.get_clock().now().nanoseconds * 1e-9
+            brake = self._brake_pwm(v, now_s)
             if abs(v) < self.ff_deadband:
-                pwm = 0
+                pwm = 0 if brake is None else int(round(brake))
                 self._moving_since = None      # 섰다 — 다음 출발은 다시 breakaway
             else:
                 mag = self.ff_static + self.ff_gain * abs(v)
@@ -369,6 +485,12 @@ class SerialBridgeNode(Node):
                 if now - self._moving_since < self.ff_breakaway_s:
                     mag = max(mag, self.ff_breakaway_pwm)
                 pwm = int(round(math.copysign(min(mag, 255.0), v)))
+            # ⚠ **양쪽 분기 뒤에서** 갱신해야 한다. 정지 분기에서 안 갱신하면
+            #   _last_cmd_v 가 옛 주행속도를 계속 들고 있어, 제동이 끝난 뒤에도
+            #   was_fast 가 참이라 **매 주기 재진입**한다(서 있는 차가 계속
+            #   역토크를 받는다). 여기서 갱신하면 정지 다음 주기에 0 이 되어
+            #   다시 달리기 전까지는 트리거가 안 걸린다.
+            self._last_cmd_v = v
             cmd = f'PWM:{pwm},STEER:{self.target_steer:.1f}\n'
         else:
             cmd = f'VEL:{self.target_vel:.2f},STEER:{self.target_steer:.1f}\n'
