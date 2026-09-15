@@ -16,6 +16,7 @@
 #   bash tools/drive_school.sh --missions   # 회피 + 돌발정지 시퀀서까지
 #   bash tools/drive_school.sh --speed 0.5
 #   bash tools/drive_school.sh --min-pwm 55   # 크리프 하한을 직접 지정
+#   bash tools/drive_school.sh --extra ff_brake_pwm:=50   # 임의 런치 인자
 #
 # ★ --min-pwm 을 쓰는 경우 (2026-09-13)
 #   breakaway(출발용 60)는 정지마찰을 뚫는 값이고, ff_min_pwm(크리프)은
@@ -38,12 +39,17 @@ WS=/home/han/racing_ws
 WP=$WS/config/chungju_school/wp_school_track_0.5.yaml
 PLAN=$WS/config/chungju_school/mission_plan_school.yaml
 MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0; FORCE_PWM=""; MINRANGE=""
+EXTRA=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --missions) MISSIONS=1; shift;;
     --no-avoid) NOAVOID=1; shift;;
     --min-pwm) FORCE_PWM="$2"; shift 2;;
     --min-range) MINRANGE="$2"; shift 2;;
+    # 임의의 런치 인자를 그대로 넘긴다. 스크립트가 챙기는 것들(장치 점검·
+    # 중복 차단·라이다 드라이버·로그)을 잃지 않고 새 인자를 시험하기 위해서다.
+    #   bash tools/drive_school.sh --missions --extra ff_brake_pwm:=50
+    --extra) EXTRA+=("$2"); shift 2;;
     --speed) SPEED="$2"; shift 2;;
     --yaw-offset) YAW="$2"; shift 2;;
     *) echo "모르는 인자: $1" >&2; exit 1;;
@@ -242,6 +248,7 @@ ARGS=(control:=true lidar:=true auto_calib:=true
 [ -n "$MINRANGE" ] && ARGS+=("fg_min_range:=$MINRANGE")
 [ "$NOAVOID" = 1 ] && ARGS+=(no_avoid_steer:=true)
 [ "$MISSIONS" = 1 ] && ARGS+=(sequencer:=true sudden_stop:=true "mission_plan:=$PLAN")
+[ ${#EXTRA[@]} -gt 0 ] && ARGS+=("${EXTRA[@]}")
 if [ "$NOAVOID" = 1 ]; then
   echo "  ⚠ 회피 조향 꺼짐 — 경로추종만 본다."
   echo "    전방 감속·정지는 그대로 동작한다(안전 기능)."
