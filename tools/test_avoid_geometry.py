@@ -126,6 +126,37 @@ def main():
           f'문 간격 {spacing:.1f}m: {verdict} — '
           f'{"통과해야" if want_pass else "막혀야"} 한다')
 
+  # ────────────────────────────────────────────────────────────────
+  # ★ 2026-09-16 — "차가 문 사이 대신 바깥으로 돈다" 를 조사하며 확인한 불변식.
+  #   처음엔 갭 선택 규칙(prefer_path_gap 의 '품었는가' 판정)이 원인인 줄 알고
+  #   고쳤는데, 시험해 보니 **옛 코드도 문을 고른다.** 구조를 따져보니 이유가
+  #   있었다 — 트랙 창이 ±1.2m 인데 의자 바깥 끝이 0.92~1.33m 이고 안전반경이
+  #   0.6375m 라, **문 바깥에 갭이 생길 여지가 아예 없다.**
+  #   즉 플래너는 '바깥으로 돌' 수가 없다. 관측된 현상은 다른 원인이다
+  #   (의자가 트랙 창 밖이라 장애물로 안 잡히는 쪽이 유력하다).
+  #   그 불변식을 여기에 못 박아 둔다 — 나중에 track_width 를 올리면 깨진다.
+  print('\n★ 문 바깥으로는 돌 수 없어야 한다 (구조적 불변식)')
+  for target in (0.0, 8.0, 16.0):
+    dec = pl.plan(make_scan([(3.0, +1.0, 0.45), (3.0, -1.0, 0.45)]),
+                  target_deg=target)
+    thru = dec.mode == 'AVOID' and abs(dec.best_angle_deg) <= 6.5
+    print(f'   경로 목표 {target:+5.1f}°  →  {dec.mode:<8} '
+          f'조준 {dec.best_angle_deg:+6.1f}°  '
+          f'{"문 통과" if thru else "바깥으로 돌았다"}  {"OK" if thru else "✗"}')
+    if not thru:
+      fails.append(f'문 통과(목표 {target:+.0f}°): 조준 '
+                   f'{dec.best_angle_deg:+.1f}° — 바깥으로 돌았다')
+
+  print('\n★ 트랙 창 밖의 물체는 장애물로 안 잡힌다 (의자 배치 기준)')
+  for off in (1.0, 1.3, 1.6):
+    dec = pl.plan(make_scan([(3.0, +off, 0.45), (3.0, -off, 0.45)]),
+                  target_deg=0.0)
+    seen = dec.mode != 'CLEAR'
+    print(f'   경로에서 ±{off:.1f}m  →  {dec.mode:<8} '
+          f'{"장애물로 잡힘" if seen else "**안 보임**(창 ±1.2m 밖)"}')
+    if off <= 1.0 and not seen:
+      fails.append(f'±{off:.1f}m 의자를 못 본다 — 창 안인데 놓쳤다')
+
   print()
   if fails:
     print('❌ 실패')
