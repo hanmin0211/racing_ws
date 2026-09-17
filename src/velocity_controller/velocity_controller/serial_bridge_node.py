@@ -197,6 +197,27 @@ class SerialBridgeNode(Node):
         #     전에 제동을 끊는다(급정지 실패). 낮으면 더 오래 걸되, 멈추는
         #     순간 측정속도 연동이 끊는다. 급정지에서는 후자가 안전하다.
         self.declare_parameter('ff_brake_decel', 1.0)
+        # ★ 2026-09-17 — **내리막 속도 거버너** (기본 0 = 꺼짐)
+        #
+        #   왜: 개루프에는 '달리는 중' 감속 권한이 없다. 제동(ff_brake_pwm)은
+        #   **정지 명령에만** 붙는다. 그래서 내리막에서 중력이 이기면 명령을
+        #   낮춰도 계속 빨라진다. 실측 — 오늘 시험장(18~20%)에서 관성만으로도
+        #   8m 에 4.1 m/s 가 된다. 굴절코스 첫 코너(R=6.4m) 상한은 3.0 이다.
+        #
+        #   무엇을: 측정속도가 명령보다 gov_deadband 넘게 빠르면, 초과분에
+        #   비례해 **역 PWM** 을 낸다. 명령 자체를 따라가는 게 아니라
+        #   '과속만 깎는' 보조 제어다.
+        #
+        #   ⚠ 전진 중 역 PWM 은 **플러깅**이라 역기전력이 인가전압에 더해져
+        #     전류가 기동보다도 크다. 그래서 gov_pwm 으로 상한을 반드시 건다.
+        #     법정 내리막(6.5~9%)은 실측 구름저항 0.733 덕에 역 PWM 50 이면
+        #     충분하다(제동력 1.01 + 저항 0.733 > 중력 0.88).
+        #
+        #   ⚠ 이건 **개루프용 임시 수단**이다. NO_ENCODER 0 으로 펌웨어 속도
+        #     PID 를 복구하면 그쪽이 같은 일을 더 잘한다(연속 제어).
+        self.declare_parameter('gov_pwm', 0.0)        # 역 PWM 상한. 0 = 꺼짐
+        self.declare_parameter('gov_deadband', 0.30)  # 이만큼 넘어야 개입 [m/s]
+        self.declare_parameter('gov_gain', 80.0)      # 초과 1 m/s 당 역 PWM
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -215,15 +236,25 @@ class SerialBridgeNode(Node):
             self.get_parameter('ff_brake_trigger_v').value)
         self.ff_brake_decel = max(
             0.1, float(self.get_parameter('ff_brake_decel').value))
+        self.gov_pwm = float(self.get_parameter('gov_pwm').value)
+        self.gov_deadband = float(self.get_parameter('gov_deadband').value)
+        self.gov_gain = float(self.get_parameter('gov_gain').value)
         self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
         self._brake_sign = 0           # 직전 진행 방향 (+1 전진 / -1 후진)
         self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
         self._meas_v = None            # 측정 속도 (없으면 None → 시간상한만)
         self._meas_v_t = 0.0
-        if self.ff_brake_pwm > 0.0:
+        if self.ff_brake_pwm > 0.0 or self.gov_pwm > 0.0:
             from nav_msgs.msg import Odometry  # noqa: PLC0415
             self.create_subscription(Odometry, '/odometry/filtered',
                                      self._odom_cb, 10)
+            if self.gov_pwm > 0.0:
+                self.get_logger().warn(
+                    f'★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 '
+                    f'{self.gov_deadband:.2f}m/s 넘게 빠르면 역 PWM 을 낸다 '
+                    f'(초과 1m/s 당 {self.gov_gain:.0f}, 상한 {self.gov_pwm:.0f}). '
+                    f'⚠ 플러깅이라 전류가 크다 — 상한을 함부로 올리지 말 것.')
+        if self.ff_brake_pwm > 0.0:
             self.get_logger().warn(
                 f'★ 능동 제동 켜짐: 역 PWM {self.ff_brake_pwm:.0f} 을 최대 '
                 f'{self.ff_brake_s * 1000:.0f}ms. '
@@ -408,6 +439,38 @@ class SerialBridgeNode(Node):
     BRAKE_MEAS_FRESH_S = 0.5
     BRAKE_V_PLAUSIBLE = 3.0
 
+    def _governor_pwm(self, cmd_v, now):
+        """내리막 과속을 깎는 역 PWM. 개입 안 하면 None.
+
+        측정속도가 명령보다 gov_deadband 넘게 빠를 때만 작동하고, 초과분에
+        비례해 역방향 PWM 을 낸다. 명령을 추종하는 게 아니라 **과속만 깎는다**.
+
+        안전:
+          · gov_pwm 으로 상한 (플러깅 전류 제한)
+          · 측정이 0.5s 넘게 낡으면 개입 안 함 (IMU 끊기면 옛 값이 남는다)
+          · 3.0m/s 초과 측정은 무시 (odom twist 가 61.9m/s 까지 튄 실측)
+          · 명령과 측정의 **부호가 같을 때만** — 후진 중 전진명령 같은
+            상황에서 엉뚱한 방향으로 밀지 않는다
+        """
+        if self.gov_pwm <= 0.0 or abs(cmd_v) < self.ff_deadband:
+            return None
+        if self._meas_v is None or (now - self._meas_v_t) >= self.BRAKE_MEAS_FRESH_S:
+            return None
+        mv = self._meas_v
+        if abs(mv) > self.BRAKE_V_PLAUSIBLE:
+            return None
+        if (mv > 0) != (cmd_v > 0):          # 부호가 다르면 개입 안 한다
+            return None
+        excess = abs(mv) - abs(cmd_v) - self.gov_deadband
+        if excess <= 0.0:
+            return None
+        mag = min(self.gov_pwm, self.gov_gain * excess)
+        self.get_logger().info(
+            f'거버너 — 측정 {abs(mv):.2f} > 명령 {abs(cmd_v):.2f} '
+            f'(+{excess + self.gov_deadband:.2f}) → 역 PWM {mag:.0f}',
+            throttle_duration_sec=1.0)
+        return -math.copysign(mag, cmd_v)
+
     def _brake_pwm(self, cmd_v, now):
         """능동 제동 상태기계. 제동 중이면 인가할 PWM, 아니면 None.
 
@@ -505,6 +568,19 @@ class SerialBridgeNode(Node):
                 pwm = 0 if brake is None else int(round(brake))
                 self._moving_since = None      # 섰다 — 다음 출발은 다시 breakaway
             else:
+                gov = self._governor_pwm(v, now_s)
+                if gov is not None:
+                    # ★ 거버너가 개입하면 **하한(ff_min_pwm)을 건너뛴다.**
+                    #   안 그러면 '과속이니 멈춰' 와 '최소한 이만큼은 밀어' 가
+                    #   싸워서 내리막에서 계속 가속한다.
+                    self._last_cmd_v = v
+                    cmd = f'PWM:{int(round(gov))},STEER:{self.target_steer:.1f}\n'
+                    try:
+                        self.ser.write(cmd.encode('utf-8'))
+                    except Exception as e:  # noqa: BLE001
+                        self.get_logger().error(f'시리얼 전송 실패: {e}',
+                                                throttle_duration_sec=2.0)
+                    return
                 mag = self.ff_static + self.ff_gain * abs(v)
                 mag = max(mag, self.ff_min_pwm)   # 크리프 하한(위 주석 참고)
                 # 정지마찰 구간: 정지에서 막 출발했으면 잠깐 더 세게 민다.
