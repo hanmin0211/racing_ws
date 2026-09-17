@@ -33,6 +33,8 @@ import rclpy                                                  # noqa: E402
 import yaml                                                   # noqa: E402
 from geometry_msgs.msg import PoseStamped                     # noqa: E402
 from nav_msgs.msg import Odometry, Path                       # noqa: E402
+from rclpy.executors import (ExternalShutdownException,   # noqa: E402
+                             SingleThreadedExecutor)
 from rclpy.node import Node                                   # noqa: E402
 from rclpy.qos import DurabilityPolicy, QoSProfile            # noqa: E402
 from std_msgs.msg import Bool, String                         # noqa: E402
@@ -58,8 +60,9 @@ def load_path(plan):
 class Harness(Node):
   """가짜 차량 + 미션 노드 흉내. 시퀀서가 arm 하면 정해진 대로 응답한다."""
 
-  def __init__(self, pts, missions, respond, speed):
-    super().__init__('mission_test_harness')
+  def __init__(self, pts, missions, respond, speed, context=None):
+    # ★ context — 케이스마다 **독립 컨텍스트**를 쓴다(run_case 주석 참고).
+    super().__init__('mission_test_harness', context=context)
     self.pts = pts
     self.speed = speed
     self.respond = respond          # {미션이름: 완료까지 걸리는 초 or None(무응답)}
@@ -197,16 +200,49 @@ def run_case(title, plan, respond, extra_params, duration, speed=3.0,
                           text=True)
   time.sleep(2.5)   # 노드 기동 대기
 
-  rclpy.init()
-  h = Harness(load_path(plan), plan['missions'], respond, speed)
+  # ★ 2026-09-16 — 케이스마다 **독립 컨텍스트**를 만든다.
+  #   예전엔 전역 컨텍스트에 rclpy.init()/shutdown() 을 케이스마다 반복했는데,
+  #   6번째 케이스쯤에서 컨텍스트가 망가져
+  #     RCLError: failed to initialize wait set: the given context is not valid
+  #   로 죽었다. ⑥번을 **단독으로** 돌리면 42.8초를 끝까지 돌고 전부 통과한다
+  #   — 즉 ⑥의 문제가 아니라 케이스 간 전역 상태 오염이었다.
+  #   독립 컨텍스트 + 독립 executor 면 케이스끼리 아무것도 공유하지 않는다.
+  ctx = rclpy.Context()
+  rclpy.init(context=ctx)
+  h = Harness(load_path(plan), plan['missions'], respond, speed, context=ctx)
+  ex = SingleThreadedExecutor(context=ctx)
+  ex.add_node(h)
   t0 = time.time()
   try:
     while time.time() - t0 < duration:
-      rclpy.spin_once(h, timeout_sec=0.02)
+      ex.spin_once(timeout_sec=0.02)
+  except ExternalShutdownException:
+    # 컨텍스트가 밖에서 내려가면 spin 이 이걸 던진다. 이 케이스의 결과는
+    # 이미 h.log 에 모여 있으므로 조용히 빠져나와 정리만 제대로 한다.
+    pass
   finally:
-    h.destroy_node()
-    rclpy.shutdown()
+    # ★ 2026-09-16 — 정리 순서를 바꿨다. **이게 좀비의 출처였다.**
+    #   예전 순서는 destroy_node → rclpy.shutdown → kill_group 이었는데,
+    #   마지막 케이스에서 shutdown 이 'rcl_shutdown already called' 로 터지면
+    #   **그 뒤의 kill_group 이 통째로 건너뛰어진다.** 그러면 시퀀서 노드가
+    #   살아남아 다음 실행을 오염시킨다 — 같은 토픽에 두 벌이 서로 다른 값을
+    #   쏘고, /lidar/arm 이 10Hz 로 ARM↔DISARM 깜빡인다.
+    #   그 증상을 보고 '시퀀서 로직이 깨졌다' 고 오판했다(실제로는 멀쩡했다).
+    #   → 자식 프로세스를 **먼저** 죽이고, rclpy 정리는 전부 예외를 삼킨다.
     kill_group(proc)
+    try:
+      ex.shutdown()
+    except Exception:  # noqa: BLE001
+      pass
+    try:
+      h.destroy_node()
+    except Exception:  # noqa: BLE001
+      pass
+    try:
+      if ctx.ok():
+        rclpy.shutdown(context=ctx)
+    except Exception:  # noqa: BLE001
+      pass
     try:
       out = proc.communicate(timeout=5)[0]
     except subprocess.TimeoutExpired:
