@@ -244,10 +244,22 @@ class SerialBridgeNode(Node):
         self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
         self._meas_v = None            # 측정 속도 (없으면 None → 시간상한만)
         self._meas_v_t = 0.0
+        self._meas_src = None          # 'odom' | 'enc' — odom 이 우선
+        self._enc_v_buf = []
         if self.ff_brake_pwm > 0.0 or self.gov_pwm > 0.0:
             from nav_msgs.msg import Odometry  # noqa: PLC0415
             self.create_subscription(Odometry, '/odometry/filtered',
                                      self._odom_cb, 10)
+            # ★ 2026-09-17 — **엔코더 속도도 받는다.**
+            #   /odometry/filtered 는 GPS+IMU 스택이 떠 있어야 나온다. teleop
+            #   만 띄운 경사 시험에서는 아예 안 와서, 거버너가 측정속도를 못
+            #   받아 **한 번도 개입하지 않았다**(실차에서 확인).
+            #   엔코더는 이 노드가 직접 파싱하므로 항상 있다 — 그쪽을 쓴다.
+            #   ⚠ 단 펌웨어 속도는 10ms 창 미분이라 양자화(0.0575 m/s)가
+            #     그대로 실린다. 5샘플(=0.25s) 이동평균으로 눌러서 쓴다.
+            self._enc_v_buf = []
+            self.create_subscription(Float64, '/current_speed',
+                                     self._enc_speed_cb, 10)
             if self.gov_pwm > 0.0:
                 self.get_logger().warn(
                     f'★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 '
@@ -422,15 +434,38 @@ class SerialBridgeNode(Node):
         self.last_cmd_time = self.openloop_time
 
     # ------------------------------------------------------------------
+    def _enc_speed_cb(self, msg):
+        """엔코더 속도 — 이동평균으로 양자화 잡음을 누른다.
+
+        /odometry/filtered 가 없을 때(teleop 만 띄운 경우) 이것이 유일한
+        측정속도다. odom 이 있으면 그쪽이 더 매끄러우므로 우선한다.
+        """
+        self._enc_v_buf.append(float(msg.data))
+        if len(self._enc_v_buf) > 5:
+            self._enc_v_buf.pop(0)
+        v = sum(self._enc_v_buf) / len(self._enc_v_buf)
+        now = self.get_clock().now().nanoseconds * 1e-9
+        # odom 이 신선하면 건드리지 않는다 (그쪽이 우선)
+        if self._meas_v is not None and (now - self._meas_v_t) < 0.3:
+            if self._meas_src == 'odom':
+                return
+        self._meas_v = v
+        self._meas_v_t = now
+        self._meas_src = 'enc'
+
+    # ------------------------------------------------------------------
     def _odom_cb(self, msg):
         """측정 속도 — 제동을 **언제 멈출지** 판단하는 유일한 근거다.
 
         ⚠ 이 토픽은 IMU 가 끊기면 같이 멈춘다(9/15 에 32번 났다). 그때는
           self._meas_v 가 낡은 값으로 남으므로 **시간 상한만 믿는다**.
           아래 _brake_pwm() 에서 수신 시각을 같이 본다.
+          ★ 2026-09-17 — 그때를 위해 **엔코더 폴백**을 붙였다(_enc_speed_cb).
+            odom 이 살아 있으면 이쪽이 우선이다 — EKF 가 훨씬 매끄럽다.
         """
         self._meas_v = float(msg.twist.twist.linear.x)
         self._meas_v_t = self.get_clock().now().nanoseconds * 1e-9
+        self._meas_src = 'odom'
 
     # 제동시간 기준속도에 쓰는 측정속도의 조건.
     #   신선도 0.5s — 해제조건 ② 와 같은 값. IMU 가 끊기면 낡은 값이 남는다.

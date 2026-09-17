@@ -339,13 +339,14 @@ def record(a):
     def __init__(self):
       super().__init__('ramp_test')
       self.v = self.cmd_v = 0.0
+      self.v_buf = []          # 중단 판정용 이동평균 (양자화 잡음 억제)
+      self.v_smooth = 0.0
       self.enc = None   # 첫 메시지 전에는 None
       self.vcc = 0
       self.pwm = 0
       self.steer = 0.0
       self.stall = False
-      self.create_subscription(Float64, '/current_speed',
-                               lambda m: setattr(self, 'v', m.data), 10)
+      self.create_subscription(Float64, '/current_speed', self._spd, 10)
       self.create_subscription(Int32, '/encoder_count',
                                lambda m: setattr(self, 'enc', m.data), 10)
       self.create_subscription(Int32, '/drive_pwm',
@@ -358,6 +359,17 @@ def record(a):
                                lambda m: setattr(self, 'stall', m.data), 10)
       self.create_subscription(Twist, '/cmd_vel',
                                lambda m: setattr(self, 'cmd_v', m.linear.x), 10)
+
+    def _spd(self, m):
+      # ★ 2026-09-17 — 중단 판정에 **원시 속도를 쓰면 안 된다.** 펌웨어가
+      #   10ms 창으로 미분해 양자화(0.0575 m/s)가 그대로 실린다. 실차에서
+      #   엔코더 기준 최대가 0.87 m/s 인 런이 잡음 한 점(2.47)으로 과속
+      #   중단됐다. 5샘플(0.25s) 이동평균으로 누른다.
+      self.v = m.data
+      self.v_buf.append(float(m.data))
+      if len(self.v_buf) > 5:
+        self.v_buf.pop(0)
+      self.v_smooth = sum(self.v_buf) / len(self.v_buf)
 
   # ★ 2026-09-17 — Ctrl-C 를 **직접** 잡는다.
   #   rclpy 기본 핸들러는 컨텍스트를 먼저 무효화해서, finally 의 정지 명령이
@@ -448,8 +460,9 @@ def record(a):
         if dist >= a.drive:
           stop_reason = f'목표 거리 도달 ({dist:.1f}m)'
           break
-        if abs(n.v) > a.abort_speed:
-          stop_reason = f'❌ 과속 중단 — {abs(n.v):.2f} > {a.abort_speed:.1f} m/s'
+        if abs(n.v_smooth) > a.abort_speed:
+          stop_reason = (f'❌ 과속 중단 — {abs(n.v_smooth):.2f} > '
+                         f'{a.abort_speed:.1f} m/s')
           break
         if 500 < n.vcc < 3200:
           stop_reason = f'❌ 전압 중단 — {n.vcc}mV'
@@ -460,7 +473,7 @@ def record(a):
         # ★ 전진 명령인데 **뒤로 가면** 세운다. 경사를 못 버티고 미끄러지는
         #   상황이다. 예전엔 '안 움직인다' 만 봐서 이걸 못 잡았고, 실차에서
         #   명령 1.20 · PWM 90 이 걸린 채 **6.7m 를 미끄러져 내려갔다**.
-        if a.speed > 0 and n.v < -0.15:
+        if a.speed > 0 and n.v_smooth < -0.15:
           slip_since = slip_since if slip_since is not None else t
           if t - slip_since > 1.0:
             stop_reason = (f'❌ 뒤로 미끄러짐 {abs(n.v):.2f} m/s — '

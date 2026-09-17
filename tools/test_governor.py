@@ -105,6 +105,70 @@ def main():
   print('\n■ 상한을 낮추면 그만큼만 낸다 (전류 제한)')
   run('gov_pwm=50 이면 50 을 안 넘는다', 1.0, 3.0, -50.0, f, gov_pwm=50.0)
 
+  print('\n■ 측정속도 공급원 — odom 우선, 없으면 엔코더 (2026-09-17)')
+  # 실차에서 teleop 만 띄웠더니 /odometry/filtered 가 없어 거버너가 **한 번도
+  # 개입하지 않았다**. 엔코더는 이 노드가 직접 파싱하므로 항상 있다.
+  # 트랙에서는 odom 이 나오지만, IMU 가 끊기면(9/15 에 32번) odom 도 멈춘다 —
+  # 거버너가 정확히 필요한 순간에 눈이 머는 것을 막는다.
+  ENC_CB = SerialBridgeNode._enc_speed_cb
+  ODOM_CB = SerialBridgeNode._odom_cb
+
+  class _Msg:
+    def __init__(self, v): self.data = v
+
+  class _Odom:
+    def __init__(self, v):
+      self.twist = type('', (), {'twist': type('', (), {
+          'linear': type('', (), {'x': v})()})()})()
+
+  class _Clock:
+    def __init__(self, t): self.t = t
+    def now(self): return type('', (), {'nanoseconds': self.t * 1e9})()
+
+  class S2(Stub):
+    def __init__(self, **kw):
+      super().__init__(**kw)
+      self._meas_src = None
+      self._enc_v_buf = []
+      self._clk = _Clock(100.0)
+    def get_clock(self): return self._clk
+
+  st = S2()
+  for _ in range(5):
+    ENC_CB(st, _Msg(1.0))
+  ok = st._meas_src == 'enc' and abs(st._meas_v - 1.0) < 1e-6
+  print(f'  {"OK " if ok else "✗  "} odom 이 없으면 엔코더를 쓴다 '
+        f'(src={st._meas_src} v={st._meas_v:.2f})')
+  if not ok:
+    f.append('엔코더 폴백')
+
+  ODOM_CB(st, _Odom(2.0))
+  before = (st._meas_src, st._meas_v)
+  ENC_CB(st, _Msg(9.0))                    # 엔코더가 이상한 값을 줘도
+  ok = st._meas_src == 'odom' and abs(st._meas_v - 2.0) < 1e-6
+  print(f'  {"OK " if ok else "✗  "} odom 이 신선하면 엔코더가 못 덮어쓴다 '
+        f'(src={st._meas_src} v={st._meas_v:.2f})')
+  if not ok:
+    f.append('odom 우선')
+
+  st._clk.t = 101.0                        # odom 이 1초 낡았다
+  ENC_CB(st, _Msg(1.5))
+  ok = st._meas_src == 'enc'
+  print(f'  {"OK " if ok else "✗  "} odom 이 낡으면(0.3s 초과) 엔코더로 넘어간다 '
+        f'(src={st._meas_src})')
+  if not ok:
+    f.append('odom 만료')
+
+  # 이동평균이 양자화 잡음을 누르는가 (1카운트 = 0.0575 m/s)
+  st2 = S2()
+  for v in (0.0, 0.115, 0.0, 0.115, 0.0):
+    ENC_CB(st2, _Msg(v))
+  ok = 0.02 < st2._meas_v < 0.08
+  print(f'  {"OK " if ok else "✗  "} 이동평균이 잡음을 누른다 '
+        f'(0/0.115 반복 → {st2._meas_v:.3f})')
+  if not ok:
+    f.append('이동평균')
+
   print()
   if f:
     print(f'❌ 실패 {len(f)}건: {", ".join(f)}')
