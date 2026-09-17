@@ -71,6 +71,14 @@ def generate_launch_description():
       # 선행시간 — 지금 가속도로 이만큼 뒤를 내다보고 판정한다.
       # 실측 재생(2026-09-17 내리막): 같은 목표에서 개입이 1.0초 앞당겨진다.
       DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
+      # ── IMU 경사 보상 ──
+      # 0.0 = 꺼짐. 켜기 전에 반드시 현장에서 부호·영점을 확정할 것:
+      #   평지에서  python3 tools/imu_grade.py --level
+      #   경사에서  python3 tools/imu_grade.py --measure --expect 19.3
+      # 부호가 반대인 채로 켜면 내리막에서 가속한다.
+      DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
+      DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
+      DeclareLaunchArgument('imu_topic', default_value='handsfree/imu'),
       DeclareLaunchArgument('max_speed', default_value='0.6',
                             description='먹스 속도 상한. 오르막 시험은 올려야 할 수 있다'),
 
@@ -116,6 +124,12 @@ def generate_launch_description():
                   LaunchConfiguration('gov_gain'), value_type=float),
               'gov_lead_s': ParameterValue(
                   LaunchConfiguration('gov_lead_s'), value_type=float),
+              'grade_ff_gain': ParameterValue(
+                  LaunchConfiguration('grade_ff_gain'), value_type=float),
+              'grade_ff_max': ParameterValue(
+                  LaunchConfiguration('grade_ff_max'), value_type=float),
+              'imu_topic': ParameterValue(
+                  LaunchConfiguration('imu_topic'), value_type=str),
           }],
       ),
   ])

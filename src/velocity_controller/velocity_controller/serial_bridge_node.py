@@ -27,6 +27,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, Float64, Int32, String
+from sensor_msgs.msg import Imu
 
 import serial
 from serial.tools import list_ports
@@ -224,6 +225,20 @@ class SerialBridgeNode(Node):
         # 선행시간 — 지금 가속도로 이만큼 뒤의 속도를 내다보고 판정한다.
         # 내리막에서 중력이 붙는 속도를 '넘고 나서' 가 아니라 '넘기 전에' 잡는다.
         self.declare_parameter('gov_lead_s', 0.30)    # [s] 0 = 순수 P
+
+        # ── 경사 보상 (IMU 피치) ───────────────────────────────────────
+        # 개루프 FF 는 평지에서 식별한 식이라 경사를 모른다. 12.5% 오르막은
+        # PWM 60 만큼의 가속도를 잡아먹는데(g·sinθ/k), 명령속도를 그대로
+        # 주면 그만큼 느려지거나 아예 못 올라간다. 내리막은 반대로 붙는다.
+        #
+        # IMU 피치로 경사를 알면 그 항을 **직접 상쇄**할 수 있다.
+        # 웨이포인트가 필요 없다 — 지도에 없는 경사도 잡는다.
+        #
+        # ⚠ 기본 0.0 = 꺼짐. 부호가 뒤집혀 있으면 내리막에서 가속한다.
+        #   tools/imu_grade.py 로 현장에서 부호·영점을 확정한 **뒤에** 켤 것.
+        self.declare_parameter('grade_ff_gain', 0.0)   # 0=꺼짐, 1.0=완전보상
+        self.declare_parameter('grade_ff_max', 70.0)   # 보상 PWM 상한
+        self.declare_parameter('imu_topic', 'handsfree/imu')
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -246,6 +261,8 @@ class SerialBridgeNode(Node):
         self.gov_deadband = float(self.get_parameter('gov_deadband').value)
         self.gov_gain = float(self.get_parameter('gov_gain').value)
         self.gov_lead_s = float(self.get_parameter('gov_lead_s').value)
+        self.grade_ff_gain = float(self.get_parameter('grade_ff_gain').value)
+        self.grade_ff_max = float(self.get_parameter('grade_ff_max').value)
         self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
         self._brake_sign = 0           # 직전 진행 방향 (+1 전진 / -1 후진)
         self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
@@ -259,6 +276,10 @@ class SerialBridgeNode(Node):
         self._enc_rej = 0              # 연속 점프 기각 횟수
         self._meas_a = 0.0             # 측정 가속도 [m/s^2] (전진 +)
         self._meas_a_t = 0.0
+        # 경사 보상 상태
+        self._pitch = None             # 저역통과한 보정 피치 [rad] (코 위 = +)
+        self._pitch_t = 0.0
+        self._pitch_off, self._pitch_sign = self._load_pitch_cfg()
         if self.ff_brake_pwm > 0.0 or self.gov_pwm > 0.0:
             from nav_msgs.msg import Odometry  # noqa: PLC0415
             self.create_subscription(Odometry, '/odometry/filtered',
@@ -273,6 +294,24 @@ class SerialBridgeNode(Node):
             self._enc_v_buf = []
             self.create_subscription(Float64, '/current_speed',
                                      self._enc_speed_cb, 10)
+
+        # 경사 보상 — grade_ff_gain>0 일 때만 구독한다. 꺼져 있으면 IMU 가
+        # 없어도 아무 영향이 없어야 한다.
+        if self.grade_ff_gain > 0.0:
+            imu_topic = str(self.get_parameter('imu_topic').value)
+            self.create_subscription(Imu, imu_topic, self._imu_cb, 20)
+            self.get_logger().warn(
+                f'★ 경사 보상 켜짐 — {imu_topic} 피치로 PWM 을 보정한다 '
+                f'(이득 {self.grade_ff_gain:.2f}, 상한 {self.grade_ff_max:.0f}). '
+                f'영점 {math.degrees(self._pitch_off):+.2f}° · '
+                f'부호 {self._pitch_sign:+.0f}. '
+                '⚠ 부호가 틀리면 내리막에서 가속한다 — '
+                'tools/imu_grade.py 로 확인했는지 볼 것.')
+            if self._pitch_off == 0.0 and self._pitch_sign == 1.0:
+                self.get_logger().warn(
+                    '⚠ IMU 영점 파일이 없다(config/imu_pitch_offset.yaml). '
+                    '마운트 기울기가 그대로 경사로 읽힌다. '
+                    '평지에서 `python3 tools/imu_grade.py --level` 먼저.')
             if self.gov_pwm > 0.0:
                 self.get_logger().warn(
                     f'★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 '
@@ -449,6 +488,107 @@ class SerialBridgeNode(Node):
         self.openloop_pwm = int(msg.data)
         self.openloop_time = self.get_clock().now()
         self.last_cmd_time = self.openloop_time
+
+    # ------------------------------------------------------------------
+    # 경사 보상 — IMU 피치로 중력 항을 직접 상쇄한다
+    #
+    # 개루프 FF(PWM = 38.8·v + 17.2)는 **평지에서** 식별한 식이다. 경사에서는
+    # 중력이 g·sinθ 만큼 더해지거나 빠지는데 FF 는 그걸 모른다. 이 차의
+    # 물성(k = 0.0202 m/s²/PWM)으로 환산하면:
+    #
+    #     법정 오르막 12.5%  →  PWM  +60 이 통째로 사라진다
+    #     법정 내리막  9%    →  PWM  -44 만큼 공짜로 붙는다
+    #     시험 경사  19.3%   →  PWM  ±94
+    #
+    # 그래서 명령속도를 그대로 주면 오르막에서는 느려지거나 못 올라가고,
+    # 내리막에서는 계속 빨라진다. 피치를 알면 그 항을 **직접 빼거나 더한다**.
+    #
+    # ★ 웨이포인트가 필요 없다. 지도에 없는 경사도, 경사 도중이라도 잡는다.
+    #   구간 기반(course_s)은 '어디서 얼마의 속도를 낼지' 를 정하고, 이쪽은
+    #   '그 속도를 내려면 PWM 이 얼마여야 하는지' 를 정한다. 역할이 다르다.
+    #
+    # ⚠ 부호가 반대면 내리막에서 가속한다. 그래서 기본이 꺼짐이고,
+    #   tools/imu_grade.py 가 현장에서 부호·영점을 확정해 아래 파일에 쓴다.
+    K_ACCEL_PER_PWM = 0.0202       # [m/s²/PWM] 실측 (vehicle-climb-limits)
+    GRADE_FRESH_S = 0.5            # IMU 가 이보다 낡으면 보상 안 함
+    GRADE_MAX_RAD = 0.35           # 35% ≈ 19.3°. 넘으면 IMU 오류로 본다
+    GRADE_TAU = 0.30               # 피치 저역통과 — 가감속 피칭을 누른다
+    PITCH_CFG = 'config/imu_pitch_offset.yaml'
+
+    def _load_pitch_cfg(self):
+        """imu_grade.py 가 쓴 영점·부호를 읽는다. 없으면 (0, +1)."""
+        import os
+        off, sign, path = 0.0, 1.0, None
+        for base in (os.getcwd(), os.path.expanduser('~/racing_ws')):
+            cand = os.path.join(base, self.PITCH_CFG)
+            if os.path.exists(cand):
+                path = cand
+                break
+        if path is None:
+            return off, sign
+        try:
+            for line in open(path):
+                line = line.split('#')[0].strip()
+                if line.startswith('pitch_offset_rad:'):
+                    off = float(line.split(':', 1)[1])
+                elif line.startswith('sign:'):
+                    sign = float(line.split(':', 1)[1])
+        except Exception as e:      # noqa: BLE001
+            self.get_logger().warn(f'IMU 영점 파일을 못 읽었다({e}) — 0 으로 간다')
+            return 0.0, 1.0
+        return off, sign
+
+    def _imu_cb(self, msg):
+        """IMU 쿼터니언 → 보정 피치. 저역통과로 가감속 피칭을 누른다."""
+        q = msg.orientation
+        sinp = 2.0 * (q.w * q.y - q.z * q.x)
+        sinp = max(-1.0, min(1.0, sinp))
+        raw = self._pitch_sign * (math.asin(sinp) - self._pitch_off)
+        now = self.get_clock().now().nanoseconds * 1e-9
+        dt = now - self._pitch_t
+        if self._pitch is None or dt <= 0.0 or dt > 1.0:
+            self._pitch = raw
+        else:
+            alpha = dt / (self.GRADE_TAU + dt)
+            self._pitch += alpha * (raw - self._pitch)
+        self._pitch_t = now
+
+    def _grade_pwm(self, now):
+        """중력 항을 상쇄하는 PWM. **전진 방향 기준 부호**(오르막이 +).
+
+        꺼져 있거나 IMU 가 낡았거나 값이 터무니없으면 0.0 — 즉 아무 일도
+        일어나지 않는다. 이 함수가 0 을 내면 경사 보상 전의 동작 그대로다.
+        """
+        if self.grade_ff_gain <= 0.0:
+            return 0.0
+        if self._pitch is None or (now - self._pitch_t) >= self.GRADE_FRESH_S:
+            return 0.0
+        if abs(self._pitch) > self.GRADE_MAX_RAD:
+            self.get_logger().warn(
+                f'IMU 피치 {math.degrees(self._pitch):+.1f}° — 한계를 넘었다. '
+                '경사 보상을 건너뛴다 (IMU 이상이나 전복을 의심할 것)',
+                throttle_duration_sec=5.0)
+            return 0.0
+        pwm = (9.81 * math.sin(self._pitch) / self.K_ACCEL_PER_PWM
+               * self.grade_ff_gain)
+        return max(-self.grade_ff_max, min(self.grade_ff_max, pwm))
+
+    def _ff_output(self, v, grade, breakaway):
+        """FF 최종 PWM(부호 포함). 순수 계산 — 하드웨어 없이 시험한다.
+
+        ★ 하한(ff_min_pwm)·정지마찰(ff_breakaway_pwm)은 **평지 성분에만**
+          건다. 경사를 포함한 값에 하한을 걸면 내리막에서 '최소한 이만큼은
+          밀어' 가 중력 상쇄를 지워 버린다 — 거버너가 ff_min_pwm 을
+          건너뛰는 것과 같은 이유다. 그래서 순서가 중요하다:
+              ① 평지 FF → ② 하한·정지마찰 → ③ 경사 더하기 → ④ 포화
+        """
+        sgn = 1.0 if v > 0 else -1.0
+        mag = self.ff_static + self.ff_gain * abs(v)
+        mag = max(mag, self.ff_min_pwm)
+        if breakaway:
+            mag = max(mag, self.ff_breakaway_pwm)
+        out = (mag + grade * sgn) * sgn
+        return max(-255.0, min(255.0, out))
 
     # ------------------------------------------------------------------
     # 엔코더 위치차분 속도·가속도 추정기
@@ -743,7 +883,14 @@ class SerialBridgeNode(Node):
                 pwm = 0 if brake is None else int(round(brake))
                 self._moving_since = None      # 섰다 — 다음 출발은 다시 breakaway
             else:
-                ff_mag = self.ff_static + self.ff_gain * abs(v)
+                # 진행 방향 부호. 아래 '크기' 는 전부 이 방향 기준이다.
+                sgn = 1.0 if v > 0 else -1.0
+                # 경사 보상은 **월드 기준**(오르막이 +)이라 진행방향으로 환산한다.
+                #   전진·오르막  → 크기가 커진다 (더 민다)
+                #   전진·내리막  → 크기가 줄고, 가파르면 음수 = 제동
+                #   후진·오르막  → 뒤로 내려가는 것이니 크기가 줄어든다
+                grade = self._grade_pwm(now_s)
+                ff_mag = self.ff_static + self.ff_gain * abs(v) + grade * sgn
                 gov = self._governor_pwm(v, ff_mag, now_s)
                 if gov is not None:
                     # ★ 거버너가 개입하면 **하한(ff_min_pwm)을 건너뛴다.**
@@ -757,8 +904,6 @@ class SerialBridgeNode(Node):
                         self.get_logger().error(f'시리얼 전송 실패: {e}',
                                                 throttle_duration_sec=2.0)
                     return
-                mag = self.ff_static + self.ff_gain * abs(v)
-                mag = max(mag, self.ff_min_pwm)   # 크리프 하한(위 주석 참고)
                 # 정지마찰 구간: 정지에서 막 출발했으면 잠깐 더 세게 민다.
                 now = self.get_clock().now().nanoseconds * 1e-9
                 if self._moving_since is None:
@@ -767,9 +912,8 @@ class SerialBridgeNode(Node):
                         f'출발 — 정지마찰 하한 {self.ff_breakaway_pwm:.0f} 을 '
                         f'{self.ff_breakaway_s * 1000:.0f}ms 인가한다',
                         throttle_duration_sec=2.0)
-                if now - self._moving_since < self.ff_breakaway_s:
-                    mag = max(mag, self.ff_breakaway_pwm)
-                pwm = int(round(math.copysign(min(mag, 255.0), v)))
+                brk = (now - self._moving_since) < self.ff_breakaway_s
+                pwm = int(round(self._ff_output(v, grade, brk)))
             # ⚠ **양쪽 분기 뒤에서** 갱신해야 한다. 정지 분기에서 안 갱신하면
             #   _last_cmd_v 가 옛 주행속도를 계속 들고 있어, 제동이 끝난 뒤에도
             #   was_fast 가 참이라 **매 주기 재진입**한다(서 있는 차가 계속
