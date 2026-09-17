@@ -93,7 +93,10 @@ class Recorder(Node):
 
   def cmd_cb(self, m):
     self.cmd_v = m.linear.x
-    self.cmd_steer = math.degrees(m.angular.z)
+    # ★ 2026-09-16 — angular.z 는 **이미 도** 단위다.
+    #   vehicle_cmd_mux_node.py:18 'angular.z = 조향각 [도] ※ rad/s 아님!'
+    #   math.degrees() 를 씌우면 57.3배로 부풀어 기록이 통째로 틀린다.
+    self.cmd_steer = float(m.angular.z)
 
   def scan_cb(self, msg):
     """스캔을 **지도 좌표로** 바꿔 저장한다.
