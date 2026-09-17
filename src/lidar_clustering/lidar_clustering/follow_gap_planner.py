@@ -16,6 +16,11 @@ class FollowGapDecision:
     best_clearance: float
     left_score: float
     right_score: float
+    # ★ 2026-09-16 — 조준 방향으로 갔을 때 실제로 앞을 막는 것까지의 거리.
+    #   front_distance 와 다르다. 아래 _aim_clearance 주석 참고.
+    #   -1.0 = 계산 안 됨(BLOCKED/CLEAR/NO_SCAN). 소비자는 front_distance 로
+    #   폴백해야 한다 — 기본값을 둔 덕에 기존 위치인자 생성이 그대로 유효하다.
+    aim_clearance: float = -1.0
 
 
 class FollowGapPlanner:
@@ -296,6 +301,31 @@ class FollowGapPlanner:
             'best_clearance': float(np.max(original_ranges[start:end + 1])),
         }
 
+    def _aim_clearance(self, angles, ranges, obstacle_indices, aim_angle):
+        """조준 방향으로 갔을 때 앞을 막는 것까지의 거리 [m].
+
+        왜 front_distance 로는 안 되나 (2026-09-16 실측):
+          front_distance = min(트랙창 ±1.2m 안 '모든' 장애물의 range)
+          → 옆으로 1.0m 비켜난 의자도 '앞이 1.0m 막혔다' 로 읽힌다.
+            longitudinal 이 그 숫자로 제동을 걸므로(obstacle_stop_dist 0.8m,
+            그 위로도 deadband 0.05 미만이면 PWM 0), **의자 사이를 지나는
+            동안 차가 선다.** 안 서는 배치 창이 ±1.00~1.20m, 폭 0.20m 뿐이었다.
+
+        여기서는 조준 방향을 축으로 놓고 차폭+여유(safety_radius) 안으로
+        들어오는 점만 '앞' 으로 센다. 옆으로 스쳐 지나가는 것은 세지 않는다.
+        정면을 실제로 막는 것은 그대로 잡힌다 — 안전 반사는 유지된다.
+        """
+        if len(obstacle_indices) == 0:
+            return self.max_range
+        rel = angles[obstacle_indices] - aim_angle
+        rng = ranges[obstacle_indices]
+        lon = rng * np.cos(rel)          # 조준축 방향 (앞이 +)
+        lat = rng * np.sin(rel)          # 조준축에서 옆으로 벗어난 양
+        inline = (lon > 0.0) & (np.abs(lat) <= self.safety_radius)
+        if not np.any(inline):
+            return self.max_range
+        return float(np.min(lon[inline]))
+
     def plan(self, msg, target_deg=None):
         """target_deg: 경로 추종이 원하는 조향 방향[도]. aim='path' 에서만 쓴다."""
         angles, ranges = self._prepare_front_scan(msg)
@@ -367,6 +397,13 @@ class FollowGapPlanner:
         else:
             direction = 'STRAIGHT'
 
+        # ★ 제동용 거리는 '조준 방향' 기준으로 따로 잰다.
+        #   front_distance(트랙창 전체 최소)를 제동에 쓰면 옆으로 비켜난
+        #   장애물에도 브레이크가 걸려 의자 사이에서 선다. _aim_clearance 주석 참고.
+        aim_clearance = self._aim_clearance(
+            angles, ranges, obstacle_indices, gap['best_angle']
+        )
+
         return FollowGapDecision(
             'AVOID',
             direction,
@@ -378,4 +415,5 @@ class FollowGapPlanner:
             float(gap['best_clearance']),
             left_score,
             right_score,
+            aim_clearance,
         )
