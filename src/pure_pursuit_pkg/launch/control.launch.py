@@ -132,6 +132,18 @@ def generate_launch_description():
       #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
       DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
 
+      # ── 경사로 구간 속도 (기본 안 씀) ──
+      # 시퀀서가 이 토픽으로 arm 을 내는 동안 기준속도가 바뀐다.
+      # 켜려면 config/mission_plan.yaml 의 ramp_up/ramp_down 을
+      # enabled:true 로 하고 s 를 실측해 넣은 뒤, 여기에 토픽·속도를 준다.
+      #   ros2 launch ... ramp_up_arm_topic:=/ramp/up_arm v_ramp_up:=1.6 \
+      #                   ramp_down_arm_topic:=/ramp/down_arm v_ramp_down:=1.11
+      DeclareLaunchArgument('ramp_up_arm_topic', default_value=''),
+      DeclareLaunchArgument('ramp_down_arm_topic', default_value=''),
+      # ⚠ 정수로 주면 INTEGER 로 들어가 노드가 즉사한다 — 반드시 소수점.
+      DeclareLaunchArgument('v_ramp_up', default_value='0.0'),
+      DeclareLaunchArgument('v_ramp_down', default_value='0.0'),
+
       # ★ 2026-09-16 — 회피 override 유지시간 / 이탈 상한 (먹스).
       #   근거와 실측은 vehicle_cmd_mux_node.py 의 avoid_hold_s 주석 참고.
       #   셋 다 기본 0 = 꺼짐. drive_0337 은 이 기능들 없이 완주했다 —
@@ -164,7 +176,21 @@ def generate_launch_description():
               'curvature_gain': curv_gain,
               'obstacle_stop_dist': ParameterValue(
                   LaunchConfiguration('obstacle_stop_dist'),
-                  value_type=float)}],
+                  value_type=float),
+              # ── 경사로 구간 속도 ──
+              # 기본은 빈 토픽 + 0.0 = **안 씀**. 시퀀서가 arm 을 내는
+              # 구간에서 기준속도만 바뀌고, 곡률·정지선·장애물 감속은
+              # 그대로 걸린다(tools/test_ramp_section.py 가 못 박는다).
+              # ⚠ 내리막은 명령만 낮춰서는 안 선다 — 중력이 이긴다.
+              #   serial_bridge 의 gov_pwm(거버너)·grade_ff 를 같이 켤 것.
+              'ramp_up_arm_topic': ParameterValue(
+                  LaunchConfiguration('ramp_up_arm_topic'), value_type=str),
+              'ramp_down_arm_topic': ParameterValue(
+                  LaunchConfiguration('ramp_down_arm_topic'), value_type=str),
+              'v_ramp_up': ParameterValue(
+                  LaunchConfiguration('v_ramp_up'), value_type=float),
+              'v_ramp_down': ParameterValue(
+                  LaunchConfiguration('v_ramp_down'), value_type=float)}],
       ),
 
       # 명령 먹스: 단일 /cmd_vel 출구 + 최종 안전 클램프

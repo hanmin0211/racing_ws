@@ -101,6 +101,54 @@ missions:
     expected_s: 12.0
     critical: false
 
+  # ── 경사로 주행 속도 (배경 기능, 규정 항목 아님) ──────────────────
+  # ★ 위 `ramp` 미션(정지·출발)과 **다른 것**이다.
+  #   ramp       = 규정 항목. 경사 중턱에 서고 3초 후 출발한다.
+  #   ramp_up/down = 그 구간을 **어느 속도로 오르내릴지**. 감점 항목 아님.
+  #
+  # ★ 왜 필요한가 (2026-09-17 실측)
+  #   개루프 FF 는 평지에서 식별한 식이라 중력을 모른다. k=0.0202 기준:
+  #       법정 오르막 12.5% → PWM 60 이 통째로 사라진다 (못 올라간다)
+  #       법정 내리막  9%   → PWM 44 가 공짜로 붙는다 (계속 빨라진다)
+  #   19.3% 시험 경사에서 4km/h 명령이 5.7km/h 로 물렸다.
+  #
+  # ★ exclusive: false — 배경이다. done 도 timeout 도 없고, 다른 미션을
+  #   막지 않는다. 특히 같은 자리의 `ramp`(정지·출발)와 **같이** 켜진다.
+  #
+  # ★ 안전 (tools/test_ramp_section.py 가 못 박는다)
+  #   기준속도만 바꾼다. 곡률·정지선·장애물 감속은 그대로 걸린다.
+  #   구간이 잘못 찍혀 R=6.4m 코너에 걸려도 곡률이 1.03 m/s 로 누른다.
+  #   시퀀서가 죽으면 1초 뒤 v_max 로 복귀한다.
+  #
+  # ⚠ 내리막은 **명령을 낮춰도 안 선다** — 중력이 이긴다.
+  #   serial_bridge 의 gov_pwm(거버너)·grade_ff(IMU 경사보상)를 같이 켤 것.
+  #   grade_ff 는 부호를 현장에서 확정한 뒤에만:
+  #       python3 tools/imu_grade.py --level      (평지)
+  #       python3 tools/imu_grade.py --measure --expect 12.5   (경사)
+  #
+  # ⚠ s 를 실측하기 전에는 enabled:false 로 둘 것. 0.0~0.0 은 빈 구간이라
+  #   켜도 arm 이 안 나가지만, 잘못 채운 값으로 켜는 것이 가장 비싼 실수다.
+  #   python3 tools/mission_s.py --waypoints <용인파일> --live --name ramp_up
+  - name: ramp_up
+    enabled: false
+    arm_topic: /ramp/up_arm
+    exclusive: false
+    trigger:
+      type: course_s
+      s_enter: 0.0          # ← 오르막 시작 (경사 진입 3m 앞)
+      s_exit:  0.0          # ← 정상부
+    critical: false
+
+  - name: ramp_down
+    enabled: false
+    arm_topic: /ramp/down_arm
+    exclusive: false
+    trigger:
+      type: course_s
+      s_enter: 0.0          # ← 정상부
+      s_exit:  0.0          # ← 내리막 끝 (평지 복귀 3m 뒤)
+    critical: false
+
   # ── 신호교차로 (규정 항목 5) ──────────────────────────────────────
   #   규정: 좌회전 포함 1회 이상 / 정지신호에 앞범퍼가 정지선 통과 5점 /
   #         교차로 내 20초 이상 정지 10점 / 30초 이내 통과 못하면 5점.

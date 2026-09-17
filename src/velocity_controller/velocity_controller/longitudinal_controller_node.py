@@ -76,6 +76,27 @@ class LongitudinalController(Node):
     self.declare_parameter('obstacle_stop_dist', 0.8)
     # ---- 안전 ----
     self.declare_parameter('curvature_timeout', 0.5)  # 경로 끊김 감지
+    # ── 경사 구간 속도 (웨이포인트 기반) ────────────────────────────
+    # 시퀀서가 course_s 로 arm 을 내면 그 구간에서 **기준속도만** 바꾼다.
+    # 곡률·정지선·장애물 감속은 그대로 아래에 걸린다(min 으로 합쳐지므로).
+    #
+    # ★ 왜 v_max 를 바꾸는 방식인가
+    #   MISSION_POLICY 처럼 고정속도를 return 하면 곡률·정지선 감속을
+    #   **통째로 건너뛴다**. 구간이 잘못 찍혀 있으면 코너에서 그 속도로
+    #   들어간다 = 이탈 = 탈락. 기준값만 바꾸면 하류 제한이 전부 살아 있어서,
+    #   구간이 엉뚱한 데 있어도 곡률 제한이 잡는다.
+    #     예) v_ramp_up=2.0 이 R=6.4m 코너에 잘못 걸려도
+    #         v = 2.0/(1+6.0·0.156) = 1.03 m/s 로 눌린다.
+    #
+    # 0.0 = 안 씀(v_max 그대로). 토픽 이름이 비어 있으면 구독도 안 한다.
+    self.declare_parameter('ramp_up_arm_topic', '')
+    self.declare_parameter('ramp_down_arm_topic', '')
+    self.declare_parameter('v_ramp_up', 0.0)      # 오르막 기준속도
+    self.declare_parameter('v_ramp_down', 0.0)    # 내리막 기준속도
+    # arm 이 이만큼 끊기면 평소 v_max 로 돌아온다. 시퀀서가 죽었는데
+    # 구간 속도가 계속 걸려 있는 상태를 막는다(시퀀서는 tick 마다 재발행한다).
+    self.declare_parameter('ramp_arm_timeout', 1.0)
+
     self.declare_parameter('rate', 20.0)
 
     g = lambda n: self.get_parameter(n).value  # noqa: E731
@@ -105,6 +126,16 @@ class LongitudinalController(Node):
     self.last_curv_time = None       # 곡률 수신 시각(경로 살아있는지 판단)
     self.goal_reached = False        # 완주 래치 (한 번 서면 다시 안 달린다)
 
+    # 경사 구간 상태
+    g = lambda n: self.get_parameter(n).value          # noqa: E731
+    self.v_ramp_up = float(g('v_ramp_up'))
+    self.v_ramp_down = float(g('v_ramp_down'))
+    self.ramp_arm_timeout = float(g('ramp_arm_timeout'))
+    self._ramp_up_on = False
+    self._ramp_up_t = 0.0
+    self._ramp_down_on = False
+    self._ramp_down_t = 0.0
+
     self.pub = self.create_publisher(Float64, '/target_speed', 10)
     self.create_subscription(Float64, '/curvature', self.curvature_cb, 10)
     self.create_subscription(Float64, '/current_speed', self.speed_cb, 10)
@@ -115,6 +146,23 @@ class LongitudinalController(Node):
     # 발행을 멈추고, 여기서는 그걸 '경로 끊김'으로만 인식한다. 완주로 선 것과
     # 센서 고장으로 선 것이 로그상 구분되지 않아 대회 중 원인 판단이 늦어진다.
     self.create_subscription(Bool, '/goal_reached', self.goal_cb, 10)
+
+    up_t = str(g('ramp_up_arm_topic')).strip()
+    dn_t = str(g('ramp_down_arm_topic')).strip()
+    if up_t and self.v_ramp_up > 0.0:
+      self.create_subscription(Bool, up_t, self._ramp_up_cb, 10)
+      self.get_logger().warn(
+          f'★ 오르막 구간 속도 켜짐: {up_t} 가 true 인 동안 '
+          f'기준속도 {self.v_max:.2f} → {self.v_ramp_up:.2f} m/s. '
+          f'곡률·정지선·장애물 감속은 그대로 걸린다.')
+    if dn_t and self.v_ramp_down > 0.0:
+      self.create_subscription(Bool, dn_t, self._ramp_down_cb, 10)
+      self.get_logger().warn(
+          f'★ 내리막 구간 속도 켜짐: {dn_t} 가 true 인 동안 '
+          f'기준속도 {self.v_max:.2f} → {self.v_ramp_down:.2f} m/s. '
+          f'⚠ 개루프에서는 명령을 낮춰도 중력이 이긴다 — '
+          f'serial_bridge 의 gov_pwm(거버너)·grade_ff 를 같이 켤 것.')
+
     self.create_timer(self.dt, self.control_loop)
 
     self.get_logger().info(
@@ -142,6 +190,30 @@ class LongitudinalController(Node):
       self.get_logger().info(
           '🏁 완주 신호 수신 — 감속 정지합니다 (고장 아님)')
 
+  def _ramp_up_cb(self, msg):
+    self._ramp_up_on = bool(msg.data)
+    self._ramp_up_t = time.time()
+
+  def _ramp_down_cb(self, msg):
+    self._ramp_down_on = bool(msg.data)
+    self._ramp_down_t = time.time()
+
+  def _base_speed(self):
+    """이 구간의 기준속도. 평소에는 v_max.
+
+    둘 다 켜져 있으면(구간이 겹치게 적혔으면) **낮은 쪽**을 쓴다.
+    계획 파일을 잘못 적었을 때 빠른 쪽으로 붙는 일이 없어야 한다.
+    """
+    now = time.time()
+    v = None
+    if (self._ramp_up_on and self.v_ramp_up > 0.0
+        and (now - self._ramp_up_t) < self.ramp_arm_timeout):
+      v = self.v_ramp_up
+    if (self._ramp_down_on and self.v_ramp_down > 0.0
+        and (now - self._ramp_down_t) < self.ramp_arm_timeout):
+      v = self.v_ramp_down if v is None else min(v, self.v_ramp_down)
+    return self.v_max if v is None else v
+
   def mission_cb(self, msg):
     new = msg.data.strip().upper()
     if new != self.mission:
@@ -158,10 +230,12 @@ class LongitudinalController(Node):
       return float(policy)
 
     # ---- 일반 주행(DRIVE): 가장 보수적인 값 채택 ----
-    v = self.v_max
+    # 기준속도는 구간에 따라 달라진다(경사로). 아래 제한들은 그대로다.
+    v_base = self._base_speed()
+    v = v_base
 
     # A. 곡률 선제 감속 (코너 전 미리 줄임)
-    v_curve = self.v_max / (1.0 + self.curv_gain * self.kappa)
+    v_curve = v_base / (1.0 + self.curv_gain * self.kappa)
     v = min(v, max(v_curve, self.v_min))
 
     # B. 정지선 비례 감속: v = √(2·a·d)
