@@ -166,6 +166,44 @@ class Harness(Node):
         self.done_pubs[name].publish(Bool(data=True))
 
 
+# ─────────────────────────────────────────────────────────────────────
+# ★ 2026-09-18 — SIGTERM 에서도 자식을 반드시 죽인다.
+#
+#   `timeout 300 python3 tools/test_*.py` 로 돌리다 상한에 걸리면 SIGTERM 이
+#   온다. 파이썬은 **SIGTERM 에서 finally 를 돌리지 않고 즉사**한다. 그래서
+#   finally 의 kill_group 이 건너뛰어지고, start_new_session=True 로 띄운
+#   `ros2 run` 자식이 **살아남는다.**
+#
+#   살아남은 시퀀서는 같은 토픽에 두 벌이 서로 다른 값을 쏴서 arm 이
+#   10Hz 로 깜빡이게 만든다. 그걸 보고 '로직이 깨졌다' 고 오판한다 —
+#   이 저장소에서 **세 번** 그랬다.
+#
+#   SIGTERM 을 KeyboardInterrupt 로 바꿔 finally 가 돌게 하고,
+#   그래도 새는 경우를 대비해 띄운 프로세스그룹을 atexit 로 한 번 더 쓸어낸다.
+import atexit as _atexit
+import signal as _sig
+
+_SPAWNED = []          # 이 실행이 띄운 자식들 (kill_group 대상)
+
+
+def _reap_all():
+  for p in _SPAWNED:
+    try:
+      os.killpg(os.getpgid(p.pid), _sig.SIGKILL)
+    except Exception:  # noqa: BLE001
+      pass
+
+
+def _on_term(_signum, _frame):
+  # finally 가 돌도록 예외로 바꾼다. 바꾸지 않으면 즉사하며 좀비를 남긴다.
+  raise KeyboardInterrupt('SIGTERM')
+
+
+_sig.signal(_sig.SIGTERM, _on_term)
+_atexit.register(_reap_all)
+# ─────────────────────────────────────────────────────────────────────
+
+
 def kill_group(proc, hard=False):
   """프로세스 그룹째 종료. 남으면 다음 케이스를 오염시킨다."""
   try:
@@ -198,6 +236,7 @@ def run_case(title, plan, respond, extra_params, duration, speed=3.0,
   proc = subprocess.Popen(cmd, env=env, start_new_session=True,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True)
+  _SPAWNED.append(proc)
   time.sleep(2.5)   # 노드 기동 대기
 
   # ★ 2026-09-16 — 케이스마다 **독립 컨텍스트**를 만든다.
