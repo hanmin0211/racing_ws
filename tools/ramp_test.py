@@ -61,9 +61,14 @@ def judge(rows, label):
   e = list(enc)
   while len(e) > 2 and abs(e[1] - e[0]) > 1000:
     e.pop(0)
-  dist = abs(e[-1] - e[0]) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R)
+  # 전진 = 카운트 **감소**(counts_per_revolution 이 음수). 부호를 살려야
+  # '뒤로 밀림' 을 '이동' 으로 세지 않는다.
+  M_PER_COUNT = (2 * math.pi * WHEEL_R) / COUNTS_PER_REV
+  fwd = -(e[-1] - e[0]) * M_PER_COUNT      # + 면 전진
+  dist = abs(fwd)
   vmax = max(abs(x) for x in v)
-  print(f'\n[{label}]  {dur:.1f}s · {len(rows)}샘플 · 이동 {dist:.1f} m')
+  arrow = '전진' if fwd >= 0 else '**뒤로**'
+  print(f'\n[{label}]  {dur:.1f}s · {len(rows)}샘플 · {arrow} {dist:.1f} m')
   print(f'   속도  평균 {sum(abs(x) for x in v) / len(v):.2f} · 최대 {vmax:.2f} m/s')
 
   # ── 속도 — 다음 커브를 돌 수 있나 ────────────────────────────────
@@ -120,6 +125,33 @@ def judge(rows, label):
       need = math.sqrt(2 * dec * dist) if dec > 0 else 0.0
       print(f'     같은 설정으로 {dist:.0f}m 를 다 오르려면 '
             f'진입속도 **{need:.2f} m/s** 이상이어야 한다')
+
+  # ── 뒤로 밀림 (롤백) ─────────────────────────────────────────────
+  #   이 차는 엔코더 홀드가 없다. 경사에서 서면 그냥 굴러 내려간다.
+  #   실제로 겪었다: 명령 0 · PWM 0 인데 19초 동안 **뒤로 5.05m** 굴렀다.
+  #   경사로 미션의 핵심 위험이고, 부호를 안 보면 '이동 5m' 로 보여 놓친다.
+  roll_m, roll_v = 0.0, 0.0
+  base = None
+  for i in range(len(rows)):
+    if abs(cv[i]) > 0.05:
+      base = None
+      continue
+    if base is None:
+      base = enc[i]
+    back = (enc[i] - base) * M_PER_COUNT     # + 면 뒤로
+    if back > roll_m:
+      roll_m = back
+    if cv[i] == 0 and v[i] < -0.05:
+      roll_v = max(roll_v, -v[i])
+  if roll_m > 0.3:
+    say('실패', '뒤로 밀림',
+        f'구동을 안 주는 동안 **{roll_m:.2f}m** 뒤로 굴렀다 '
+        f'(최대 {roll_v:.2f} m/s). 엔코더 홀드가 없어 경사에서 서면 밀린다 — '
+        f'멈추면 사람이 잡거나 굄목을 댈 것')
+  elif roll_m > 0.05:
+    say('경고', '뒤로 밀림', f'{roll_m:.2f}m 뒤로 굴렀다')
+  else:
+    say('통과', '뒤로 밀림', f'{roll_m:.2f}m (밀림 없음)')
 
   # ── PWM — '못 올라감' 의 원인을 가른다 ───────────────────────────
   #   PWM 이 높은데 안 움직이면 토크 부족(또는 잠김).
@@ -216,6 +248,7 @@ def judge(rows, label):
 
 
 def record(a):
+  import signal
   import rclpy
   from rclpy.node import Node
   from geometry_msgs.msg import Twist
@@ -244,6 +277,18 @@ def record(a):
                                lambda m: setattr(self, 'stall', m.data), 10)
       self.create_subscription(Twist, '/cmd_vel',
                                lambda m: setattr(self, 'cmd_v', m.linear.x), 10)
+
+  # ★ 2026-09-17 — Ctrl-C 를 **직접** 잡는다.
+  #   rclpy 기본 핸들러는 컨텍스트를 먼저 무효화해서, finally 의 정지 명령이
+  #   `publisher's context is invalid` 로 터진다. 실차에서 실제로 그랬다:
+  #   **정지 명령이 안 나가고 기록도 저장 안 됐다**(펌웨어 워치독 0.5초가
+  #   차를 세우긴 했지만, 우리가 세운 게 아니다).
+  stop_flag = {'hit': False}
+
+  def _sigint(_sig, _frm):
+    stop_flag['hit'] = True
+
+  signal.signal(signal.SIGINT, _sigint)
 
   rclpy.init()
   n = R()
@@ -283,15 +328,24 @@ def record(a):
           f'상한 {limit:.0f}s · 중단속도 {a.abort_speed:.1f} m/s')
 
   def send(v):
-    if drive:
+    # 어떤 이유로든 발행이 실패해도 **죽지 않는다**. 여기서 예외가 나면
+    # 정지 명령 반복이 중단되고 기록도 저장되지 않는다.
+    if not drive:
+      return
+    try:
       from geometry_msgs.msg import Twist as _T
       m = _T()
       m.linear.x = float(v)
       m.angular.z = 0.0          # 직진 (조향 중앙)
       n.drive_pub.publish(m)
+    except Exception:            # noqa: BLE001
+      pass
 
   try:
     while time.time() - t0 < limit and rclpy.ok():
+      if stop_flag['hit']:
+        stop_reason = '사용자 중단 (Ctrl-C)'
+        break
       rclpy.spin_once(n, timeout_sec=0.01)
       t = time.time() - t0
       # 발행이 ~20Hz 다. 50Hz 면 충분하고, 그 이상은 같은 값을 베껴 쓸 뿐이다.
@@ -357,11 +411,19 @@ def record(a):
           '차를 잡거나 굄목을 댈 것')
   rclpy.shutdown()
 
-  with open(out, 'w', newline='') as f:
-    w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-    w.writeheader()
-    w.writerows(rows)
-  print(f'\n저장: {out}')
+  # ★ 저장은 판정보다 **먼저**, 그리고 어떤 경우에도 한다. 실차에서 Ctrl-C
+  #   한 번에 25초짜리 런이 통째로 날아갔다.
+  if not rows:
+    print('❌ 기록된 샘플이 없다')
+    return 1
+  try:
+    with open(out, 'w', newline='') as f:
+      w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+      w.writeheader()
+      w.writerows(rows)
+    print(f'\n저장: {out}  ({len(rows)}샘플)')
+  except Exception as exc:       # noqa: BLE001
+    print(f'❌ 저장 실패: {exc}')
   r = judge(rows, a.label)
   print(f'  ■ 종료 사유: {stop_reason}')
   return r
