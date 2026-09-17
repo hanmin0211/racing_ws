@@ -36,6 +36,26 @@ SPEED_OK, SPEED_WARN = 3.0, 4.0
 VCC_OK, VCC_LOW, VCC_BOD = 4700, 4300, 3483
 COAST_DECEL = 0.37          # 평지 관성 감속 실측 0.31~0.43 의 중앙
 COUNTS_PER_REV, WHEEL_R = 290.0, 0.1327
+M_PER_COUNT = (2 * math.pi * WHEEL_R) / COUNTS_PER_REV
+
+
+def _enc_speed(t, e, win=0.25):
+  """엔코더 카운트를 win 초 중심차분해 속도[m/s] 를 낸다 (전진 +).
+
+  펌웨어의 /current_speed 보다 훨씬 조용하다 — 창이 25배 길기 때문이다.
+  대가는 0.25초의 시간 분해능인데, 경사 판정에는 충분하다.
+  """
+  n = len(t)
+  out = [0.0] * n
+  for i in range(n):
+    lo = hi = i
+    while lo > 0 and t[i] - t[lo] < win / 2:
+      lo -= 1
+    while hi < n - 1 and t[hi] - t[i] < win / 2:
+      hi += 1
+    dt = t[hi] - t[lo]
+    out[i] = (-(e[hi] - e[lo]) * M_PER_COUNT / dt) if dt > win * 0.4 else 0.0
+  return out
 
 
 def judge(rows, label):
@@ -44,7 +64,12 @@ def judge(rows, label):
     print(f'❌ 표본 {len(rows)}개뿐 — 기록이 안 됐다')
     return 1
   t = [r['t'] for r in rows]
-  v = [r['v'] for r in rows]
+  # ★ 2026-09-17 — 펌웨어 /current_speed 를 그대로 쓰면 안 된다.
+  #   10ms 창 미분이라 양자화 잡음이 그대로 실린다(엔코더 1카운트 = 0.0575 m/s).
+  #   실측: 갱신 간 변화량 중앙 0.115 = 정확히 2카운트, 0.5m/s 넘는 점프가
+  #   평지·경사 똑같이 8~9%. 그 잡음을 '바퀴 슬립' 으로 읽어 오진했다.
+  #   카운트 자체는 멀쩡하므로 **0.25초 중심차분**으로 다시 만든다.
+  v = _enc_speed(t, [r['enc'] for r in rows])
   cv = [r['cmd_v'] for r in rows]
   vcc = [r['vcc'] for r in rows if r['vcc'] > 500]
   enc = [r['enc'] for r in rows]
@@ -63,7 +88,6 @@ def judge(rows, label):
     e.pop(0)
   # 전진 = 카운트 **감소**(counts_per_revolution 이 음수). 부호를 살려야
   # '뒤로 밀림' 을 '이동' 으로 세지 않는다.
-  M_PER_COUNT = (2 * math.pi * WHEEL_R) / COUNTS_PER_REV
   fwd = -(e[-1] - e[0]) * M_PER_COUNT      # + 면 전진
   dist = abs(fwd)
   fwd_all = [-(r['enc'] - e[0]) * M_PER_COUNT for r in rows]
@@ -191,7 +215,11 @@ def judge(rows, label):
   # ── 바퀴 슬립 ────────────────────────────────────────────────────
   #   같은 PWM · 같은 경사면 속도는 매끄러워야 한다. 0 ↔ 2.3 m/s 를 오가면
   #   접지를 잃고 헛돌다(엔코더는 빠르게 읽는다) 다시 물리는 것이다.
-  #   실측(2026-09-17): PWM 122 고정 603샘플 중 545개, 속도 0.00~2.30 반복.
+  #   ⚠ 문턱을 0.55 로 잡았다가 **정상 런까지 슬립으로 찍었다**. 원인은 두 개였다:
+  #     ① 펌웨어 속도의 양자화 잡음(위 _enc_speed 주석)
+  #     ② 가속 구간과 등반 감속을 한 덩어리로 재면 슬립이 없어도 변동이 크다
+  #   엔코더 기준 실측: 평지 0.42 · 경사 0.48~0.59 — **경사가 더 조용하다**.
+  #   즉 이 코스에서 슬립 증거는 없었다. 문턱을 0.95 로 올렸다.
   #   ⚠ 슬립이면 **PWM 을 올리면 더 나빠진다** — 처방이 정반대다.
   if any(pw):
     from collections import Counter
@@ -207,13 +235,13 @@ def judge(rows, label):
                    if p == p_mode and abs(x) <= 0.05)
         print(f'   슬립   PWM {p_mode} 고정 {len(vs_mode)}샘플 · '
               f'속도 평균 {mean:.2f} · 변동계수 {cv_:.2f} · 정지 {zero}회')
-        if cv_ > 0.55:
+        if cv_ > 0.95:
           say('실패', '바퀴 슬립',
               f'PWM {p_mode} 로 일정한데 속도 변동계수가 {cv_:.2f} 다 '
               f'(0~{max(vs_mode):.2f} m/s 를 오간다). 접지를 잃고 헛도는 것 — '
               f'**PWM 을 올리면 더 나빠진다.** 바퀴가 도는데 차가 안 나가는지 '
               f'눈으로 확인할 것')
-        elif cv_ > 0.35:
+        elif cv_ > 0.75:
           say('경고', '바퀴 슬립', f'속도 변동계수 {cv_:.2f} — 슬립 의심')
         else:
           say('통과', '바퀴 슬립', f'속도 변동계수 {cv_:.2f} (매끄럽다)')
