@@ -206,6 +206,41 @@ class ClusterPlotNode(Node):
         self._stuck_since = None      # 정지 유발 상태가 시작된 시각
         self._escaping = False
 
+        # ★ 2026-09-16 — 회피 조향 슬루레이트 제한 [도/초]
+        #
+        # 왜 필요한가 — **구조적 비대칭**이다.
+        #   경로조향은 local_pure_pursuit 가 max_steer_rate_deg(기본 90°/s)로
+        #   이미 제한한다. 그런데 회피조향은 그 경로를 **통째로 우회한다**:
+        #     cluster_plot_node → /lidar/avoid_steer → 먹스 → /cmd_vel
+        #   즉 회피각에는 아무 제한이 없다. 그래서 플래너가 갭 선택을 뒤집으면
+        #   명령이 그대로 건너뛴다.
+        #
+        # 실측 (drive_0337, arm 구간 9.9초):
+        #   · 명령 조향 프레임간 변화 최대 **30.2° = 604°/s**
+        #     (p95 도 5.3°/프레임 = 105°/s. 실제 조향은 ~25°/s 가 한계다)
+        #   · 좌/우 전환 6회 중 4회가 t77.55~78.25 **0.7초 안에** 몰렸다
+        #   · 한 방향 체류 8회 중 **4회(50%)가 조향 지연 0.35s 보다 짧다**
+        #     — 액추에이터가 시작도 못 해 보고 명령이 반대로 뒤집힌다
+        #   그 0.7초 동안 명령은 +17.4 → −10.9 → +16.8 → −13.4 → −15.8 로
+        #   흔들렸고 **실제 조향각은 −2.9~+2.7 에 머물렀다.** 차가 무사했던 건
+        #   액추에이터가 못 따라가서지 설계 덕이 아니다.
+        #
+        # 이 제한은 플래너의 **판단을 바꾸지 않는다.** 명령이 액추에이터가
+        # 물리적으로 할 수 있는 것 이상을 요구하지 못하게 할 뿐이다. 플래너가
+        # 진짜로 방향을 바꾸고 그 판단을 유지하면 제한 안에서 그대로 통과한다.
+        #   ⚠ 근본 원인은 따로 있다 — _find_largest_gap 이 **무상태**라 매
+        #     프레임 갭을 처음부터 다시 고른다. 이건 그 증상을 막는 것이지
+        #     원인을 고치는 게 아니다. HANDOFF 의 '미해결' 참고.
+        # 0 = 꺼짐(기본). drive_0337 은 이 기능 없이 완주했다 — 검증된 동작을
+        # 기본값으로 바꾸지 않는다. 실차에서 재보고 켤 것.
+        self.avoid_steer_rate = float(
+            self.declare_parameter('avoid_steer_rate_deg', 0.0).value)
+        # 회피가 이만큼 끊기면 제한 상태를 버린다(새 기동으로 본다).
+        self.avoid_steer_rate_reset_s = float(
+            self.declare_parameter('avoid_steer_rate_reset_s', 1.0).value)
+        self._rl_prev = None          # 직전에 **발행한** 회피각
+        self._rl_prev_t = None
+
         # ★ 회피각을 조향각으로 어떻게 옮길 것인가 (2026-09-12)
         #   follow-gap 이 내는 best_angle_deg 는 **갭 방향(방위각)** 이지
         #   조향각이 아니다. 그런데 먹스는 이 값을 그대로 조향각으로 쓴다
@@ -288,6 +323,17 @@ class ClusterPlotNode(Node):
         self.get_logger().info(
             'Vehicle coordinate: +X forward, +Y left, -Y right.'
         )
+        # ★ 켜졌다는 것을 **눈에 보이게** 찍는다. 런치 인자를 오타 내면 조용히
+        #   무시되고 그대로 달린다 — 그러면 한 런을 통째로 버리고도 왜 안 변했는지
+        #   모른다. 꺼져 있을 때는 아무 말도 안 해 기존 로그를 어지럽히지 않는다.
+        if self.avoid_steer_rate > 0.0:
+            self.get_logger().warn(
+                f'★ 회피 조향 슬루레이트 제한 {self.avoid_steer_rate:.0f}°/s '
+                f'(끊김 {self.avoid_steer_rate_reset_s:.1f}s 넘으면 상태 리셋). '
+                '경로조향의 max_steer_rate_deg 와 같은 값이면 두 갈래가 대칭이다.')
+        else:
+            self.get_logger().info(
+                '회피 조향 슬루레이트 제한 꺼짐 (avoid_steer_rate_deg:=90.0 으로 켠다)')
 
     def _scan_watchdog(self):
         now = self.get_clock().now().nanoseconds * 1e-9
@@ -314,6 +360,30 @@ class ClusterPlotNode(Node):
         if now - self.path_steer_time > self.path_steer_timeout:
             return 0.0
         return self.path_steer_deg
+
+    def _rate_limit_steer(self, steer, now):
+        """회피 조향각에 슬루레이트 제한을 건다 (위 avoid_steer_rate 주석 참고).
+
+        NaN(회피 없음)일 때 직전값을 **버리지 않는다.** BLOCKED 한두 프레임을
+        사이에 두고 좌 → 우로 건너뛰는 것이 바로 막으려는 현상이기 때문이다.
+        대신 시간은 흐르므로 허용 변화량이 그만큼 커진다 — 오래 끊겼다가
+        돌아오면 사실상 제한이 없다(액추에이터도 그동안 움직일 수 있었다).
+        """
+        if self.avoid_steer_rate <= 0.0:
+            return steer
+        if math.isnan(steer):
+            if (self._rl_prev_t is not None
+                    and now - self._rl_prev_t > self.avoid_steer_rate_reset_s):
+                self._rl_prev = None
+                self._rl_prev_t = None
+            return steer
+        if self._rl_prev is None or self._rl_prev_t is None:
+            self._rl_prev, self._rl_prev_t = float(steer), now
+            return steer
+        step = self.avoid_steer_rate * max(now - self._rl_prev_t, 1e-3)
+        out = max(self._rl_prev - step, min(self._rl_prev + step, float(steer)))
+        self._rl_prev, self._rl_prev_t = out, now
+        return out
 
     def _bearing_to_steer(self, deg):
         """갭 방위각[도] → 조향각[도]. steer_mode 에 따라 환산하거나 그대로."""
@@ -371,7 +441,17 @@ class ClusterPlotNode(Node):
             obs = 0.0
             steer = NO_STEER
         elif mode == 'AVOID':
-            obs = float(d.front_distance)
+            # ★ 2026-09-16 — 제동 기준을 front_distance 에서 aim_clearance 로 바꿨다.
+            #   front_distance 는 트랙창(±1.2m) 안 **모든** 장애물의 최소거리라,
+            #   옆으로 1.0m 비켜난 의자도 '앞이 1.0m' 로 읽혔다. longitudinal 이
+            #   그 숫자로 제동을 걸어(stop 0.8m, 그 위로도 deadband 0.05 미만이면
+            #   PWM 0) **의자 사이를 지나는 동안 차가 섰다.** 안 서는 배치 창이
+            #   ±1.00~1.20m, 폭 0.20m 뿐이었다 — 아무리 놔도 안 되는 게 당연했다.
+            #   aim_clearance 는 조준 방향 축에서 차폭+여유 안으로 들어오는 것만
+            #   센다. 정면을 실제로 막는 것은 그대로 잡히므로 안전 반사는 유지된다.
+            #   음수 = 계산 안 됨 → 예전 동작으로 폴백.
+            obs = (float(d.aim_clearance) if getattr(d, 'aim_clearance', -1.0) >= 0.0
+                   else float(d.front_distance))
             steer = self._bearing_to_steer(d.best_angle_deg)
         else:  # BLOCKED
             obs = float(d.front_distance)
@@ -383,9 +463,11 @@ class ClusterPlotNode(Node):
         #     AVOID 인데 전방이 정지 문턱 안 — 비켜가려는데 차가 안 나간다
         limit = {'BLOCKED': self.blocked_escape_s,
                  'NO_SCAN': self.no_scan_escape_s}.get(mode, 0.0)
+        # ★ 고착 판정도 제동에 쓴 것과 **같은 숫자**로 본다. front_distance 로
+        #   보면 제동이 안 걸렸는데도 '못 나간다' 고 ESCAPE 를 띄운다.
         if (limit <= 0.0 and mode == 'AVOID'
                 and self.blocked_escape_s > 0.0
-                and float(d.front_distance) <= self.stuck_distance):
+                and obs <= self.stuck_distance):
             limit = self.blocked_escape_s
         if limit > 0.0:
             now = self.get_clock().now().nanoseconds * 1e-9
@@ -428,6 +510,10 @@ class ClusterPlotNode(Node):
         if not self.armed:
             steer = NO_STEER
             mode = f'{mode}(조향OFF)'
+        # 슬루레이트 제한은 **arm 게이트 뒤**에 건다. 앞에 걸면 DISARM 때
+        # 램프가 남아 회피각이 서서히 사라지고, 그 사이 구간을 벗어난다.
+        steer = self._rate_limit_steer(
+            steer, self.get_clock().now().nanoseconds * 1e-9)
         self.avoid_steer_pub.publish(Float64(data=steer))
         self.mode_pub.publish(String(data=f'{mode}|{d.direction}'))
 
