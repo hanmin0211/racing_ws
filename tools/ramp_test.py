@@ -86,6 +86,41 @@ def judge(rows, label):
         f'실제/명령 = {ratio:.2f} 배 (개루프면 1 에서 멀어진다. '
         f'NO_ENCODER 0 + ff_mode:=firmware 로 닫으면 1 에 가까워져야 한다)')
 
+  # ── 거리별 속도 프로파일 — 조주(run-up) 시험의 핵심 ──────────────
+  #   경사는 정지출발이 아니라 **달려와서** 오른다(대회도 그렇다). 그러면
+  #   "어디서 얼마나 느려졌나" 가 전부다. 최대 속도만 봐서는 안 보인다.
+  d_all = []
+  for r in rows:
+    d_all.append(abs(r['enc'] - e[0]) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R))
+  if dist > 1.0:
+    nb = min(12, max(4, int(dist)))
+    print(f'\n   거리별 속도 (총 {dist:.1f}m 를 {nb}칸으로)')
+    step = dist / nb
+    prev_v = None
+    for b in range(nb):
+      lo, hi = b * step, (b + 1) * step
+      vs = [abs(vv) for dd, vv in zip(d_all, v) if lo <= dd < hi]
+      if not vs:
+        continue
+      mv = sum(vs) / len(vs)
+      bar = '█' * max(1, int(mv / max(0.1, max(abs(x) for x in v)) * 24))
+      tag = ''
+      if prev_v is not None and mv < prev_v * 0.6:
+        tag = '  ← 급감속'
+      prev_v = mv
+      print(f'   {lo:5.1f}~{hi:4.1f}m  {mv:5.2f} m/s  {bar}{tag}')
+
+    # 감속 구간에서 경사를 역산한다 (구동이 걸린 채이므로 '유효' 경사다)
+    half = len(d_all) // 2
+    if len(d_all) > 20 and abs(v[-1]) < abs(v[half]) * 0.7:
+      dv = abs(v[half]) ** 2 - abs(v[-1]) ** 2
+      dd = max(d_all[-1] - d_all[half], 1e-6)
+      dec = dv / (2 * dd)
+      print(f'   ※ 후반 감속 {dec:.2f} m/s² — 이만큼 더 밀어야 등속이 된다')
+      need = math.sqrt(2 * dec * dist) if dec > 0 else 0.0
+      print(f'     같은 설정으로 {dist:.0f}m 를 다 오르려면 '
+            f'진입속도 **{need:.2f} m/s** 이상이어야 한다')
+
   # ── PWM — '못 올라감' 의 원인을 가른다 ───────────────────────────
   #   PWM 이 높은데 안 움직이면 토크 부족(또는 잠김).
   #   PWM 이 낮은데 안 움직이면 **명령이 모자란 것** — 설정을 올리면 된다.
@@ -94,8 +129,10 @@ def judge(rows, label):
     moving = [abs(x) > 0.05 for x in v]
     run_pw = sorted(p for p, mv in zip(pw, moving) if mv)
     med = run_pw[len(run_pw) // 2] if run_pw else 0
-    stuck_pw = [p for p, c, mv in zip(pw, cv, moving)
-                if abs(c) > 0.1 and not mv]
+    # ⚠ 출발 구간(첫 2초)은 빼야 한다. 안 그러면 가속 시작 첫 샘플(v=0)이
+    #   '안 움직임' 으로 잡혀 오탐이 난다(합성 검증에서 실제로 났다).
+    stuck_pw = [p for p, c, mv, tt in zip(pw, cv, moving, t)
+                if abs(c) > 0.1 and not mv and tt > 2.0]
     print(f'   PWM   최대 {max(pw)} · 달릴 때 중앙 {med}')
     if stuck_pw:
       mx = max(stuck_pw)
@@ -262,7 +299,7 @@ def record(a):
         # 명령은 있는데 안 움직이면 2초 뒤 중단 (경사에서 못 올라가는 경우)
         if t > 2.0 and abs(n.v) < 0.05:
           stuck_since = stuck_since if stuck_since is not None else t
-          if t - stuck_since > 2.0:
+          if t - stuck_since > a.stuck_after:
             stop_reason = f'❌ 안 움직인다 ({t - stuck_since:.1f}s) — 못 올라감'
             break
         else:
@@ -320,11 +357,15 @@ def main():
                   help='--drive 목표 속도')
   ap.add_argument('--abort-speed', type=float, default=2.5, metavar='m/s',
                   help='이 속도를 넘으면 즉시 중단 (내리막 폭주 방어)')
+  ap.add_argument('--stuck-after', type=float, default=2.0, metavar='s',
+                  help='안 움직인다고 판정하기까지의 시간. 조주 시험에서는 '
+                       '경사에 올라 잠깐 멈칫할 수 있으니 늘려 잡는다')
   a = ap.parse_args()
   if a.report:
     if not os.path.exists(a.report):
       sys.exit(f'없는 파일: {a.report}')
-    rows = [{k: (int(v) if k in ('enc', 'vcc', 'stall') else float(v))
+    rows = [{k: (int(float(v)) if k in ('enc', 'vcc', 'stall', 'pwm')
+                 else float(v))
              for k, v in r.items()}
             for r in csv.DictReader(open(a.report))]
     return judge(rows, os.path.basename(a.report))
