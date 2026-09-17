@@ -142,7 +142,8 @@ def judge(rows, label):
   #   경사로 미션의 핵심 위험이고, 부호를 안 보면 '이동 5m' 로 보여 놓친다.
   peak = max(fwd_all)
   lost = peak - fwd_all[-1]          # 최고점에서 되밀린 양
-  back_cmd = sum(1 for cc, vv in zip(cv, v) if cc > 0.05 and vv < -0.05)
+  # ⚠ −0.05 로 잡으면 양자화 잡음(±0.0575)을 후진으로 센다. 2카운트 위로.
+  back_cmd = sum(1 for cc, vv in zip(cv, v) if cc > 0.05 and vv < -0.12)
   if back_cmd > len(rows) * 0.05:
     say('실패', '경사 못 버팀',
         f'**전진 명령 중에** 뒤로 간 샘플 {back_cmd}개 '
@@ -322,6 +323,7 @@ def record(a):
   e0 = n.enc
   stop_reason = '시간 종료'
   stuck_since = None
+  stuck_dist = 0.0
   slip_since = None
   limit = a.seconds
   if drive:
@@ -388,14 +390,18 @@ def record(a):
             break
         else:
           slip_since = None
-        # 명령은 있는데 안 움직이면 2초 뒤 중단 (경사에서 못 올라가는 경우)
-        if t > 2.0 and abs(n.v) < 0.05:
-          stuck_since = stuck_since if stuck_since is not None else t
-          if t - stuck_since > a.stuck_after:
-            stop_reason = f'❌ 안 움직인다 ({t - stuck_since:.1f}s) — 못 올라감'
+        # ★ 정지 판정은 **거리**로 한다. 속도로 하면 안 잡힌다 —
+        #   엔코더 1카운트 = 2.875mm 이고 20Hz 갱신이라 최소 분해속도가
+        #   **0.0575 m/s** 다. 문턱 0.05 는 그 양자화 잡음 아래라서, 실제로
+        #   선 차가 ±0.06 으로 떨리며 판정을 계속 리셋했다(실차에서 17초 동안
+        #   중단이 안 걸렸다).
+        if t > 2.0:
+          if stuck_since is None or dist > stuck_dist + 0.15:
+            stuck_since, stuck_dist = t, dist
+          elif t - stuck_since > a.stuck_after:
+            stop_reason = (f'❌ {t - stuck_since:.1f}s 동안 {dist - stuck_dist:.2f}m '
+                           f'밖에 못 갔다 — 못 올라감')
             break
-        else:
-          stuck_since = None
         # 출발 램프 — 1초에 걸쳐 올린다(덜컹 방지)
         send(a.speed * min(1.0, t / 1.0))
 
