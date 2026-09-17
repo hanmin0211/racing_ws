@@ -57,6 +57,15 @@ class LocalPurePursuit(Node):
     self.declare_parameter('cmd_topic', '/cmd_vel')
     self.declare_parameter('control_rate', 20.0)
     self.declare_parameter('path_timeout', 0.5)         # 초; 이보다 오래 경로 없으면 정지
+    # ★ 2026-09-16 — odom 속도 스파이크 방어.
+    #   /odometry/filtered 의 twist 는 EKF 가 odom 프레임을 늦게/빠뜨려 받으면
+    #   dt≈0 으로 나누며 튄다. drive_0337 실측: 1.08 → **61.90** → 0.99 m/s
+    #   (2샘플, 랩당 3회). 위치는 멀쩡했다 — twist 필드만 튄다.
+    #   여기서는 lookahead 가 ld=k_ld·v+min_ld 라 그 순간 max_lookahead 로 튀고,
+    #   0.1초 동안 조향이 둔해진다. 클램프 덕에 파국은 아니지만 외란은 외란이다.
+    #   이 값을 넘는 측정은 **버리고 직전 값을 유지한다.** 차량 최고속이
+    #   1.5m/s 대이므로 3.0 이면 정상 주행을 절대 자르지 않는다.
+    self.declare_parameter('max_plausible_speed', 3.0)
     # ---- 조향 슬루레이트 (부드러운 sweep) ----
     # 조향각이 1초에 이 각도 이상 못 바뀌게 제한. 급조향 방지 → 부드러운 추종 +
     # 조향모터 스톨/과부하 방지(안전). 실차에서 조향모터 속도에 맞춰 튜닝.
@@ -78,6 +87,9 @@ class LocalPurePursuit(Node):
     self.control_rate = rate
     self.path_timeout = float(self.get_parameter('path_timeout').value)
     self.max_steer_rate = float(self.get_parameter('max_steer_rate_deg').value)
+    self.max_plausible_speed = float(
+        self.get_parameter('max_plausible_speed').value)
+    self.speed_rejects = 0
 
     self.path_pts = []          # [(x, y), ...] 차량기준
     self.last_path_time = None
@@ -111,7 +123,17 @@ class LocalPurePursuit(Node):
     self.last_path_time = self.get_clock().now()
 
   def odom_cb(self, msg: Odometry):
-    self.speed = abs(msg.twist.twist.linear.x)
+    # 말이 안 되는 속도는 버리고 직전 값을 유지한다(위 max_plausible_speed 주석).
+    v = abs(float(msg.twist.twist.linear.x))
+    if not math.isfinite(v) or v > self.max_plausible_speed:
+      self.speed_rejects += 1
+      self.get_logger().warn(
+          f'odom 속도 {v:.1f}m/s — 비현실적이라 버린다 '
+          f'(직전 {self.speed:.2f} 유지, 누적 {self.speed_rejects}회). '
+          'EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.',
+          throttle_duration_sec=5.0)
+      return
+    self.speed = v
 
   def curv_cb(self, msg: Float64):
     self.curvature = float(msg.data)
