@@ -341,12 +341,19 @@ def record(a):
       self.v = self.cmd_v = 0.0
       self.v_buf = []          # 중단 판정용 이동평균 (양자화 잡음 억제)
       self.v_smooth = 0.0
+      self.v_src = '이동평균'
       self.enc = None   # 첫 메시지 전에는 None
       self.vcc = 0
       self.pwm = 0
       self.steer = 0.0
       self.stall = False
       self.create_subscription(Float64, '/current_speed', self._spd, 10)
+      # ★ 거버너가 **실제로 보는** 속도(엔코더 위치차분, serial_bridge 가 발행).
+      #   판정에는 안 쓴다 — 여긴 기록만 한다. 거버너가 왜 그 PWM 을 냈는지
+      #   나중에 replay_governor.py 로 따지려면 이 열이 있어야 한다.
+      self.venc = 0.0
+      self.venc_t = 0.0
+      self.create_subscription(Float64, '/current_speed_enc', self._venc, 10)
       self.create_subscription(Int32, '/encoder_count',
                                lambda m: setattr(self, 'enc', m.data), 10)
       self.create_subscription(Int32, '/drive_pwm',
@@ -370,6 +377,30 @@ def record(a):
       if len(self.v_buf) > 5:
         self.v_buf.pop(0)
       self.v_smooth = sum(self.v_buf) / len(self.v_buf)
+      self._pick_v()
+
+    def _venc(self, m):
+      # 엔코더 위치차분 (serial_bridge 발행). 0.3초 창이라 이동평균보다
+      # 훨씬 조용하다 — 같은 로그 재생에서 표본간 변동이 4.5배 작았다.
+      self.venc = float(m.data)
+      self.venc_t = time.time()
+      self._pick_v()
+
+    def _pick_v(self):
+      """중단 판정이 볼 속도를 고른다. 위치차분이 신선하면 그쪽.
+
+      ★ 2026-09-17 — 이동평균만 쓰던 시절, 엔코더 기준 최대 0.87 m/s 인
+        런이 잡음으로 2.47 을 찍어 과속 중단됐다. 이동평균은 잡음의
+        **크기**를 줄일 뿐 스파이크를 없애지 못한다. 위치차분은 애초에
+        스파이크를 만들 수 없다(위치는 안 튄다).
+        위치차분이 끊기면 예전 경로로 되돌아간다 — 판정을 잃지 않는다.
+      """
+      if self.venc_t > 0.0 and (time.time() - self.venc_t) < 0.5:
+        self.v_smooth = self.venc
+        self.v_src = '위치차분'
+      else:
+        self.v_smooth = sum(self.v_buf) / len(self.v_buf) if self.v_buf else 0.0
+        self.v_src = '이동평균'
 
   # ★ 2026-09-17 — Ctrl-C 를 **직접** 잡는다.
   #   rclpy 기본 핸들러는 컨텍스트를 먼저 무효화해서, finally 의 정지 명령이
@@ -408,7 +439,10 @@ def record(a):
   print(f'▶ {a.seconds}초 기록 · {out}')
   print('  ⚠ 내리막이면 ff_brake_pwm 이 켜져 있는지 확인할 것 '
         '(꺼져 있으면 놓아도 안 선다)')
-  print(f'  {"t":>6} {"명령":>6} {"실제":>6} {"PWM":>5} {"vcc":>6} {"이동":>6}')
+  # '실제' 는 판정이 쓰는 속도(위치차분). '펌' 은 펌웨어 VEL — 둘이 크게
+  # 벌어지면 펌웨어 속도를 믿고 만든 판단은 전부 의심해야 한다.
+  print(f'  {"t":>6} {"명령":>6} {"실제":>6} {"펌":>6} {"PWM":>5} '
+        f'{"vcc":>6} {"이동":>6}')
   last = 0.0
   e0 = n.enc
   stop_reason = '시간 종료'
@@ -451,9 +485,9 @@ def record(a):
       # ★ 기록을 **먼저** 한다. 예전엔 중단 판정이 먼저라 중단을 유발한
       #   샘플이 CSV 에 안 남았다 — '최대 2.47' 인데 2.5 로 중단돼 원인이
       #   기록에서 사라졌다(실제로 겪음).
-      rows.append({'t': t, 'v': n.v, 'cmd_v': n.cmd_v, 'enc': n.enc,
-                   'vcc': n.vcc, 'pwm': n.pwm, 'steer': n.steer,
-                   'stall': int(n.stall)})
+      rows.append({'t': t, 'v': n.v, 'venc': n.venc, 'cmd_v': n.cmd_v,
+                   'enc': n.enc, 'vcc': n.vcc, 'pwm': n.pwm,
+                   'steer': n.steer, 'stall': int(n.stall)})
 
       if drive:
         # ── 중단 조건 ──
@@ -462,7 +496,7 @@ def record(a):
           break
         if abs(n.v_smooth) > a.abort_speed:
           stop_reason = (f'❌ 과속 중단 — {abs(n.v_smooth):.2f} > '
-                         f'{a.abort_speed:.1f} m/s')
+                         f'{a.abort_speed:.1f} m/s ({n.v_src})')
           break
         if 500 < n.vcc < 3200:
           stop_reason = f'❌ 전압 중단 — {n.vcc}mV'
@@ -505,7 +539,8 @@ def record(a):
           flag = '  ⚠ 빠르다'
         if 500 < n.vcc < VCC_BOD:
           flag += '  ❌ 전압'
-        print(f'  {t:6.1f} {n.cmd_v:6.2f} {n.v:6.2f} {n.pwm:5d} '
+        print(f'  {t:6.1f} {n.cmd_v:6.2f} {n.v_smooth:6.2f} {n.v:6.2f} '
+              f'{n.pwm:5d} '
               f'{n.vcc:6.0f} {dist:6.1f}{flag}')
   except KeyboardInterrupt:
     stop_reason = '사용자 중단 (Ctrl-C)'

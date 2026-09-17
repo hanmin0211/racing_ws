@@ -68,6 +68,9 @@ def generate_launch_description():
       #   노드만 고쳤다가 시작 로그가 옛 값을 찍어서 알아챘다.
       DeclareLaunchArgument('gov_deadband', default_value='0.10'),
       DeclareLaunchArgument('gov_gain', default_value='300.0'),
+      # 선행시간 — 지금 가속도로 이만큼 뒤를 내다보고 판정한다.
+      # 실측 재생(2026-09-17 내리막): 같은 목표에서 개입이 1.0초 앞당겨진다.
+      DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
       DeclareLaunchArgument('max_speed', default_value='0.6',
                             description='먹스 속도 상한. 오르막 시험은 올려야 할 수 있다'),
 
@@ -111,6 +114,8 @@ def generate_launch_description():
                   LaunchConfiguration('gov_deadband'), value_type=float),
               'gov_gain': ParameterValue(
                   LaunchConfiguration('gov_gain'), value_type=float),
+              'gov_lead_s': ParameterValue(
+                  LaunchConfiguration('gov_lead_s'), value_type=float),
           }],
       ),
   ])
