@@ -401,6 +401,13 @@ class SerialBridgeNode(Node):
         self._meas_v = float(msg.twist.twist.linear.x)
         self._meas_v_t = self.get_clock().now().nanoseconds * 1e-9
 
+    # 제동시간 기준속도에 쓰는 측정속도의 조건.
+    #   신선도 0.5s — 해제조건 ② 와 같은 값. IMU 가 끊기면 낡은 값이 남는다.
+    #   타당성 3.0m/s — local_pure_pursuit 의 max_plausible_speed 와 같은 값.
+    #     /odometry/filtered 의 twist 는 EKF 프레임 지연으로 튄다(실측 61.9m/s).
+    BRAKE_MEAS_FRESH_S = 0.5
+    BRAKE_V_PLAUSIBLE = 3.0
+
     def _brake_pwm(self, cmd_v, now):
         """능동 제동 상태기계. 제동 중이면 인가할 PWM, 아니면 None.
 
@@ -419,12 +426,38 @@ class SerialBridgeNode(Node):
         if self._brake_until is None:
             if stop_cmd and was_fast:
                 self._brake_sign = 1 if self._last_cmd_v > 0 else -1
-                dur = min(self.ff_brake_s,
-                          abs(self._last_cmd_v) / self.ff_brake_decel)
+                # ★ 2026-09-17 — 제동시간의 기준속도를 **측정속도로 올린다**.
+                #   명령속도는 실제보다 낮다. ff_min_pwm 55 하한이 낮은 명령을
+                #   전부 덮어쓰기 때문이다(drive_0152 실측: 명령 0.70 / 실제 1.12).
+                #   명령으로 재면 dur = 0.70s 인데 실제로 필요한 건 1.12s 분이다.
+                #
+                #   ⚠ 평지에서는 이 수정이 거의 무의미하다 — 해제조건 ②(측정속도
+                #     0.15 미만)가 먼저 끊기 때문이다. drive_0152 를 위치미분으로
+                #     보면 차는 t+0.75s 에 이미 섰고 제동은 0.70s 에 끝났다.
+                #     (odom twist 로 보면 0.90s 인데 그건 **약 0.2s 지연**이다.
+                #      인계문서의 '마지막 400ms 는 관성' 은 그 지연 아티팩트다.)
+                #
+                #   그럼 왜 고치나 — **내리막** 때문이다. 내리막에서는 실제속도가
+                #   명령보다 훨씬 높고 감속도 느려서, 명령으로 잰 dur 이 차가 아직
+                #   구르는 중에 제동을 끊는다(②는 아직 안 걸린 상태). 용인에
+                #   내리막이 있다. 돌발정지가 거기서 걸리면 이게 차이를 만든다.
+                #
+                #   안전: **올리기만 하고 내리지 않는다.** 측정속도가 명령보다
+                #   낮게 잘못 나와도 제동이 짧아지지 않는다(급정지 실패 방향).
+                #   스파이크는 무시한다(odom twist 가 61.9m/s 까지 튄 실측이 있다).
+                #   그래도 최종값은 ff_brake_ms 상한과 해제조건 ②가 잡는다.
+                v_ref, src = abs(self._last_cmd_v), '명령'
+                if (self._meas_v is not None
+                        and (now - self._meas_v_t) < self.BRAKE_MEAS_FRESH_S):
+                    mv = abs(self._meas_v)
+                    if self.BRAKE_V_PLAUSIBLE >= mv > v_ref:
+                        v_ref, src = mv, '측정'
+                dur = min(self.ff_brake_s, v_ref / self.ff_brake_decel)
                 self._brake_until = now + dur
                 self.get_logger().info(
                     f'제동 — 역 PWM {self.ff_brake_pwm:.0f} 을 '
-                    f'{dur * 1000:.0f}ms (직전 {self._last_cmd_v:+.2f}m/s, '
+                    f'{dur * 1000:.0f}ms ({src}속도 {v_ref:.2f}m/s, '
+                    f'직전명령 {self._last_cmd_v:+.2f}m/s, '
                     f'상한 {self.ff_brake_s * 1000:.0f}ms)')
             else:
                 return None
