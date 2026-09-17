@@ -105,7 +105,9 @@ def judge(rows, label):
   v_up = v[:i_peak + 1]
   span = max(d_all) if d_all else 0.0
   if span > 1.0:
-    nb = min(12, max(4, int(span)))
+    # 긴 런은 칸을 더 잘게. 100m 를 12칸으로 나누면 8m 씩이라 경사 진입점이
+    # 뭉개진다. 대략 2~5m 한 칸이 되게 잡는다.
+    nb = min(24, max(4, int(span / 2) if span > 24 else int(span)))
     tail = '' if i_peak >= len(rows) - 5 else '  ※ 최고점까지만 (그 뒤는 되밀림)'
     print(f'\n   거리별 속도 (전진 {span:.1f}m 를 {nb}칸으로){tail}')
     step = span / nb
