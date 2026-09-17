@@ -40,8 +40,13 @@ def generate_launch_description():
       #   내리막 시험은 반드시 ff_mode:=ros + ff_brake_pwm:=50 으로 할 것.
       #   놓는 순간 역 PWM 이 걸려 감속이 0.37 → 0.98 m/s² 가 된다
       #   (4m/s 에서 정지거리 21.6m → 8.2m).
-      DeclareLaunchArgument('ff_mode', default_value='ros',
-                            description="'ros'=능동제동 가능 · 'firmware'=제동 없음"),
+      # ★ 2026-09-17 — 기본값을 **firmware** 로. 엔코더를 살려 펌웨어 속도
+      #   PID(NO_ENCODER 0)를 쓰면 VEL: 을 보내야 한다. 'ros' 는 PWM: 을 보내
+      #   PID 를 우회하므로 경사에서 다시 개루프가 된다.
+      #   ⚠ 'firmware' 에서는 ff_brake_pwm(ROS 쪽 능동 제동)이 동작하지 않는다.
+      #     대신 PID 가 과속에 역 PWM 을 낸다 — 그쪽이 옳다.
+      DeclareLaunchArgument('ff_mode', default_value='firmware',
+                            description="'firmware'=속도 PID(권장) · 'ros'=개루프 PWM"),
       DeclareLaunchArgument('ff_brake_pwm', default_value='0.0',
                             description='능동 제동 역 PWM. 내리막 시험은 50 권장'),
       DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
