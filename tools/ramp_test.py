@@ -159,16 +159,27 @@ def judge(rows, label):
 
   # ── 엔코더 연속성 — 이게 끊기면 PID 를 못 켠다 ────────────────────
   # 움직이는 중(명령이 있는데)에 카운트가 멈추면 끊긴 것이다.
-  stuck = 0
-  for i in range(1, len(rows)):
-    if abs(cv[i]) > 0.1 and enc[i] == enc[i - 1] and abs(v[i - 1]) > 0.2:
-      stuck += 1
-  if stuck > len(rows) * 0.05:
+  # ★ 2026-09-17 수정 — 예전엔 **연속 샘플**끼리 비교했다. 기록기는 120Hz 로
+  #   도는데 엔코더는 18~20Hz 로 갱신되므로, 같은 값이 연속으로 찍히는 게
+  #   정상이다. 그걸 끊김으로 세서 **정상 런에 '72% 멈춤' 실패**를 냈다.
+  #   (이 저장소에서 같은 실수를 두 번째로 했다 — drive_review 의 변화율 분모와
+  #    같은 함정이다. 비교는 샘플이 아니라 **시간**으로 할 것.)
+  #   진짜 끊김은 '움직이는 중인데 갱신 주기의 몇 배 동안 값이 그대로' 다.
+  UPD_S = 0.25          # 20Hz 기준 5주기. 이보다 오래 멈추면 진짜다
+  worst, held_t, held_v = 0.0, None, None
+  for i in range(len(rows)):
+    if held_v is None or enc[i] != held_v:
+      held_v, held_t = enc[i], t[i]
+      continue
+    if abs(cv[i]) > 0.1 and abs(v[i]) > 0.2:
+      worst = max(worst, t[i] - held_t)
+  if worst > UPD_S:
     say('실패', '엔코더 연속성',
-        f'달리는 중 카운트가 멈춘 샘플 {stuck}개 ({100 * stuck / len(rows):.0f}%) '
+        f'달리는 중 카운트가 {worst:.2f}s 동안 멈췄다 (한계 {UPD_S}s) '
         f'— 이 상태로 NO_ENCODER 0 을 켜면 PID 가 오동작한다')
   else:
-    say('통과', '엔코더 연속성', f'멈춘 샘플 {stuck}개')
+    say('통과', '엔코더 연속성',
+        f'최장 정지 {worst:.3f}s (갱신주기 ~0.05s · 한계 {UPD_S}s)')
 
   # ── 링크 ─────────────────────────────────────────────────────────
   gaps = [t[i] - t[i - 1] for i in range(1, len(t)) if t[i] - t[i - 1] > 0.5]
@@ -278,12 +289,22 @@ def record(a):
 
   try:
     while time.time() - t0 < limit and rclpy.ok():
-      rclpy.spin_once(n, timeout_sec=0.05)
+      rclpy.spin_once(n, timeout_sec=0.01)
       t = time.time() - t0
+      # 발행이 ~20Hz 다. 50Hz 면 충분하고, 그 이상은 같은 값을 베껴 쓸 뿐이다.
+      if rows and t - rows[-1]['t'] < 0.02:
+        continue
       dist = abs(n.enc - e0) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R)
 
+      # ★ 기록을 **먼저** 한다. 예전엔 중단 판정이 먼저라 중단을 유발한
+      #   샘플이 CSV 에 안 남았다 — '최대 2.47' 인데 2.5 로 중단돼 원인이
+      #   기록에서 사라졌다(실제로 겪음).
+      rows.append({'t': t, 'v': n.v, 'cmd_v': n.cmd_v, 'enc': n.enc,
+                   'vcc': n.vcc, 'pwm': n.pwm, 'steer': n.steer,
+                   'stall': int(n.stall)})
+
       if drive:
-        # ── 중단 조건 (먼저 판정하고 그 다음에 명령을 낸다) ──
+        # ── 중단 조건 ──
         if dist >= a.drive:
           stop_reason = f'목표 거리 도달 ({dist:.1f}m)'
           break
@@ -307,9 +328,6 @@ def record(a):
         # 출발 램프 — 1초에 걸쳐 올린다(덜컹 방지)
         send(a.speed * min(1.0, t / 1.0))
 
-      rows.append({'t': t, 'v': n.v, 'cmd_v': n.cmd_v, 'enc': n.enc,
-                   'vcc': n.vcc, 'pwm': n.pwm, 'steer': n.steer,
-                   'stall': int(n.stall)})
       if t - last >= 0.5:
         last = t
         flag = ''
@@ -341,7 +359,9 @@ def record(a):
     w.writeheader()
     w.writerows(rows)
   print(f'\n저장: {out}')
-  return judge(rows, a.label)
+  r = judge(rows, a.label)
+  print(f'  ■ 종료 사유: {stop_reason}')
+  return r
 
 
 def main():
