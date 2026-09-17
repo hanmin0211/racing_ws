@@ -66,6 +66,7 @@ def judge(rows, label):
   M_PER_COUNT = (2 * math.pi * WHEEL_R) / COUNTS_PER_REV
   fwd = -(e[-1] - e[0]) * M_PER_COUNT      # + 면 전진
   dist = abs(fwd)
+  fwd_all = [-(r['enc'] - e[0]) * M_PER_COUNT for r in rows]
   vmax = max(abs(x) for x in v)
   arrow = '전진' if fwd >= 0 else '**뒤로**'
   print(f'\n[{label}]  {dur:.1f}s · {len(rows)}샘플 · {arrow} {dist:.1f} m')
@@ -94,64 +95,65 @@ def judge(rows, label):
   # ── 거리별 속도 프로파일 — 조주(run-up) 시험의 핵심 ──────────────
   #   경사는 정지출발이 아니라 **달려와서** 오른다(대회도 그렇다). 그러면
   #   "어디서 얼마나 느려졌나" 가 전부다. 최대 속도만 봐서는 안 보인다.
-  d_all = []
-  for r in rows:
-    d_all.append(abs(r['enc'] - e[0]) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R))
-  if dist > 1.0:
-    nb = min(12, max(4, int(dist)))
-    print(f'\n   거리별 속도 (총 {dist:.1f}m 를 {nb}칸으로)')
-    step = dist / nb
+  # ⚠ 부호 있는 전진거리로 나눠야 한다. abs() 로 하면 올라갔다 되밀린 런에서
+  #   칸이 뒤엉킨다(실차에서 3.76m 올라갔다 −2.94m 까지 내려온 런이 있었다).
+  # ⚠ **최고점까지만** 본다. 되밀린 런은 같은 지점을 두 번 지나므로
+  #   그대로 평균하면 올라갈 때와 내려올 때가 상쇄돼 전부 0 근처가 된다
+  #   (실차 런에서 실제로 그랬다).
+  i_peak = fwd_all.index(max(fwd_all))
+  d_all = fwd_all[:i_peak + 1]
+  v_up = v[:i_peak + 1]
+  span = max(d_all) if d_all else 0.0
+  if span > 1.0:
+    nb = min(12, max(4, int(span)))
+    tail = '' if i_peak >= len(rows) - 5 else '  ※ 최고점까지만 (그 뒤는 되밀림)'
+    print(f'\n   거리별 속도 (전진 {span:.1f}m 를 {nb}칸으로){tail}')
+    step = span / nb
     prev_v = None
     for b in range(nb):
       lo, hi = b * step, (b + 1) * step
-      vs = [abs(vv) for dd, vv in zip(d_all, v) if lo <= dd < hi]
+      vs = [vv for dd, vv in zip(d_all, v_up) if lo <= dd < hi]
       if not vs:
         continue
       mv = sum(vs) / len(vs)
-      bar = '█' * max(1, int(mv / max(0.1, max(abs(x) for x in v)) * 24))
+      bar = '█' * max(1, int(abs(mv) / max(0.1, max(abs(x) for x in v)) * 24))
       tag = ''
-      if prev_v is not None and mv < prev_v * 0.6:
+      if mv < -0.05:
+        tag = '  ← **뒤로**'
+      elif prev_v is not None and mv < prev_v * 0.6:
         tag = '  ← 급감속'
       prev_v = mv
       print(f'   {lo:5.1f}~{hi:4.1f}m  {mv:5.2f} m/s  {bar}{tag}')
 
     # 감속 구간에서 경사를 역산한다 (구동이 걸린 채이므로 '유효' 경사다)
     half = len(d_all) // 2
-    if len(d_all) > 20 and abs(v[-1]) < abs(v[half]) * 0.7:
-      dv = abs(v[half]) ** 2 - abs(v[-1]) ** 2
+    if len(d_all) > 20 and abs(v_up[-1]) < abs(v_up[half]) * 0.7:
+      dv = abs(v_up[half]) ** 2 - abs(v_up[-1]) ** 2
       dd = max(d_all[-1] - d_all[half], 1e-6)
       dec = dv / (2 * dd)
       print(f'   ※ 후반 감속 {dec:.2f} m/s² — 이만큼 더 밀어야 등속이 된다')
-      need = math.sqrt(2 * dec * dist) if dec > 0 else 0.0
-      print(f'     같은 설정으로 {dist:.0f}m 를 다 오르려면 '
+      need = math.sqrt(2 * dec * span) if dec > 0 else 0.0
+      print(f'     같은 설정으로 {span:.0f}m 를 다 오르려면 '
             f'진입속도 **{need:.2f} m/s** 이상이어야 한다')
 
   # ── 뒤로 밀림 (롤백) ─────────────────────────────────────────────
   #   이 차는 엔코더 홀드가 없다. 경사에서 서면 그냥 굴러 내려간다.
   #   실제로 겪었다: 명령 0 · PWM 0 인데 19초 동안 **뒤로 5.05m** 굴렀다.
   #   경사로 미션의 핵심 위험이고, 부호를 안 보면 '이동 5m' 로 보여 놓친다.
-  roll_m, roll_v = 0.0, 0.0
-  base = None
-  for i in range(len(rows)):
-    if abs(cv[i]) > 0.05:
-      base = None
-      continue
-    if base is None:
-      base = enc[i]
-    back = (enc[i] - base) * M_PER_COUNT     # + 면 뒤로
-    if back > roll_m:
-      roll_m = back
-    if cv[i] == 0 and v[i] < -0.05:
-      roll_v = max(roll_v, -v[i])
-  if roll_m > 0.3:
+  peak = max(fwd_all)
+  lost = peak - fwd_all[-1]          # 최고점에서 되밀린 양
+  back_cmd = sum(1 for cc, vv in zip(cv, v) if cc > 0.05 and vv < -0.05)
+  if back_cmd > len(rows) * 0.05:
+    say('실패', '경사 못 버팀',
+        f'**전진 명령 중에** 뒤로 간 샘플 {back_cmd}개 '
+        f'({100 * back_cmd / len(rows):.0f}%) · 최고점에서 {lost:.2f}m 되밀렸다. '
+        f'추진력이 경사를 못 버틴다 — PWM 을 올리거나 이 경사를 포기할 것')
+  elif lost > 0.3:
     say('실패', '뒤로 밀림',
-        f'구동을 안 주는 동안 **{roll_m:.2f}m** 뒤로 굴렀다 '
-        f'(최대 {roll_v:.2f} m/s). 엔코더 홀드가 없어 경사에서 서면 밀린다 — '
-        f'멈추면 사람이 잡거나 굄목을 댈 것')
-  elif roll_m > 0.05:
-    say('경고', '뒤로 밀림', f'{roll_m:.2f}m 뒤로 굴렀다')
+        f'최고점 {peak:.2f}m 에서 **{lost:.2f}m** 되밀렸다. 엔코더 홀드가 '
+        f'없어 경사에서 서면 굴러간다 — 멈추면 잡거나 굄목을 댈 것')
   else:
-    say('통과', '뒤로 밀림', f'{roll_m:.2f}m (밀림 없음)')
+    say('통과', '뒤로 밀림', f'되밀림 {max(lost, 0.0):.2f}m')
 
   # ── PWM — '못 올라감' 의 원인을 가른다 ───────────────────────────
   #   PWM 이 높은데 안 움직이면 토크 부족(또는 잠김).
@@ -320,6 +322,7 @@ def record(a):
   e0 = n.enc
   stop_reason = '시간 종료'
   stuck_since = None
+  slip_since = None
   limit = a.seconds
   if drive:
     # 예상시간의 3배 + 10초. 스톨·미끄러짐으로 안 끝나는 것을 막는다.
@@ -374,6 +377,17 @@ def record(a):
         if n.stall:
           stop_reason = '❌ 펌웨어 스톨 감지'
           break
+        # ★ 전진 명령인데 **뒤로 가면** 세운다. 경사를 못 버티고 미끄러지는
+        #   상황이다. 예전엔 '안 움직인다' 만 봐서 이걸 못 잡았고, 실차에서
+        #   명령 1.20 · PWM 90 이 걸린 채 **6.7m 를 미끄러져 내려갔다**.
+        if a.speed > 0 and n.v < -0.15:
+          slip_since = slip_since if slip_since is not None else t
+          if t - slip_since > 1.0:
+            stop_reason = (f'❌ 뒤로 미끄러짐 {abs(n.v):.2f} m/s — '
+                           f'이 설정으로는 경사를 못 버틴다')
+            break
+        else:
+          slip_since = None
         # 명령은 있는데 안 움직이면 2초 뒤 중단 (경사에서 못 올라가는 경우)
         if t > 2.0 and abs(n.v) < 0.05:
           stuck_since = stuck_since if stuck_since is not None else t
