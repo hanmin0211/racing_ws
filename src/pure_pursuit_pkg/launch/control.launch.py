@@ -132,6 +132,18 @@ def generate_launch_description():
       #   여기서 관성거리(1.384·v^1.506)만큼 더 간다.
       DeclareLaunchArgument('obstacle_stop_dist', default_value='0.8'),
 
+      # ★ 2026-09-16 — 회피 override 유지시간 / 이탈 상한 (먹스).
+      #   근거와 실측은 vehicle_cmd_mux_node.py 의 avoid_hold_s 주석 참고.
+      #   셋 다 기본 0 = 꺼짐. drive_0337 은 이 기능들 없이 완주했다 —
+      #   검증된 동작을 기본값으로 바꾸지 않는다.
+      #   ⚠ 이탈 상한(avoid_max_*)은 **유지시간과 같이** 쓸 것. 유지시간만
+      #     늘리면 회피각을 더 오래 물고 있어 이탈이 커진다.
+      #   권장 시험값:  avoid_hold_s:=0.25
+      #                 avoid_max_lateral_m:=0.85  avoid_max_heading_deg:=22.0
+      DeclareLaunchArgument('avoid_hold_s', default_value='0.0'),
+      DeclareLaunchArgument('avoid_max_lateral_m', default_value='0.0'),
+      DeclareLaunchArgument('avoid_max_heading_deg', default_value='0.0'),
+
       # 횡방향: 조향각만 발행 (속도는 종방향이 소유)
       Node(
           package='pure_pursuit_pkg',
@@ -161,7 +173,20 @@ def generate_launch_description():
           executable='vehicle_cmd_mux',
           name='vehicle_cmd_mux',
           output='screen',
-          parameters=[{'max_speed': max_speed, 'max_steer_deg': max_steer}],
+          # ⚠ 전부 ParameterValue(float) 로 감싼다. `avoid_hold_s:=0` 처럼
+          #   정수로 주면 INTEGER 로 들어가 노드가 즉사한다(런치 인자 함정).
+          parameters=[{
+              'max_speed': max_speed,
+              'max_steer_deg': max_steer,
+              'avoid_hold_s': ParameterValue(
+                  LaunchConfiguration('avoid_hold_s'), value_type=float),
+              'avoid_max_lateral_m': ParameterValue(
+                  LaunchConfiguration('avoid_max_lateral_m'),
+                  value_type=float),
+              'avoid_max_heading_deg': ParameterValue(
+                  LaunchConfiguration('avoid_max_heading_deg'),
+                  value_type=float),
+          }],
       ),
 
       # 시리얼 브리지: /cmd_vel → Arduino, 텔레메트리 → 구조화 토픽
