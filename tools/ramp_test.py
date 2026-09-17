@@ -69,7 +69,17 @@ def judge(rows, label):
   #   실측: 갱신 간 변화량 중앙 0.115 = 정확히 2카운트, 0.5m/s 넘는 점프가
   #   평지·경사 똑같이 8~9%. 그 잡음을 '바퀴 슬립' 으로 읽어 오진했다.
   #   카운트 자체는 멀쩡하므로 **0.25초 중심차분**으로 다시 만든다.
-  v = _enc_speed(t, [r['enc'] for r in rows])
+  # ★ 점프 보정을 **속도 계산보다 먼저** 한다. 나중에 하면 거리만 고쳐지고
+  #   속도는 점프를 그대로 미분해 478 m/s 같은 값이 남는다(실제로 그랬다).
+  e_fix = [r['enc'] for r in rows]
+  jumps = 0
+  for i in range(1, len(e_fix)):
+    d = e_fix[i] - e_fix[i - 1]
+    if abs(d) > 400:          # 20Hz 에서 400카운트 = 1.15m = 23 m/s (불가능)
+      jumps += 1
+      for j in range(i, len(e_fix)):
+        e_fix[j] -= d
+  v = _enc_speed(t, e_fix)
   cv = [r['cmd_v'] for r in rows]
   vcc = [r['vcc'] for r in rows if r['vcc'] > 500]
   enc = [r['enc'] for r in rows]
@@ -88,24 +98,11 @@ def judge(rows, label):
     e.pop(0)
   # 전진 = 카운트 **감소**(counts_per_revolution 이 음수). 부호를 살려야
   # '뒤로 밀림' 을 '이동' 으로 세지 않는다.
-  # ★ 2026-09-17 — **주행 중 카운트 점프**를 버린다. 아두이노가 리셋되거나
-  #   브리지가 재연결되면 카운트가 통째로 튄다. 예전엔 첫 샘플만 방어해서,
-  #   중간 점프가 그대로 이동거리가 됐다 — '뒤로 154.2m · 최대 1198 m/s'
-  #   같은 값이 나왔다(실제로 겪었다).
-  #   20Hz 에서 한 샘플에 400카운트(=1.15m, 23 m/s)는 물리적으로 불가능하다.
-  e = list(e)
-  jumps = 0
-  for i in range(1, len(e)):
-    d = e[i] - e[i - 1]
-    if abs(d) > 400:
-      jumps += 1
-      for j in range(i, len(e)):
-        e[j] -= d                      # 점프분을 이후 전체에서 뺀다
+  e = e_fix
   if jumps:
     say('실패', '엔코더 점프',
         f'주행 중 카운트가 {jumps}회 통째로 튀었다 — 아두이노 리셋이나 '
         f'브리지 재연결이다. 점프분을 빼고 계산했지만 **이 런은 믿지 말 것**')
-
   fwd = -(e[-1] - e[0]) * M_PER_COUNT      # + 면 전진
   dist = abs(fwd)
   fwd_all = [-(r['enc'] - e[0]) * M_PER_COUNT for r in rows]
