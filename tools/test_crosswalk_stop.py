@@ -46,6 +46,37 @@ TOLERANCE = 0.64
 DWELL = 3.0
 
 
+# ─────────────────────────────────────────────────────────────────────
+# ★ 2026-09-18 — SIGTERM 에서도 자식을 반드시 죽인다.
+#   `timeout N python3 ...` 로 돌리다 상한에 걸리면 SIGTERM 이 오는데,
+#   파이썬은 SIGTERM 에서 **finally 를 안 돌리고 즉사**한다. 그러면
+#   start_new_session=True 로 띄운 `ros2 run` 자식이 살아남아 다음 실행을
+#   오염시킨다(같은 토픽에 두 벌 → arm 이 10Hz 로 깜빡임).
+#   이 저장소에서 세 번 그랬다. SIGTERM 을 예외로 바꿔 finally 가 돌게 하고,
+#   그래도 새면 atexit 이 한 번 더 쓸어낸다.
+import atexit as _atexit
+import signal as _sig
+
+_SPAWNED = []
+
+
+def _reap_all():
+  for p in _SPAWNED:
+    try:
+      os.killpg(os.getpgid(p.pid), _sig.SIGKILL)
+    except Exception:  # noqa: BLE001
+      pass
+
+
+def _on_term(_signum, _frame):
+  raise KeyboardInterrupt('SIGTERM')
+
+
+_sig.signal(_sig.SIGTERM, _on_term)
+_atexit.register(_reap_all)
+# ─────────────────────────────────────────────────────────────────────
+
+
 def _kill_group(proc):
   """ros2 run 래퍼와 그 자식 노드를 통째로 죽인다.
 
@@ -142,6 +173,7 @@ def main():
        '-p', 'stop_enter_dist:=0.5'],
       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
       start_new_session=True)
+  _SPAWNED.append(node_proc)
   time.sleep(2.5)      # 노드가 뜰 때까지
 
   rclpy.init()
