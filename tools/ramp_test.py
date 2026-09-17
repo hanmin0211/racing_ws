@@ -14,6 +14,10 @@
       ros2 launch tools/teleop_drive.launch.py ff_mode:=ros ff_brake_pwm:=50.0
 
 사용:
+  # ★ 자율 — 차가 스스로 지정 거리만큼 가고 선다 (키보드 불필요, GPS 불필요)
+  python3 tools/ramp_test.py --label 오르막1 --drive 15 --speed 0.8
+
+  # 수동 — teleop 으로 몰면서 기록만
   python3 tools/ramp_test.py --label 내리막1
   python3 tools/ramp_test.py --label 오르막1 --seconds 60
   python3 tools/ramp_test.py --report /tmp/ramp_내리막1_2130.csv   # 다시 판정만
@@ -167,6 +171,12 @@ def record(a):
 
   rclpy.init()
   n = R()
+  drive = a.drive is not None
+  if drive:
+    from geometry_msgs.msg import Twist as _T
+    # ★ /teleop/cmd_vel 로 낸다. 먹스에서 teleop 이 자율보다 우선이고
+    #   E-stop(/e_stop)은 그보다도 위다 — 비상정지 권한을 살려 둔다.
+    n.drive_pub = n.create_publisher(_T, '/teleop/cmd_vel', 10)
   out = a.out or f'/tmp/ramp_{a.label}_{time.strftime("%H%M")}.csv'
   rows = []
   # ★ 엔코더 첫 메시지를 기다린다. 안 기다리면 초기값(0)에서 실제 카운트로
@@ -186,18 +196,59 @@ def record(a):
         '(꺼져 있으면 놓아도 안 선다)')
   print(f'  {"t":>6} {"명령":>6} {"실제":>6} {"vcc":>6} {"이동":>6}')
   last = 0.0
-  e0 = None
+  e0 = n.enc
+  stop_reason = '시간 종료'
+  stuck_since = None
+  limit = a.seconds
+  if drive:
+    # 예상시간의 3배 + 10초. 스톨·미끄러짐으로 안 끝나는 것을 막는다.
+    limit = min(a.seconds, a.drive / max(a.speed, 0.05) * 3.0 + 10.0)
+    print(f'  ▶ 자율 {a.drive:.1f}m · 목표 {a.speed:.2f} m/s · '
+          f'상한 {limit:.0f}s · 중단속도 {a.abort_speed:.1f} m/s')
+
+  def send(v):
+    if drive:
+      from geometry_msgs.msg import Twist as _T
+      m = _T()
+      m.linear.x = float(v)
+      m.angular.z = 0.0          # 직진 (조향 중앙)
+      n.drive_pub.publish(m)
+
   try:
-    while time.time() - t0 < a.seconds and rclpy.ok():
+    while time.time() - t0 < limit and rclpy.ok():
       rclpy.spin_once(n, timeout_sec=0.05)
       t = time.time() - t0
-      if e0 is None and n.enc:
-        e0 = n.enc
+      dist = abs(n.enc - e0) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R)
+
+      if drive:
+        # ── 중단 조건 (먼저 판정하고 그 다음에 명령을 낸다) ──
+        if dist >= a.drive:
+          stop_reason = f'목표 거리 도달 ({dist:.1f}m)'
+          break
+        if abs(n.v) > a.abort_speed:
+          stop_reason = f'❌ 과속 중단 — {abs(n.v):.2f} > {a.abort_speed:.1f} m/s'
+          break
+        if 500 < n.vcc < 3200:
+          stop_reason = f'❌ 전압 중단 — {n.vcc}mV'
+          break
+        if n.stall:
+          stop_reason = '❌ 펌웨어 스톨 감지'
+          break
+        # 명령은 있는데 안 움직이면 2초 뒤 중단 (경사에서 못 올라가는 경우)
+        if t > 2.0 and abs(n.v) < 0.05:
+          stuck_since = stuck_since if stuck_since is not None else t
+          if t - stuck_since > 2.0:
+            stop_reason = f'❌ 안 움직인다 ({t - stuck_since:.1f}s) — 못 올라감'
+            break
+        else:
+          stuck_since = None
+        # 출발 램프 — 1초에 걸쳐 올린다(덜컹 방지)
+        send(a.speed * min(1.0, t / 1.0))
+
       rows.append({'t': t, 'v': n.v, 'cmd_v': n.cmd_v, 'enc': n.enc,
                    'vcc': n.vcc, 'steer': n.steer, 'stall': int(n.stall)})
       if t - last >= 0.5:
         last = t
-        d = abs(n.enc - (e0 or n.enc)) / COUNTS_PER_REV * (2 * math.pi * WHEEL_R)
         flag = ''
         if abs(n.v) > SPEED_WARN:
           flag = '  ❌ 너무 빠르다'
@@ -206,9 +257,20 @@ def record(a):
         if 500 < n.vcc < VCC_BOD:
           flag += '  ❌ 전압'
         print(f'  {t:6.1f} {n.cmd_v:6.2f} {n.v:6.2f} {n.vcc:6.0f} '
-              f'{d:6.1f}{flag}')
+              f'{dist:6.1f}{flag}')
   except KeyboardInterrupt:
-    print('\n(중단)')
+    stop_reason = '사용자 중단 (Ctrl-C)'
+  finally:
+    if drive:
+      # 정지 명령을 여러 번 낸다. 한 번은 놓칠 수 있고, 펌웨어 워치독이
+      # 0.5초 안에 받쳐 주지만 그 전에 확실히 끊는다.
+      for _ in range(10):
+        send(0.0)
+        rclpy.spin_once(n, timeout_sec=0.02)
+  print(f'\n  ■ 종료: {stop_reason}')
+  if drive:
+    print('  ⚠ 경사에서는 정지 후 **뒤로 밀린다** (엔코더 홀드 없음). '
+          '차를 잡거나 굄목을 댈 것')
   rclpy.shutdown()
 
   with open(out, 'w', newline='') as f:
@@ -225,6 +287,13 @@ def main():
   ap.add_argument('--seconds', type=float, default=40.0)
   ap.add_argument('--out', default=None)
   ap.add_argument('--report', default=None, help='기록된 CSV 를 다시 판정만 한다')
+  ap.add_argument('--drive', type=float, default=None, metavar='m',
+                  help='자율 주행: 이 거리만큼 스스로 가고 선다 [m]. '
+                       '거리는 **엔코더로** 잰다 (GPS 불필요)')
+  ap.add_argument('--speed', type=float, default=0.8, metavar='m/s',
+                  help='--drive 목표 속도')
+  ap.add_argument('--abort-speed', type=float, default=2.5, metavar='m/s',
+                  help='이 속도를 넘으면 즉시 중단 (내리막 폭주 방어)')
   a = ap.parse_args()
   if a.report:
     if not os.path.exists(a.report):
