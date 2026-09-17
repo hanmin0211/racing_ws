@@ -60,6 +60,12 @@ def generate_launch_description():
       # 60 → 1.07 m/s. **오르막 출발은 더 필요할 수 있다.**
       DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
       DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
+      # ★ 내리막 속도 거버너 (기본 0 = 꺼짐). 측정속도가 명령보다 빠르면
+      #   초과분에 비례해 역 PWM 을 낸다 — 개루프의 유일한 '달리는 중' 감속 수단.
+      #   ⚠ 플러깅이라 전류가 크다. 법정 내리막(6.5~9%)은 50 이면 충분하다.
+      DeclareLaunchArgument('gov_pwm', default_value='0.0'),
+      DeclareLaunchArgument('gov_deadband', default_value='0.30'),
+      DeclareLaunchArgument('gov_gain', default_value='80.0'),
       DeclareLaunchArgument('max_speed', default_value='0.6',
                             description='먹스 속도 상한. 오르막 시험은 올려야 할 수 있다'),
 
@@ -97,6 +103,12 @@ def generate_launch_description():
                   LaunchConfiguration('ff_breakaway_pwm'), value_type=float),
               'ff_breakaway_ms': ParameterValue(
                   LaunchConfiguration('ff_breakaway_ms'), value_type=float),
+              'gov_pwm': ParameterValue(
+                  LaunchConfiguration('gov_pwm'), value_type=float),
+              'gov_deadband': ParameterValue(
+                  LaunchConfiguration('gov_deadband'), value_type=float),
+              'gov_gain': ParameterValue(
+                  LaunchConfiguration('gov_gain'), value_type=float),
           }],
       ),
   ])
