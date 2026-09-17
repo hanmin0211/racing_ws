@@ -216,8 +216,11 @@ class SerialBridgeNode(Node):
         #   ⚠ 이건 **개루프용 임시 수단**이다. NO_ENCODER 0 으로 펌웨어 속도
         #     PID 를 복구하면 그쪽이 같은 일을 더 잘한다(연속 제어).
         self.declare_parameter('gov_pwm', 0.0)        # 역 PWM 상한. 0 = 꺼짐
-        self.declare_parameter('gov_deadband', 0.30)  # 이만큼 넘어야 개입 [m/s]
-        self.declare_parameter('gov_gain', 80.0)      # 초과 1 m/s 당 역 PWM
+        #   ⚠ P 제어라 정상편차가 남는다. 초과 = (FF − 필요PWM)/gain + deadband.
+        #     5km/h 목표·법정 9% 기준: (71−28)/300 + 0.10 ≈ 0.24 → 약 1.63 m/s 에
+        #     물린다(목표 대비 +17%). 정확히 물리려면 펌웨어 속도 PID 가 필요하다.
+        self.declare_parameter('gov_deadband', 0.10)  # 이만큼 넘어야 개입 [m/s]
+        self.declare_parameter('gov_gain', 300.0)     # 초과 1 m/s 당 깎을 PWM
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -474,18 +477,30 @@ class SerialBridgeNode(Node):
     BRAKE_MEAS_FRESH_S = 0.5
     BRAKE_V_PLAUSIBLE = 3.0
 
-    def _governor_pwm(self, cmd_v, now):
-        """내리막 과속을 깎는 역 PWM. 개입 안 하면 None.
+    def _governor_pwm(self, cmd_v, ff_pwm, now):
+        """과속이면 FF 출력을 **연속적으로 깎는다**. 개입 안 하면 None.
 
-        측정속도가 명령보다 gov_deadband 넘게 빠를 때만 작동하고, 초과분에
-        비례해 역방향 PWM 을 낸다. 명령을 추종하는 게 아니라 **과속만 깎는다**.
+        ★ 2026-09-17 수정 — 예전엔 개입할 때 FF 를 통째로 역 PWM 으로 바꿨다.
+          중간이 없어서 구동과 제동 사이를 오갔다(실측: 48 → -1 → 33 → -24 → -50).
+          '버티면서 내려가기' 가 안 된다.
 
-        안전:
-          · gov_pwm 으로 상한 (플러깅 전류 제한)
-          · 측정이 0.5s 넘게 낡으면 개입 안 함 (IMU 끊기면 옛 값이 남는다)
-          · 3.0m/s 초과 측정은 무시 (odom twist 가 61.9m/s 까지 튄 실측)
-          · 명령과 측정의 **부호가 같을 때만** — 후진 중 전진명령 같은
-            상황에서 엉뚱한 방향으로 밀지 않는다
+          내리막을 등속으로 내려가는 데 필요한 것은 대부분 **스로틀을 줄이는
+          것**이지 제동이 아니다. 5 km/h 유지 기준 실측 계산:
+              평지      PWM 71 (구동)
+              법정 6.5%  PWM 40 (구동)
+              법정 9%    PWM 28 (구동)
+              시험장 18% PWM −15 (제동)
+          그래서 FF 에서 초과분에 비례해 **빼되**, 필요하면 음수까지 내려간다.
+
+        ⚠ P 제어라 정상편차(droop)가 남는다. 정확히 목표속도를 물리려면
+          적분이 필요하고, 그건 펌웨어 속도 PID(NO_ENCODER 0)의 몫이다.
+          거버너는 '과속을 눌러 주는' 보조 수단이다.
+
+        안전(이전과 동일):
+          · gov_pwm 으로 **역방향 상한** (플러깅 전류 제한)
+          · 측정이 0.5s 넘게 낡으면 개입 안 함
+          · 3.0m/s 초과 측정은 무시
+          · 명령과 측정의 부호가 같을 때만
         """
         if self.gov_pwm <= 0.0 or abs(cmd_v) < self.ff_deadband:
             return None
@@ -494,17 +509,24 @@ class SerialBridgeNode(Node):
         mv = self._meas_v
         if abs(mv) > self.BRAKE_V_PLAUSIBLE:
             return None
-        if (mv > 0) != (cmd_v > 0):          # 부호가 다르면 개입 안 한다
+        if (mv > 0) != (cmd_v > 0):
             return None
         excess = abs(mv) - abs(cmd_v) - self.gov_deadband
         if excess <= 0.0:
             return None
-        mag = min(self.gov_pwm, self.gov_gain * excess)
+        # FF 크기에서 초과분에 비례해 뺀다. 음수(제동)까지 내려갈 수 있고,
+        # 역방향은 gov_pwm 으로 막는다.
+        out = abs(ff_pwm) - self.gov_gain * excess
+        out = max(out, -self.gov_pwm)
         self.get_logger().info(
             f'거버너 — 측정 {abs(mv):.2f} > 명령 {abs(cmd_v):.2f} '
-            f'(+{excess + self.gov_deadband:.2f}) → 역 PWM {mag:.0f}',
+            f'(+{excess + self.gov_deadband:.2f}) → PWM {abs(ff_pwm):.0f} '
+            f'{"→" if out >= 0 else "→ 제동"} {out:.0f}',
             throttle_duration_sec=1.0)
-        return -math.copysign(mag, cmd_v)
+        # ⚠ copysign 을 쓰면 안 된다 — copysign(-80, +1) 은 **+80** 이다
+        #   (크기만 가져간다). out 이 음수면 '진행 반대 방향' 이어야 하므로
+        #   부호를 **곱한다**.
+        return out * (1.0 if cmd_v > 0 else -1.0)
 
     def _brake_pwm(self, cmd_v, now):
         """능동 제동 상태기계. 제동 중이면 인가할 PWM, 아니면 None.
@@ -603,7 +625,8 @@ class SerialBridgeNode(Node):
                 pwm = 0 if brake is None else int(round(brake))
                 self._moving_since = None      # 섰다 — 다음 출발은 다시 breakaway
             else:
-                gov = self._governor_pwm(v, now_s)
+                ff_mag = self.ff_static + self.ff_gain * abs(v)
+                gov = self._governor_pwm(v, ff_mag, now_s)
                 if gov is not None:
                     # ★ 거버너가 개입하면 **하한(ff_min_pwm)을 건너뛴다.**
                     #   안 그러면 '과속이니 멈춰' 와 '최소한 이만큼은 밀어' 가
