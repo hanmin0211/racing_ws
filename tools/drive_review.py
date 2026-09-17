@@ -301,9 +301,15 @@ def main():
         p95 = float(np.percentile(ad, 95))
         hh = he[m]
         ah = np.abs(hh[np.isfinite(hh)])
-        vv2 = v[m][np.isfinite(v[m])]
+        # ⚠ 스파이크를 걸러야 한다. odom twist 는 랩당 3~6회 튄다(실측 61.9m/s).
+        #   안 거르면 '내리막 최대 28.7 m/s' 같은 값이 나와 그대로 오판한다.
+        vok = m & ~spike & np.isfinite(v)
+        vv2 = v[vok]
+        # 속도는 **최대**가 중요하다. 내리막처럼 제동 권한이 없는 구간에서는
+        # 바닥 속도가 다음 커브를 돌 수 있는지를 정한다(R=6.4m 코너는 3 m/s 까지).
         print(f'   {nm:<10} s{a0:.0f}~{a1:.0f} · 표본 {int(m.sum())} · '
-              f'속도 {vv2.mean() if len(vv2) else float("nan"):.2f} m/s')
+              f'속도 평균 {vv2.mean() if len(vv2) else float("nan"):.2f} · '
+              f'최대 {np.abs(vv2).max() if len(vv2) else float("nan"):.2f} m/s')
         print(f'   {"":10} 이탈 평균 {ad.mean():.2f} · p95 {p95:.2f} · '
               f'최대 {ad.max():.2f} m')
         if len(ah):

@@ -183,6 +183,18 @@ def main():
   if not ok:
     f.append('빈 구간')
 
+  # 스파이크가 구간 통계로 새면 '내리막 최대 28.7 m/s' 같은 값이 나온다.
+  # 실제로 그렇게 나왔었다 — 내리막 판단에 쓰는 숫자라 치명적이다.
+  out = review('0337', '--section', '직선=42:55')
+  # ⚠ 구간 줄만 본다. 앞쪽 '[데이터] v 스파이크 (최대 61.9 m/s)' 를 잡으면
+  #   시험이 코드가 아니라 자기 정규식을 시험하게 된다(실제로 그랬다).
+  m = re.search(r'직선\s+s42~55.*?최대 ([\d.]+) m/s', out)
+  ok = bool(m) and float(m.group(1)) < 3.0
+  print(f'  {"OK " if ok else "✗  "} 구간 최대속도에 odom 스파이크가 안 샌다 '
+        f'({m.group(1) if m else "?"} m/s < 3.0)')
+  if not ok:
+    f.append('구간 속도 스파이크')
+
   print('\n■ 픽스처는 저장소 사본을 쓴다 (/tmp 는 재부팅하면 사라진다)')
   csv, _ = find_run('0337')
   ok = csv is not None and '/data/' in csv
