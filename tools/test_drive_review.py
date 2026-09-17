@@ -60,9 +60,9 @@ def verdict_line(out):
   return ''
 
 
-def review(tag):
+def review(tag, *extra):
   csv, _ = require_run(tag)
-  r = subprocess.run([sys.executable, REVIEW, csv],
+  r = subprocess.run([sys.executable, REVIEW, csv] + list(extra),
                      capture_output=True, text=True, cwd=WS)
   return r.stdout + r.stderr
 
@@ -138,6 +138,50 @@ def main():
   print(f'  {"OK " if ok else "✗  "} drive_0337 (정상, 최대 18°) → 안 찍는다')
   if not ok:
     f.append('단위버그 오탐')
+
+  print('\n■ 구간별 이탈 — 이탈 상한 값의 근거를 만드는 곳 (2026-09-17)')
+  # drive_0337 의 s20~34 은 회피 구간(s40~50) 밖이라 **기준 추종오차**다.
+  # 커브(R 4.7~13m)인데도 p95 0.17m — S자에서 기댈 수 있는 숫자다.
+  out = review('0337', '--section', '커브=20:34')
+  m = re.search(r'커브.*?\n.*?이탈 평균 ([\d.]+) · p95 ([\d.]+)', out)
+  ok = bool(m) and abs(float(m.group(2)) - 0.17) <= 0.02
+  print(f'  {"OK " if ok else "✗  "} 커브 구간 기준 이탈 p95 '
+        f'{m.group(2) if m else "?"}m (기준 0.17±0.02)')
+  if not ok:
+    f.append('구간 이탈 p95')
+
+  # 상한 = 기준 p95 + 통과 필요량 + 여유.  0.17 + (0.6375+0.325) + 0.15 = 1.28
+  out = review('0337', '--section', '커브=20:34', '--obstacle-width', '0.65')
+  ok = 'avoid_max_lateral_m 1.28' in out
+  print(f'  {"OK " if ok else "✗  "} 브룬 0.65m → 상한 권장 1.28m 을 계산한다')
+  if not ok:
+    f.append('상한 권장값')
+  ok = '0.85' in out and '필요한 순간에 회피를 버린다' in out
+  print(f'  {"OK " if ok else "✗  "} 학교 값 0.85 로는 안 된다고 말한다')
+  if not ok:
+    f.append('0.85 경고')
+
+  # 차선 폭을 주면 이탈이 차선 안에 드는지 본다 (3.0m 면 못 든다)
+  out = review('0337', '--section', '커브=20:34', '--obstacle-width', '0.65',
+               '--lane-width', '3.0')
+  ok = '차선 여유' in out and '❌' in out
+  print(f'  {"OK " if ok else "✗  "} 차선 3.0m 면 회피가 차선을 벗어난다고 잡는다')
+  if not ok:
+    f.append('차선 여유')
+  # 넉넉한 차선이면 통과해야 한다 — 항상 실패만 내는 검사는 쓸모없다
+  out = review('0337', '--section', '커브=20:34', '--obstacle-width', '0.65',
+               '--lane-width', '4.0')
+  ok = '차선 여유' in out and '✅' in out
+  print(f'  {"OK " if ok else "✗  "} 차선 4.0m 면 통과시킨다 (항상 실패가 아니다)')
+  if not ok:
+    f.append('차선 여유 통과')
+
+  # 조용한 통과 방지 — 지나지도 않은 구간을 달라고 하면 실패해야 한다
+  out = review('0337', '--section', '없는구간=500:600')
+  ok = '표본이' in out and '❌' in out
+  print(f'  {"OK " if ok else "✗  "} 안 지난 구간은 **소리내어 실패**한다')
+  if not ok:
+    f.append('빈 구간')
 
   print('\n■ 픽스처는 저장소 사본을 쓴다 (/tmp 는 재부팅하면 사라진다)')
   csv, _ = find_run('0337')

@@ -161,6 +161,15 @@ def main():
                                formatter_class=argparse.RawDescriptionHelpFormatter)
   ap.add_argument('csv')
   ap.add_argument('--waypoints', default=DEF_WP)
+  ap.add_argument('--section', action='append', default=[],
+                  metavar='이름=s0:s1',
+                  help='구간별 이탈 통계. 예: --section S자=176:250 '
+                       '(반복 가능). 장애물 없는 랩으로 재면 이탈 상한의 근거가 된다')
+  ap.add_argument('--obstacle-width', type=float, default=None, metavar='m',
+                  help='장애물 폭 [m]. --section 과 같이 주면 '
+                       'avoid_max_lateral_m 권장값을 낸다')
+  ap.add_argument('--lane-width', type=float, default=None, metavar='m',
+                  help='차선 폭 [m] (현장 실측). 회피가 차선 안에 드는지 본다')
   ap.add_argument('--detail', action='store_true',
                   help='회피 구간을 전 프레임(0.05s) 찍는다 — 솎아 보면 오판한다')
   args = ap.parse_args()
@@ -267,6 +276,63 @@ def main():
           f'{lap:.0f}s (예산 480s)')
     else:
       say('미확인', '랩타임', '경로 끝(s=%.0f)에 도달한 기록이 없다' % total)
+
+  # ── 구간별 이탈 (--section) ──────────────────────────────────────────
+  # ★ 왜 (2026-09-17) — 용인 S자는 **커브 안에서** 회피해야 한다. 거기서
+  #   기댈 보호장치는 먹스의 이탈 상한뿐인데, 그 값을 학교 트랙 숫자(0.85)로
+  #   두면 안 된다. 커브는 추종오차 자체가 크고, 브룬 장애물을 지나가려면
+  #   0.96m 를 비켜야 한다. **장애물 없는 랩을 재서** 거기에 통과 필요량을
+  #   더하는 것이 유일하게 근거 있는 방법이다.
+  if args.section:
+    if sv is None:
+      say('실패', '구간 통계', '경로 파일이 없어 구간을 못 나눈다')
+    else:
+      print('\n[구간별 이탈] ⚠ **장애물 없는 랩**으로 재야 의미가 있다')
+      VEH_HALF, SAFE_R = 0.3875, 0.6375
+      for spec in args.section:
+        nm, rng = spec.split('=', 1) if '=' in spec else ('구간', spec)
+        a0, a1 = (float(z) for z in rng.split(':'))
+        m = np.isfinite(sv) & np.isfinite(dv) & (sv >= a0) & (sv <= a1)
+        if int(m.sum()) < 5:
+          say('실패', nm, f's {a0:.0f}~{a1:.0f} 에 표본이 {int(m.sum())}개뿐 — '
+                          f'이 구간을 안 지났거나 측위가 끊겼다')
+          continue
+        ad = np.abs(dv[m])
+        p95 = float(np.percentile(ad, 95))
+        hh = he[m]
+        ah = np.abs(hh[np.isfinite(hh)])
+        vv2 = v[m][np.isfinite(v[m])]
+        print(f'   {nm:<10} s{a0:.0f}~{a1:.0f} · 표본 {int(m.sum())} · '
+              f'속도 {vv2.mean() if len(vv2) else float("nan"):.2f} m/s')
+        print(f'   {"":10} 이탈 평균 {ad.mean():.2f} · p95 {p95:.2f} · '
+              f'최대 {ad.max():.2f} m')
+        if len(ah):
+          print(f'   {"":10} 헤딩 p95 {np.percentile(ah, 95):.1f} · '
+                f'최대 {ah.max():.1f}°')
+
+        if args.obstacle_width:
+          need = SAFE_R + args.obstacle_width / 2
+          cap = p95 + need + 0.15
+          print(f'   {"":10} → 통과 필요 {need:.2f} + 기준 p95 {p95:.2f} '
+                f'+ 여유 0.15 = **avoid_max_lateral_m {cap:.2f}**')
+          if cap <= 0.85:
+            say('통과', f'{nm} 이탈상한', f'{cap:.2f}m — 권장 0.85 안에 든다')
+          else:
+            say('경고', f'{nm} 이탈상한',
+                f'{cap:.2f}m 가 필요하다. 학교에서 쓰던 0.85 로 두면 '
+                f'**필요한 순간에 회피를 버린다**')
+          if args.lane_width:
+            outer = cap + VEH_HALF
+            half = args.lane_width / 2.0
+            g = ('실패' if outer > half
+                 else '경고' if outer > half - 0.15 else '통과')
+            say(g, f'{nm} 차선 여유',
+                f'상한 {cap:.2f} + 차 반폭 {VEH_HALF:.2f} = {outer:.2f}m 가 '
+                f'차선 반폭 {half:.2f}m 안에 들어야 한다 '
+                f'(여유 {half - outer:+.2f}m)')
+          else:
+            say('미확인', f'{nm} 차선 여유',
+                '차선 폭을 모른다 — `--lane-width <m>` 로 주면 검사한다')
 
   # ── arm(회피) 구간 ───────────────────────────────────────────────────
   print('\n[회피] arm 구간')
