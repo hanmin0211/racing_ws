@@ -44,10 +44,15 @@ class Stub:
     self.gov_deadband = 0.10
     self.gov_gain = 300.0
     self.ff_deadband = 0.05
+    self.gov_lead_s = 0.0          # 시험 기본은 순수 P — 선행은 따로 시험한다
     self._meas_v = None
     self._meas_v_t = 0.0
-    self.BRAKE_MEAS_FRESH_S = SerialBridgeNode.BRAKE_MEAS_FRESH_S
-    self.BRAKE_V_PLAUSIBLE = SerialBridgeNode.BRAKE_V_PLAUSIBLE
+    self._meas_a = 0.0
+    self._meas_a_t = 0.0
+    # 원본의 대문자 상수를 전부 가져온다 (위 S2 주석 참고)
+    for _k, _v in vars(SerialBridgeNode).items():
+      if _k.isupper() and not callable(_v):
+        setattr(self, _k, _v)
     self.__dict__.update(kw)
 
   def get_logger(self): return _Log()
@@ -137,10 +142,22 @@ def main():
     def now(self): return type('', (), {'nanoseconds': self.t * 1e9})()
 
   class S2(Stub):
+    # ★ 상수를 하나씩 베껴 쓰면 원본에 상수가 늘 때마다 AttributeError 가
+    #   난다(실제로 ENC_ACC_TAU 를 추가하고 바로 겪었다). 대문자 클래스
+    #   속성은 **전부** 가져온다.
+    for _k, _v in vars(SerialBridgeNode).items():
+      if _k.isupper() and not callable(_v):
+        locals()[_k] = _v
+    del _k, _v
+
     def __init__(self, **kw):
       super().__init__(**kw)
       self._meas_src = None
       self._enc_v_buf = []
+      self._enc_hist = []
+      self._enc_last_c = None
+      self._enc_rej = 0
+      self.encv_pub = None
       self._clk = _Clock(100.0)
     def get_clock(self): return self._clk
 
@@ -179,6 +196,145 @@ def main():
         f'(0/0.115 반복 → {st2._meas_v:.3f})')
   if not ok:
     f.append('이동평균')
+
+
+  # ================================================================
+  # 엔코더 위치차분 추정기 (2026-09-17) — 펌웨어 VEL 이 못 쓸 물건이라서
+  # ================================================================
+  print()
+  print('■ 엔코더 위치차분 추정기 — 잡음을 구조적으로 없앤다')
+  ENCPOS = SerialBridgeNode._enc_pos_update
+  MPC = SerialBridgeNode.ENC_M_PER_COUNT
+
+  def feed(st, speed_fn, secs, dt=0.01, t0=100.0):
+    """speed_fn(t) 로 움직이는 차를 dt 간격으로 먹인다. 카운트는 정수로 끊는다."""
+    d = 0.0
+    t = t0
+    st._clk.t = t
+    ENCPOS(st, 0)
+    n = int(secs / dt)
+    for i in range(n):
+      t += dt
+      d += speed_fn(t - t0) * dt
+      st._clk.t = t
+      ENCPOS(st, -int(round(d / MPC)))      # 전진하면 카운트가 준다
+    return d
+
+  # ① 등속 — 정확도
+  st = S2()
+  feed(st, lambda t: 1.00, 1.0)
+  ok = st._meas_src == 'encpos' and abs(st._meas_v - 1.00) < 0.02
+  print(f'  {"OK " if ok else "✗  "} 등속 1.00 m/s → {st._meas_v:.3f} (오차 <0.02)')
+  if not ok: f.append('등속 정확도')
+
+  # ② 저속 양자화 — 펌웨어 10ms 차분과 정면 비교
+  st = S2()
+  feed(st, lambda t: 0.30, 1.0)
+  fw_quantum = MPC / 0.01                   # 펌웨어가 10ms 로 차분할 때의 눈금
+  ok = abs(st._meas_v - 0.30) < 0.03
+  print(f'  {"OK " if ok else "✗  "} 저속 0.30 m/s → {st._meas_v:.3f} '
+        f'(펌웨어 눈금은 {fw_quantum:.3f} m/s — 0.30 을 낼 수가 없다)')
+  if not ok: f.append('저속 양자화')
+
+  # ③ SPI 오독 1발은 무시한다
+  st = S2()
+  feed(st, lambda t: 1.00, 0.5)
+  good = st._meas_v
+  st._clk.t += 0.01
+  ENCPOS(st, st._enc_last_c - 5000)         # 점프
+  ok = abs(st._meas_v - good) < 1e-9        # 값이 안 바뀌었다
+  print(f'  {"OK " if ok else "✗  "} 1샘플 5000카운트 점프를 기각한다 '
+        f'({good:.2f} 유지)')
+  if not ok: f.append('점프 기각')
+
+  # ④ 진짜 리셋(3연속)이면 복구한다 — 영영 굳으면 안 된다
+  st = S2()
+  feed(st, lambda t: 1.00, 0.5)
+  base = st._enc_last_c - 50000
+  for i in range(4):
+    st._clk.t += 0.01
+    ENCPOS(st, base - i)
+  ok = st._enc_last_c is not None and abs(st._enc_last_c - base) <= 4
+  print(f'  {"OK " if ok else "✗  "} 3연속이면 리셋으로 보고 창을 버린다 '
+        f'(추종 재개)')
+  if not ok: f.append('리셋 복구')
+
+  # ⑤ 가속도 — 등가속 1.5 m/s^2
+  st = S2()
+  feed(st, lambda t: 1.5 * t, 1.0)
+  ok = abs(st._meas_a - 1.5) < 0.3
+  print(f'  {"OK " if ok else "✗  "} 등가속 1.50 m/s² → {st._meas_a:.2f} (오차 <0.3)')
+  if not ok: f.append('가속도 추정')
+
+  # ⑥ 창이 덜 차면 아직 안 믿는다
+  st = S2()
+  st._clk.t = 100.0
+  ENCPOS(st, 0)
+  for i in range(3):
+    st._clk.t += 0.01
+    ENCPOS(st, -i)
+  ok = st._meas_v is None
+  print(f'  {"OK " if ok else "✗  "} 창이 덜 차면 측정을 내놓지 않는다')
+  if not ok: f.append('창 미충족')
+
+  # ⑦ 우선순위 — encpos 가 odom·펌웨어VEL 을 이긴다
+  st = S2()
+  feed(st, lambda t: 1.00, 0.5)
+  ODOM_CB(st, _Odom(61.9))                  # EKF 스파이크
+  ENC_CB(st, _Msg(3.05))                    # 펌웨어 VEL 스파이크
+  ok = st._meas_src == 'encpos' and abs(st._meas_v - 1.00) < 0.02
+  print(f'  {"OK " if ok else "✗  "} odom 61.9 · 펌웨어 3.05 가 와도 안 밀린다 '
+        f'(src={st._meas_src} v={st._meas_v:.2f})')
+  if not ok: f.append('encpos 우선')
+
+  # ================================================================
+  # 선행(가속도) 항 — 넘고 나서가 아니라 넘기 전에 잡는다
+  # ================================================================
+  print()
+  print('■ 선행항 — 내리막 runaway 를 미리 잡는다')
+
+  # ⑧ 아직 안 넘었지만 붙는 중이면 개입한다
+  run('P 단독이면 아직 안 건다 (측정=명령)',
+      1.11, 1.11, None, f, gov_lead_s=0.0)
+  run('선행 0.3s · 가속 +2.0 이면 미리 깎는다',
+      1.11, 1.11, 60.3 - 100 * (0.6 - 0.10), f,   # lead=0.6 → 초과 0.5
+      gov_lead_s=0.3, gov_gain=100.0, _meas_a=2.0, _meas_a_t=1e9)
+
+  # ⑨ 감속 중이면 개입을 푼다 (헛제동 방지)
+  run('과속이어도 감속 중이면 안 건다',
+      1.11, 1.30, None, f, gov_lead_s=0.3, _meas_a=-8.0, _meas_a_t=1e9)
+
+  # ⑩ 선행 포화 — 잡음이 지배하지 못한다
+  st = Stub(gov_lead_s=0.3, gov_gain=50.0, _meas_a=5.0, _meas_a_t=1e9,
+            _meas_v=1.11, _meas_v_t=1e9)
+  st.get_clock = lambda: None
+  out = GOV(st, 1.11, 60.3, 1e9)
+  want = 60.3 - 50 * (1.0 - 0.10)           # lead 1.5 가 1.0 으로 포화
+  ok = out is not None and abs(out - want) < 2
+  print(f'  {"OK " if ok else "✗  "} 선행은 ±1.0 m/s 로 포화한다 '
+        f'(a=5 → {out:.0f}, 기대 {want:.0f} · 포화 없으면 -54)')
+  if not ok: f.append('선행 포화')
+
+  # ⑪ 가속도가 낡으면 선행 없이 P 로만
+  run('가속도가 낡으면 선행을 안 쓴다',
+      1.11, 1.11, None, f, gov_lead_s=0.3, _meas_a=2.0, _meas_a_t=0.0)
+
+  # ================================================================
+  # 실측 재현 — 4 km/h(1.11 m/s) 목표로 그 순간을 다시 돌린다
+  # ================================================================
+  print()
+  print('■ 실측 재현 — 2026-09-17 내리막 t=4.07s (실속 0.73, 붙는 중)')
+  #   그때 거버너는 PWM 71 을 유지했고 0.4초 뒤 2.53 m/s 로 중단됐다.
+  #   4km/h 목표 + 선행이면 그 순간에 이미 깎아야 한다.
+  ff4 = 38.8 * 1.11 + 17.2                  # 60.3
+  st = Stub(gov_lead_s=0.3, gov_pwm=60.0, _meas_a=2.4, _meas_a_t=1e9,
+            _meas_v=0.73, _meas_v_t=1e9)
+  out = GOV(st, 1.11, ff4, 1e9)
+  # v_pred = 0.73 + 0.72 = 1.45 → 초과 0.24 → 60.3 - 72 = -12 (제동)
+  ok = out is not None and out < 10
+  print(f'  {"OK " if ok else "✗  "} 그 순간 이미 깎는다 '
+        f'(FF {ff4:.0f} → {out if out is None else round(out)})')
+  if not ok: f.append('실측 재현')
 
   print()
   if f:

@@ -221,6 +221,9 @@ class SerialBridgeNode(Node):
         #     물린다(목표 대비 +17%). 정확히 물리려면 펌웨어 속도 PID 가 필요하다.
         self.declare_parameter('gov_deadband', 0.10)  # 이만큼 넘어야 개입 [m/s]
         self.declare_parameter('gov_gain', 300.0)     # 초과 1 m/s 당 깎을 PWM
+        # 선행시간 — 지금 가속도로 이만큼 뒤의 속도를 내다보고 판정한다.
+        # 내리막에서 중력이 붙는 속도를 '넘고 나서' 가 아니라 '넘기 전에' 잡는다.
+        self.declare_parameter('gov_lead_s', 0.30)    # [s] 0 = 순수 P
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -242,13 +245,20 @@ class SerialBridgeNode(Node):
         self.gov_pwm = float(self.get_parameter('gov_pwm').value)
         self.gov_deadband = float(self.get_parameter('gov_deadband').value)
         self.gov_gain = float(self.get_parameter('gov_gain').value)
+        self.gov_lead_s = float(self.get_parameter('gov_lead_s').value)
         self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
         self._brake_sign = 0           # 직전 진행 방향 (+1 전진 / -1 후진)
         self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
         self._meas_v = None            # 측정 속도 (없으면 None → 시간상한만)
         self._meas_v_t = 0.0
-        self._meas_src = None          # 'odom' | 'enc' — odom 이 우선
+        self._meas_src = None          # 'encpos' | 'odom' | 'enc' — 이 순서로 우선
         self._enc_v_buf = []
+        # 엔코더 위치차분 추정기 상태 (100Hz STATUS_10ms 마다 갱신)
+        self._enc_hist = []            # [(t, counts)] — 창 길이만큼만 유지
+        self._enc_last_c = None
+        self._enc_rej = 0              # 연속 점프 기각 횟수
+        self._meas_a = 0.0             # 측정 가속도 [m/s^2] (전진 +)
+        self._meas_a_t = 0.0
         if self.ff_brake_pwm > 0.0 or self.gov_pwm > 0.0:
             from nav_msgs.msg import Odometry  # noqa: PLC0415
             self.create_subscription(Odometry, '/odometry/filtered',
@@ -267,7 +277,8 @@ class SerialBridgeNode(Node):
                 self.get_logger().warn(
                     f'★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 '
                     f'{self.gov_deadband:.2f}m/s 넘게 빠르면 역 PWM 을 낸다 '
-                    f'(초과 1m/s 당 {self.gov_gain:.0f}, 상한 {self.gov_pwm:.0f}). '
+                    f'(초과 1m/s 당 {self.gov_gain:.0f}, 상한 {self.gov_pwm:.0f}, '
+                    f'선행 {self.gov_lead_s:.2f}s). '
                     f'⚠ 플러깅이라 전류가 크다 — 상한을 함부로 올리지 말 것.')
         if self.ff_brake_pwm > 0.0:
             self.get_logger().warn(
@@ -298,6 +309,9 @@ class SerialBridgeNode(Node):
         # 엔코더 원시 카운트 — 엔코더 스케일(counts_per_revolution) 검증에 필수.
         # RTK 이동거리와 비교해 1카운트당 실제 거리를 역산한다.
         self.enc_pub = self.create_publisher(Int32, '/encoder_count', 10)
+        # 거버너가 실제로 보는 속도 — 로그로 검증할 수 있어야 한다.
+        # /current_speed(펌웨어 VEL)와 나란히 찍어 비교하려고 따로 낸다.
+        self.encv_pub = self.create_publisher(Float64, '/current_speed_enc', 10)
         # 개루프 식별용: 현재 인가 중인 구동 PWM
         self.drive_pwm_pub = self.create_publisher(Int32, '/drive_pwm', 10)
         # 소나 유효 최대거리[m]. NewPing은 미검출 시 0을 주므로 그대로 쓰면
@@ -437,6 +451,95 @@ class SerialBridgeNode(Node):
         self.last_cmd_time = self.openloop_time
 
     # ------------------------------------------------------------------
+    # 엔코더 위치차분 속도·가속도 추정기
+    #
+    # ★ 2026-09-17 실측(내리막 5km/h 시험, /tmp/ramp_5키로_2338.csv) —
+    #   펌웨어 VEL 은 거버너의 입력으로 쓸 수 없다. 같은 순간의 값이:
+    #       t=2.59  VEL 1.90  ↔ 엔코더 실속 0.63
+    #       t=3.22  VEL 3.05  ↔ 엔코더 실속 1.08   → 거버너 PWM 71→23
+    #       t=3.44  VEL 0.06  ↔ 엔코더 실속 0.65   → 거버너 PWM 23→59
+    #   잡음을 쫓느라 진짜 가속(0.7→1.7→2.5 m/s)을 놓치고 중단됐다.
+    #   VEL 은 펌웨어가 10ms 간격 카운트차로 내는 값이라 양자화가 그대로
+    #   실린다(1카운트 = 2.875mm → 10ms 면 0.2875 m/s 눈금!).
+    #
+    #   그래서 **카운트를 직접 시간창으로 차분**한다. 같은 양자화가 훨씬 긴
+    #   시간으로 나뉘므로 눈금이 그만큼 잘게 쪼개진다.
+    #   이동평균과 달리 위상지연이 창의 절반으로 고정된다.
+    #
+    # ★ 텔레메트리는 100Hz 가 아니라 **20Hz** 다 (2026-09-17 로그 실측:
+    #   enc 가 실제로 바뀌는 간격 중앙 0.051s, 최대 0.250s). 이름이
+    #   STATUS_10ms 라서 100Hz 로 착각하기 쉽다 — 창 길이를 정할 때 중요하다.
+    #   0.30s 창 = 표본 6개. 더 줄이면 표본이 3개 밑으로 떨어져 못 쓴다.
+    ENC_M_PER_COUNT = 2.0 * math.pi * 0.1327 / 290.0   # 2.875 mm
+    ENC_FORWARD_SIGN = -1.0        # 전진하면 카운트가 준다(cpr = -290)
+    ENC_JUMP_COUNTS = 400          # 1샘플 400카운트 = 115 m/s. SPI 오독이다
+    ENC_WIN_S = 0.30               # 위치차분 창 (20Hz → 표본 6개)
+    ENC_ACC_CAP = 8.0              # 가속도 포화 [m/s^2] — 미분 잡음 방어
+    # 가속도는 2계 미분이라 속도보다 훨씬 거칠다(실측 재생에서 ±8 로 요동쳤다).
+    # 시정수 0.20s 로 1차 저역통과한다. 선행(0.3s)에서 이만큼 까먹지만,
+    # 요동치는 선행은 선행이 아니라 잡음 주입이다.
+    ENC_ACC_TAU = 0.20
+    # 선행 보정의 상한 [m/s]. 잡음이 지배하지 못하게 막되, **정상 내리막이
+    # 여기 걸리면 안 된다**. 법정 최급경사(12.5%)의 관성가속도가 1.22 m/s²,
+    # 선행 0.3s 면 0.37 m/s. 시험장 20% 라도 1.92×0.3 = 0.58 m/s.
+    # 처음 0.5 로 뒀다가 시험에서 잡혔다 — 평범한 내리막이 상시 포화했다.
+    GOV_LEAD_CAP = 1.0
+
+    def _enc_pos_update(self, counts):
+        """STATUS_10ms 줄마다 호출(실제 ~20Hz). 위치차분으로 속도·가속도를 낸다."""
+        now = self.get_clock().now().nanoseconds * 1e-9
+
+        # 점프 기각 — 단, 3연속이면 진짜 리셋으로 보고 창을 버리고 재시작
+        if self._enc_last_c is not None and \
+                abs(counts - self._enc_last_c) > self.ENC_JUMP_COUNTS:
+            self._enc_rej += 1
+            if self._enc_rej < 3:
+                return
+            self._enc_hist = []
+        self._enc_rej = 0
+        self._enc_last_c = counts
+
+        self._enc_hist.append((now, counts))
+        while len(self._enc_hist) > 2 and (now - self._enc_hist[0][0]) > self.ENC_WIN_S:
+            self._enc_hist.pop(0)
+        if len(self._enc_hist) < 3:
+            return
+        t0, c0 = self._enc_hist[0]
+        span = now - t0
+        if span < self.ENC_WIN_S * 0.5:    # 창이 덜 찼다 — 아직 못 믿는다
+            return
+
+        k = self.ENC_FORWARD_SIGN * self.ENC_M_PER_COUNT
+        v = k * (counts - c0) / span
+
+        # 가속도 — 창을 반으로 갈라 두 평균속도의 차. 인접샘플 미분과 달리
+        # 양자화가 10배 희석된다.
+        mid = self._enc_hist[len(self._enc_hist) // 2]
+        dt1 = mid[0] - t0
+        dt2 = now - mid[0]
+        if dt1 > 1e-3 and dt2 > 1e-3:
+            v1 = k * (mid[1] - c0) / dt1
+            v2 = k * (counts - mid[1]) / dt2
+            dtc = (now + mid[0]) * 0.5 - (mid[0] + t0) * 0.5
+            if dtc > 1e-3:
+                a = (v2 - v1) / dtc
+                a = max(-self.ENC_ACC_CAP, min(self.ENC_ACC_CAP, a))
+                # 1차 저역통과 — dt 를 반영해 표본율이 흔들려도 시정수가 유지된다
+                dta = now - self._meas_a_t
+                if self._meas_a_t <= 0.0 or dta <= 0.0 or dta > 0.5:
+                    self._meas_a = a
+                else:
+                    alpha = dta / (self.ENC_ACC_TAU + dta)
+                    self._meas_a += alpha * (a - self._meas_a)
+                self._meas_a_t = now
+
+        self._meas_v = v
+        self._meas_v_t = now
+        self._meas_src = 'encpos'
+        if self.encv_pub is not None:
+            self.encv_pub.publish(Float64(data=float(v)))
+
+    # ------------------------------------------------------------------
     def _enc_speed_cb(self, msg):
         """엔코더 속도 — 이동평균으로 양자화 잡음을 누른다.
 
@@ -448,9 +551,10 @@ class SerialBridgeNode(Node):
             self._enc_v_buf.pop(0)
         v = sum(self._enc_v_buf) / len(self._enc_v_buf)
         now = self.get_clock().now().nanoseconds * 1e-9
-        # odom 이 신선하면 건드리지 않는다 (그쪽이 우선)
+        # 더 나은 출처가 신선하면 건드리지 않는다.
+        # ★ encpos(위치차분) > odom(EKF) > enc(펌웨어 VEL, 이 함수)
         if self._meas_v is not None and (now - self._meas_v_t) < 0.3:
-            if self._meas_src == 'odom':
+            if self._meas_src in ('odom', 'encpos'):
                 return
         self._meas_v = v
         self._meas_v_t = now
@@ -466,8 +570,13 @@ class SerialBridgeNode(Node):
           ★ 2026-09-17 — 그때를 위해 **엔코더 폴백**을 붙였다(_enc_speed_cb).
             odom 이 살아 있으면 이쪽이 우선이다 — EKF 가 훨씬 매끄럽다.
         """
+        now = self.get_clock().now().nanoseconds * 1e-9
+        # 위치차분이 살아 있으면 그쪽이 우선이다 — EKF twist 는 프레임지연으로
+        # 튄다(실측 61.9 m/s). 위치차분은 그 병이 없다.
+        if self._meas_src == 'encpos' and (now - self._meas_v_t) < 0.3:
+            return
         self._meas_v = float(msg.twist.twist.linear.x)
-        self._meas_v_t = self.get_clock().now().nanoseconds * 1e-9
+        self._meas_v_t = now
         self._meas_src = 'odom'
 
     # 제동시간 기준속도에 쓰는 측정속도의 조건.
@@ -511,7 +620,16 @@ class SerialBridgeNode(Node):
             return None
         if (mv > 0) != (cmd_v > 0):
             return None
-        excess = abs(mv) - abs(cmd_v) - self.gov_deadband
+        # 선행 — 지금 가속도로 gov_lead_s 뒤의 속도를 내다본다.
+        # 내리막에서는 중력이 계속 더하므로, 넘고 나서 잡으면 이미 늦다.
+        # (실측: 0.73 → 1.05 → 1.70 m/s 가 0.4초에 일어났다)
+        sgn = 1.0 if cmd_v > 0 else -1.0
+        lead = 0.0
+        if self.gov_lead_s > 0.0 and (now - self._meas_a_t) < self.BRAKE_MEAS_FRESH_S:
+            lead = self.gov_lead_s * self._meas_a * sgn
+            lead = max(-self.GOV_LEAD_CAP, min(self.GOV_LEAD_CAP, lead))
+        v_pred = abs(mv) + lead
+        excess = v_pred - abs(cmd_v) - self.gov_deadband
         if excess <= 0.0:
             return None
         # FF 크기에서 초과분에 비례해 뺀다. 음수(제동)까지 내려갈 수 있고,
@@ -519,7 +637,7 @@ class SerialBridgeNode(Node):
         out = abs(ff_pwm) - self.gov_gain * excess
         out = max(out, -self.gov_pwm)
         self.get_logger().info(
-            f'거버너 — 측정 {abs(mv):.2f} > 명령 {abs(cmd_v):.2f} '
+            f'거버너 — 측정 {abs(mv):.2f}{lead:+.2f}(선행) > 명령 {abs(cmd_v):.2f} '
             f'(+{excess + self.gov_deadband:.2f}) → PWM {abs(ff_pwm):.0f} '
             f'{"→" if out >= 0 else "→ 제동"} {out:.0f}',
             throttle_duration_sec=1.0)
@@ -790,6 +908,8 @@ class SerialBridgeNode(Node):
                     enc1, vel, _, pwm, _, s1, s2, s3 = m.groups()
                     self.speed_pub.publish(Float64(data=float(vel)))
                     self.enc_pub.publish(Int32(data=int(enc1)))
+                    # 위치차분 추정기 — 거버너·제동이 보는 속도의 출처
+                    self._enc_pos_update(int(enc1))
                     self.drive_pwm_pub.publish(Int32(data=int(pwm)))
                     # 미검출(0.00) = '장애물 없음'.
                     # ★ 2026-08-19 버그 수정 (랩 10분의 주범):
