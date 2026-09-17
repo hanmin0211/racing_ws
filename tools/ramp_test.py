@@ -174,19 +174,12 @@ def judge(rows, label):
     print(f'   PWM   최대 {max(pw)} · 달릴 때 중앙 {med}')
     if stuck_pw:
       mx = max(stuck_pw)
-      # ★ 2026-09-17 — PWM 이 높은데 **전압도 안 떨어지면** 토크 문제가 아니라
-      #   모터에 전력이 안 가는 것이다. 잠긴 모터는 역기전력이 없어 전류를
-      #   최대로 빤다 — 2026-09-13 실측: PWM 50 으로 안 굴렀을 때 VMIN 2938mV.
-      #   오늘 PWM 200 으로 안 움직였는데 VMIN 4167mV 였고, **바퀴를 들어도**
-      #   안 돌았다. 구동계 고장이었다(직전 런에서는 3.5 m/s 가 나왔다).
-      #   이 도구는 차가 경사에 있는지 모른다. '경사 한계' 라고 단정하면 안 된다.
-      sag = (max(vcc) - min(vcc)) if vcc else 0
-      if mx >= 120 and sag < 300:
-        say('실패', '구동 전력 의심',
-            f'PWM {mx} 인데 전압이 {sag}mV 밖에 안 흔들렸다 — 잠긴 모터면 '
-            f'크게 주저앉아야 한다. **모터에 전력이 안 가는 것**일 수 있다. '
-            f'바퀴를 들고 같은 PWM 을 줘 보라 — 그래도 안 돌면 구동계 고장이다')
-      elif mx >= 180:
+      # ⚠ 전압으로 구동 전류를 판단하면 안 된다. tools/drive_diag.py 실측:
+      #   구동 모터가 **정상 회전**할 때도 /vcc_mv 강하가 0mV 였고, 조향은
+      #   같은 배터리에서 2160mV 를 끌어내렸다. 구동은 로직 레일과 **별도
+      #   전원**이라 이 신호에 안 나타난다. (한때 '전압이 안 흔들리니 전력이
+      #   안 간다' 는 검사를 넣었다가 정상 런에도 뜨는 것을 보고 지웠다.)
+      if mx >= 180:
         say('실패', '추진력 한계',
             f'PWM {mx} (상한 230) 로도 안 움직였다 — 설정으로 올릴 여지가 '
             f'거의 없다. 경사라면 이 차의 한계이고, 평지라면 고장이다')
@@ -194,6 +187,36 @@ def judge(rows, label):
         say('경고', '추진력 부족',
             f'PWM {mx} 로 안 움직였다 — 상한 230 까지 여유가 있다. '
             f'ff_breakaway_pwm(출발) 과 ff_min_pwm(주행) 을 올려 볼 것')
+
+  # ── 바퀴 슬립 ────────────────────────────────────────────────────
+  #   같은 PWM · 같은 경사면 속도는 매끄러워야 한다. 0 ↔ 2.3 m/s 를 오가면
+  #   접지를 잃고 헛돌다(엔코더는 빠르게 읽는다) 다시 물리는 것이다.
+  #   실측(2026-09-17): PWM 122 고정 603샘플 중 545개, 속도 0.00~2.30 반복.
+  #   ⚠ 슬립이면 **PWM 을 올리면 더 나빠진다** — 처방이 정반대다.
+  if any(pw):
+    from collections import Counter
+    common = Counter(p for p, mv in zip(pw, [abs(x) > 0.05 for x in v]) if mv)
+    if common:
+      p_mode, n_mode = common.most_common(1)[0]
+      vs_mode = [abs(x) for x, p in zip(v, pw) if p == p_mode and abs(x) > 0.05]
+      if len(vs_mode) >= 30:
+        mean = sum(vs_mode) / len(vs_mode)
+        var = sum((x - mean) ** 2 for x in vs_mode) / len(vs_mode)
+        cv_ = (var ** 0.5) / max(mean, 1e-6)
+        zero = sum(1 for x, p in zip(v, pw)
+                   if p == p_mode and abs(x) <= 0.05)
+        print(f'   슬립   PWM {p_mode} 고정 {len(vs_mode)}샘플 · '
+              f'속도 평균 {mean:.2f} · 변동계수 {cv_:.2f} · 정지 {zero}회')
+        if cv_ > 0.55:
+          say('실패', '바퀴 슬립',
+              f'PWM {p_mode} 로 일정한데 속도 변동계수가 {cv_:.2f} 다 '
+              f'(0~{max(vs_mode):.2f} m/s 를 오간다). 접지를 잃고 헛도는 것 — '
+              f'**PWM 을 올리면 더 나빠진다.** 바퀴가 도는데 차가 안 나가는지 '
+              f'눈으로 확인할 것')
+        elif cv_ > 0.35:
+          say('경고', '바퀴 슬립', f'속도 변동계수 {cv_:.2f} — 슬립 의심')
+        else:
+          say('통과', '바퀴 슬립', f'속도 변동계수 {cv_:.2f} (매끄럽다)')
 
   # ── 전압 ─────────────────────────────────────────────────────────
   if vcc:
