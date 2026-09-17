@@ -86,6 +86,28 @@ def judge(rows, label):
         f'실제/명령 = {ratio:.2f} 배 (개루프면 1 에서 멀어진다. '
         f'NO_ENCODER 0 + ff_mode:=firmware 로 닫으면 1 에 가까워져야 한다)')
 
+  # ── PWM — '못 올라감' 의 원인을 가른다 ───────────────────────────
+  #   PWM 이 높은데 안 움직이면 토크 부족(또는 잠김).
+  #   PWM 이 낮은데 안 움직이면 **명령이 모자란 것** — 설정을 올리면 된다.
+  pw = [abs(r.get('pwm', 0)) for r in rows]
+  if any(pw):
+    moving = [abs(x) > 0.05 for x in v]
+    run_pw = sorted(p for p, mv in zip(pw, moving) if mv)
+    med = run_pw[len(run_pw) // 2] if run_pw else 0
+    stuck_pw = [p for p, c, mv in zip(pw, cv, moving)
+                if abs(c) > 0.1 and not mv]
+    print(f'   PWM   최대 {max(pw)} · 달릴 때 중앙 {med}')
+    if stuck_pw:
+      mx = max(stuck_pw)
+      if mx >= 100:
+        say('실패', '토크 부족',
+            f'PWM {mx} 를 주고도 안 움직였다 — 설정으로 더 못 올린다. '
+            f'경사가 이 차의 한계를 넘는다')
+      else:
+        say('경고', '명령 부족',
+            f'안 움직일 때 PWM 이 {mx} 뿐이었다 — 아직 여유가 있다. '
+            f'ff_min_pwm 을 올려 볼 것 (평지 정지마찰 문턱 55~56)')
+
   # ── 전압 ─────────────────────────────────────────────────────────
   if vcc:
     lo = min(vcc)
@@ -154,12 +176,15 @@ def record(a):
       self.v = self.cmd_v = 0.0
       self.enc = None   # 첫 메시지 전에는 None
       self.vcc = 0
+      self.pwm = 0
       self.steer = 0.0
       self.stall = False
       self.create_subscription(Float64, '/current_speed',
                                lambda m: setattr(self, 'v', m.data), 10)
       self.create_subscription(Int32, '/encoder_count',
                                lambda m: setattr(self, 'enc', m.data), 10)
+      self.create_subscription(Int32, '/drive_pwm',
+                               lambda m: setattr(self, 'pwm', m.data), 10)
       self.create_subscription(Int32, '/vcc_mv',
                                lambda m: setattr(self, 'vcc', m.data), 10)
       self.create_subscription(Float64, '/steering_angle',
@@ -194,7 +219,7 @@ def record(a):
   print(f'▶ {a.seconds}초 기록 · {out}')
   print('  ⚠ 내리막이면 ff_brake_pwm 이 켜져 있는지 확인할 것 '
         '(꺼져 있으면 놓아도 안 선다)')
-  print(f'  {"t":>6} {"명령":>6} {"실제":>6} {"vcc":>6} {"이동":>6}')
+  print(f'  {"t":>6} {"명령":>6} {"실제":>6} {"PWM":>5} {"vcc":>6} {"이동":>6}')
   last = 0.0
   e0 = n.enc
   stop_reason = '시간 종료'
@@ -246,7 +271,8 @@ def record(a):
         send(a.speed * min(1.0, t / 1.0))
 
       rows.append({'t': t, 'v': n.v, 'cmd_v': n.cmd_v, 'enc': n.enc,
-                   'vcc': n.vcc, 'steer': n.steer, 'stall': int(n.stall)})
+                   'vcc': n.vcc, 'pwm': n.pwm, 'steer': n.steer,
+                   'stall': int(n.stall)})
       if t - last >= 0.5:
         last = t
         flag = ''
@@ -256,8 +282,8 @@ def record(a):
           flag = '  ⚠ 빠르다'
         if 500 < n.vcc < VCC_BOD:
           flag += '  ❌ 전압'
-        print(f'  {t:6.1f} {n.cmd_v:6.2f} {n.v:6.2f} {n.vcc:6.0f} '
-              f'{dist:6.1f}{flag}')
+        print(f'  {t:6.1f} {n.cmd_v:6.2f} {n.v:6.2f} {n.pwm:5d} '
+              f'{n.vcc:6.0f} {dist:6.1f}{flag}')
   except KeyboardInterrupt:
     stop_reason = '사용자 중단 (Ctrl-C)'
   finally:
