@@ -45,6 +45,10 @@ def generate_launch_description():
       DeclareLaunchArgument('ff_brake_pwm', default_value='0.0',
                             description='능동 제동 역 PWM. 내리막 시험은 50 권장'),
       DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
+      # 정지→출발 시 정지마찰을 뚫는 값. 평지 실측: PWM 50 안 구름 / 55 덜컹 /
+      # 60 → 1.07 m/s. **오르막 출발은 더 필요할 수 있다.**
+      DeclareLaunchArgument('ff_breakaway_pwm', default_value='60.0'),
+      DeclareLaunchArgument('ff_breakaway_ms', default_value='1200.0'),
       DeclareLaunchArgument('max_speed', default_value='0.6',
                             description='먹스 속도 상한. 오르막 시험은 올려야 할 수 있다'),
 
@@ -78,6 +82,10 @@ def generate_launch_description():
                   LaunchConfiguration('ff_brake_pwm'), value_type=float),
               'ff_min_pwm': ParameterValue(
                   LaunchConfiguration('ff_min_pwm'), value_type=float),
+              'ff_breakaway_pwm': ParameterValue(
+                  LaunchConfiguration('ff_breakaway_pwm'), value_type=float),
+              'ff_breakaway_ms': ParameterValue(
+                  LaunchConfiguration('ff_breakaway_ms'), value_type=float),
           }],
       ),
   ])
