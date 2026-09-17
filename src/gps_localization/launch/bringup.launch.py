@@ -272,6 +272,26 @@ def generate_launch_description():
       # true 면 라이다 **조향 회피만** 끈다(감속·정지는 그대로).
       # 돌발 급정지 단독 시험처럼 '피하지 말고 서야' 하는 경우에 쓴다.
       DeclareLaunchArgument('no_avoid_steer', default_value='false'),
+      # 신호등 상태 토픽. 파이의 COCO 검출기는 /traffic_light_state_coco 로 쏜다.
+      # (옛 전용모델 노드를 쓰면 /traffic_light_state 로 되돌릴 것)
+      DeclareLaunchArgument('traffic_light_topic',
+                            default_value='/traffic_light_state_coco'),
+      # ★ 2026-09-16 — 회피 조향 안정화 3종. 전부 기본 0 = 꺼짐.
+      #   drive_0337(학교트랙 완주 런)은 이 기능들 **없이** 완주했다.
+      #   검증된 동작을 기본값으로 바꾸지 않는다 — 현장에서 하나씩 켜서 잴 것.
+      #
+      #   avoid_steer_rate_deg   회피 조향 슬루레이트 제한 [도/초]
+      #     실측: 회피 명령이 최대 **604°/s** 를 요구했다(실제 조향은 ~25°/s).
+      #     경로조향은 이미 90°/s 로 제한되는데 **회피만 제한이 없었다.**
+      #     권장 90.0 — 경로조향과 같은 값이라 두 갈래가 대칭이 된다.
+      #     실측 리플레이: 460→90°/s, 부호전환 6→4회, −18° 기동은 250ms 지연으로
+      #     끝까지 간다(조향 지연 350ms 보다 작다). tools/test_avoid_rate.py
+      #   avoid_hold_s / avoid_max_*  먹스의 유지시간·이탈 상한
+      #     상세는 vehicle_cmd_mux_node.py 주석. 둘은 **한 쌍**이다.
+      DeclareLaunchArgument('avoid_steer_rate_deg', default_value='0.0'),
+      DeclareLaunchArgument('avoid_hold_s', default_value='0.0'),
+      DeclareLaunchArgument('avoid_max_lateral_m', default_value='0.0'),
+      DeclareLaunchArgument('avoid_max_heading_deg', default_value='0.0'),
       DeclareLaunchArgument('ff_static', default_value='17.2'),
       DeclareLaunchArgument('ff_gain', default_value='38.8'),
       # ★ 2026-09-13 노출 — 상세 주석은 control.launch.py 에 있다.
@@ -428,6 +448,12 @@ def generate_launch_description():
                   LaunchConfiguration('obstacle_stop_dist'),
               'ff_static': LaunchConfiguration('ff_static'),
               'ff_gain': LaunchConfiguration('ff_gain'),
+              # 먹스의 회피 유지시간·이탈 상한 (위 DeclareLaunchArgument 주석).
+              'avoid_hold_s': LaunchConfiguration('avoid_hold_s'),
+              'avoid_max_lateral_m':
+                  LaunchConfiguration('avoid_max_lateral_m'),
+              'avoid_max_heading_deg':
+                  LaunchConfiguration('avoid_max_heading_deg'),
           }.items(),
       ),
 
@@ -489,6 +515,10 @@ def generate_launch_description():
               # 콘 사이로 '통과' 할 것인가(True) 바깥으로 돌 것인가(False).
               'fg_prefer_path_gap': ParameterValue(
                   LaunchConfiguration('fg_prefer_path_gap'), value_type=bool),
+              # 회피 조향 슬루레이트 제한 (위 DeclareLaunchArgument 주석 참고).
+              'avoid_steer_rate_deg': ParameterValue(
+                  LaunchConfiguration('avoid_steer_rate_deg'),
+                  value_type=float),
               # ★ 2026-09-13 — 회피 '조향' 만 따로 끌 수 있어야 한다.
               #   돌발 급정지는 **서야** 성공이고 피하면 실패(10점)다. 그런데
               #   sudden_stop_node 는 HOLD 에서 /stop_line_distance=0 만 내고
@@ -514,7 +544,17 @@ def generate_launch_description():
           name='traffic_light_bridge',
           output='screen',
           condition=IfCondition(mission),
-          parameters=[{'stop_points': stop_pts}],
+          # ★ 2026-09-17 — state_topic 을 **반드시** 넘긴다.
+          #   브리지 기본값은 /traffic_light_state 인데, 지금 쓰는 COCO 검출기는
+          #   **/traffic_light_state_coco** 로 쏜다. 예전엔 이 인자를 안 넘겨서
+          #   브리지가 아무도 발행하지 않는 토픽을 구독했다.
+          #   **오류가 안 난다** — 조용히 '미검출' 로 판단하고 on_none 대로
+          #   10초 뒤 통과시킨다. 신호등을 아무리 잘 읽어도 제어에 안 닿는다.
+          #   현장에서 제일 찾기 어려운 종류의 고장이라 런치 인자로 뺐다.
+          parameters=[{
+              'stop_points': stop_pts,
+              'state_topic': LaunchConfiguration('traffic_light_topic'),
+          }],
       ),
 
       # 7-c. 횡단보도 정지 (crosswalk:=true 일 때만)
