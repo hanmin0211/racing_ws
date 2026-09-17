@@ -45,8 +45,14 @@ def generate_launch_description():
       #   PID 를 우회하므로 경사에서 다시 개루프가 된다.
       #   ⚠ 'firmware' 에서는 ff_brake_pwm(ROS 쪽 능동 제동)이 동작하지 않는다.
       #     대신 PID 가 과속에 역 PWM 을 낸다 — 그쪽이 옳다.
-      DeclareLaunchArgument('ff_mode', default_value='firmware',
-                            description="'firmware'=속도 PID(권장) · 'ros'=개루프 PWM"),
+      # ⚠ 기본값을 잠시 'firmware' 로 바꿨다가 **되돌렸다**(2026-09-17).
+      #   펌웨어를 아직 안 구웠는데(NO_ENCODER 1) 기본값만 바꿔 두면,
+      #   인자 없이 띄웠을 때 VEL: 이 나가고 ROS 쪽 ff_min_pwm 이 무시된다.
+      #   실제로 그래서 PWM 이 42~45 밖에 안 나가 차가 안 움직였다.
+      #   **NO_ENCODER 0 으로 굽고 검증한 뒤에** 'firmware' 로 바꿀 것.
+      DeclareLaunchArgument('ff_mode', default_value='ros',
+                            description="'ros'=개루프 PWM(현재 펌웨어) · "
+                                        "'firmware'=속도 PID(NO_ENCODER 0 이후)"),
       DeclareLaunchArgument('ff_brake_pwm', default_value='0.0',
                             description='능동 제동 역 PWM. 내리막 시험은 50 권장'),
       DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
