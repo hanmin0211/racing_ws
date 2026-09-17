@@ -51,38 +51,26 @@ def fit_accel(ts, vs):
 
 def analyse(t, v, quiet=False):
   """전진(+)으로 밀었다 놓은 기록에서 경사를 낸다."""
-  # 올라가는 구간: v > 0 이면서 줄어드는 곳 (손을 뗀 뒤)
-  peak = max(range(len(v)), key=lambda i: v[i])
-  up_t, up_v = [], []
-  for i in range(peak, len(v)):
-    if v[i] <= 0.05:
-      break
-    up_t.append(t[i])
-    up_v.append(v[i])
-  # 내려오는 구간: 그 뒤 v < 0 이 이어지는 곳
-  down_t, down_v = [], []
-  started = False
-  for i in range(peak, len(v)):
-    if v[i] < -0.05:
-      started = True
-      down_t.append(t[i])
-      down_v.append(v[i])
-    elif started:
-      break
+  # ★ 구간 탐지는 **가장 긴 연속 구간**으로 찾는다. 예전엔 최고속도 지점
+  #   이후만 봤는데, 밀지 않고 놓기만 한 기록은 최고점이 끝에 있어 아무것도
+  #   안 잡혔다.
+  def longest(mask):
+    best = cur = None
+    for i, ok in enumerate(mask):
+      if ok:
+        cur = i if cur is None else cur
+      elif cur is not None:
+        if best is None or i - cur > best[1] - best[0]:
+          best = (cur, i)
+        cur = None
+    if cur is not None and (best is None or len(mask) - cur > best[1] - best[0]):
+      best = (cur, len(mask))
+    return best
 
-  # ★ 손을 안 뗀 런을 걸러낸다. 계속 밀면 속도가 **일정**하게 유지된다.
-  #   실측(2026-09-17): 0.8 m/s 가 10초 동안 유지돼 '올라감 가속도 -0.03' 이
-  #   나왔다 — 그건 감속이 아니라 등속 밀기다.
-  if len(up_v) > 20:
-    mu = sum(up_v) / len(up_v)
-    sd = (sum((x - mu) ** 2 for x in up_v) / len(up_v)) ** 0.5
-    span = up_t[-1] - up_t[0]
-    if span > 3.0 and sd / max(mu, 1e-6) < 0.25:
-      print(f'\n❌ {span:.1f}초 동안 속도가 {mu:.2f} m/s 로 거의 일정했다 '
-            f'(변동 {100 * sd / mu:.0f}%).')
-      print('   **손을 안 뗀 것**이다. 세게 밀고 **완전히 놓아야** 한다 —')
-      print('   감속 → 정지 → 되돌아 내려옴, 이 세 구간이 다 나와야 계산된다.')
-      return None
+  up = longest([x > 0.10 for x in v])       # 전진(밀려 올라가는) 구간
+  dn = longest([x < -0.10 for x in v])      # 후진(굴러 내려오는) 구간
+  up_t, up_v = ((t[up[0]:up[1]], v[up[0]:up[1]]) if up else ([], []))
+  down_t, down_v = ((t[dn[0]:dn[1]], v[dn[0]:dn[1]]) if dn else ([], []))
 
   a_up, n_up = fit_accel(up_t, up_v)
   a_dn, n_dn = fit_accel(down_t, down_v)
@@ -92,9 +80,32 @@ def analyse(t, v, quiet=False):
     print(f'   내려옴  {n_dn:3d}샘플 · 가속도 '
           f'{a_dn if a_dn is not None else float("nan"):+.2f} m/s²')
 
-  if a_up is None or a_dn is None:
-    print('\n❌ 두 구간을 다 못 잡았다. 더 세게 밀어 올리고, 놓은 뒤 차가'
-          ' 되돌아 내려올 때까지 기록을 유지할 것.')
+  if a_up is None and a_dn is None:
+    print('\n❌ 두 구간을 다 못 잡았다. 경사 위로 **세게 밀고 완전히 손을 떼서**,'
+          ' 차가 되돌아 내려올 때까지 기록을 유지할 것.')
+    return None
+
+  if a_up is None:
+    # ★ 내려오는 구간만 있는 경우 — '그냥 놓기만' 했을 때다. 구름저항이
+    #   상쇄되지 않으므로 **가정해야** 한다. 밀었다 놓은 것보다 부정확하다.
+    #   a_down = g·sinθ − f  ⇒  g·sinθ = a_down + f
+    print('\n⚠ 올라가는 구간이 없다 — 밀지 않고 놓기만 한 것 같다.')
+    print('  구름저항을 **가정**해서 계산한다(밀었다 놓으면 가정이 필요 없다).')
+    for f_g in (0.31, 0.37, 0.43):
+      gs_ = abs(a_dn) + f_g
+      if gs_ < G:
+        th_ = math.degrees(math.asin(gs_ / G))
+        print(f'    구름저항 {f_g:.2f} 가정 → 경사 '
+              f'{math.tan(math.radians(th_)) * 100:4.1f}% ({th_:.1f}°)')
+    gs = abs(a_dn) + 0.37
+    if gs >= G:
+      return None
+    th = math.degrees(math.asin(gs / G))
+    return math.tan(math.radians(th)) * 100
+
+  if a_dn is None:
+    print('\n❌ 내려오는 구간이 없다. 놓은 뒤 차가 되돌아 내려올 때까지'
+          ' 기다릴 것 (경사가 아주 완만하면 안 내려올 수도 있다).')
     return None
 
   gs = (abs(a_up) + abs(a_dn)) / 2.0          # g·sinθ
