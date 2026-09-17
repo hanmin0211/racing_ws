@@ -70,6 +70,20 @@ def analyse(t, v, quiet=False):
     elif started:
       break
 
+  # ★ 손을 안 뗀 런을 걸러낸다. 계속 밀면 속도가 **일정**하게 유지된다.
+  #   실측(2026-09-17): 0.8 m/s 가 10초 동안 유지돼 '올라감 가속도 -0.03' 이
+  #   나왔다 — 그건 감속이 아니라 등속 밀기다.
+  if len(up_v) > 20:
+    mu = sum(up_v) / len(up_v)
+    sd = (sum((x - mu) ** 2 for x in up_v) / len(up_v)) ** 0.5
+    span = up_t[-1] - up_t[0]
+    if span > 3.0 and sd / max(mu, 1e-6) < 0.25:
+      print(f'\n❌ {span:.1f}초 동안 속도가 {mu:.2f} m/s 로 거의 일정했다 '
+            f'(변동 {100 * sd / mu:.0f}%).')
+      print('   **손을 안 뗀 것**이다. 세게 밀고 **완전히 놓아야** 한다 —')
+      print('   감속 → 정지 → 되돌아 내려옴, 이 세 구간이 다 나와야 계산된다.')
+      return None
+
   a_up, n_up = fit_accel(up_t, up_v)
   a_dn, n_dn = fit_accel(down_t, down_v)
   if not quiet:
