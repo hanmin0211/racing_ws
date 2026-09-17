@@ -129,21 +129,24 @@ def judge(rows, label):
     moving = [abs(x) > 0.05 for x in v]
     run_pw = sorted(p for p, mv in zip(pw, moving) if mv)
     med = run_pw[len(run_pw) // 2] if run_pw else 0
-    # ⚠ 출발 구간(첫 2초)은 빼야 한다. 안 그러면 가속 시작 첫 샘플(v=0)이
-    #   '안 움직임' 으로 잡혀 오탐이 난다(합성 검증에서 실제로 났다).
+    # ⚠ 출발 램프(첫 1초)만 뺀다. 2초로 잡았더니 **breakaway 구간(기본 1.2초)이
+    #   통째로 빠져서**, PWM 110 으로 밀어도 안 움직인 런을 'PWM 90 뿐' 이라고
+    #   보고했다. 출발 정지마찰을 뚫는 값이 얼마였는지가 여기서 제일 중요하다.
     stuck_pw = [p for p, c, mv, tt in zip(pw, cv, moving, t)
-                if abs(c) > 0.1 and not mv and tt > 2.0]
+                if abs(c) > 0.1 and not mv and tt > 1.0]
     print(f'   PWM   최대 {max(pw)} · 달릴 때 중앙 {med}')
     if stuck_pw:
       mx = max(stuck_pw)
-      if mx >= 100:
-        say('실패', '토크 부족',
-            f'PWM {mx} 를 주고도 안 움직였다 — 설정으로 더 못 올린다. '
-            f'경사가 이 차의 한계를 넘는다')
+      # 개루프 경로의 상한은 펌웨어 MAX_OPENLOOP_PWM = 230 이다.
+      # 그 근처까지 갔을 때만 '차의 한계' 다. 그 아래면 아직 올릴 수 있다.
+      if mx >= 180:
+        say('실패', '토크 한계',
+            f'PWM {mx} (상한 230) 를 주고도 안 움직였다 — 설정으로 더 올릴 '
+            f'여지가 거의 없다. 이 경사는 이 차의 한계다')
       else:
-        say('경고', '명령 부족',
-            f'안 움직일 때 PWM 이 {mx} 뿐이었다 — 아직 여유가 있다. '
-            f'ff_min_pwm 을 올려 볼 것 (평지 정지마찰 문턱 55~56)')
+        say('경고', '추진력 부족',
+            f'PWM {mx} 로 안 움직였다 — 상한 230 까지 여유가 있다. '
+            f'ff_breakaway_pwm(출발) 과 ff_min_pwm(주행) 을 올려 볼 것')
 
   # ── 전압 ─────────────────────────────────────────────────────────
   if vcc:
