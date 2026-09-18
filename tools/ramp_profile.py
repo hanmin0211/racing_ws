@@ -141,6 +141,7 @@ class Bridge:
   for _k in ('ENC_M_PER_COUNT', 'ENC_FORWARD_SIGN', 'ENC_JUMP_COUNTS',
              'ENC_WIN_S', 'ENC_ACC_CAP', 'ENC_ACC_TAU', 'GOV_LEAD_CAP',
              'BRAKE_MEAS_FRESH_S', 'BRAKE_V_PLAUSIBLE', 'GRADE_FRESH_S',
+             'GOV_V_PLAUSIBLE_ENCPOS',
              'GRADE_MAX_RAD', 'GRADE_TAU', 'K_ACCEL_PER_PWM'):
     locals()[_k] = getattr(SB, _k)
   del _k
@@ -151,6 +152,7 @@ class Bridge:
   _governor_pwm = SB._governor_pwm
   _enc_pos_update = SB._enc_pos_update
   _imu_cb = SB._imu_cb
+  _gov_v_plausible = SB._gov_v_plausible
 
   def __init__(self, a):
     self.clock = _Clock()

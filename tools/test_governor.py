@@ -49,11 +49,17 @@ class Stub:
     self._meas_v_t = 0.0
     self._meas_a = 0.0
     self._meas_a_t = 0.0
+    # ★ 측정 출처. 기본 None = 예전과 같은 상한(3.0). 'encpos' 로 주면
+    #   위치차분 상한(6.0)이 적용된다 — 2026-09-18 추가분.
+    self._meas_src = None
     # 원본의 대문자 상수를 전부 가져온다 (위 S2 주석 참고)
     for _k, _v in vars(SerialBridgeNode).items():
       if _k.isupper() and not callable(_v):
         setattr(self, _k, _v)
     self.__dict__.update(kw)
+
+  # 출처별 상한 판정도 **원본을 그대로** 쓴다. 베끼면 갈라진다.
+  _gov_v_plausible = SerialBridgeNode._gov_v_plausible
 
   def get_logger(self): return _Log()
 
@@ -117,6 +123,30 @@ def main():
   # 5 km/h(1.39) 목표를 살짝 넘긴 경우 — 스로틀만 줄어야 한다
   run('5km/h 목표 · 실제 1.55 → FF 71 에서 44 로 (제동 아님)',
       1.39, 1.55, 71.1 - 300 * 0.06, f)
+
+  print('\n■ ★ 측정 출처별 타당성 상한 (2026-09-18)')
+  # 3.0 은 /odometry/filtered 의 twist 스파이크(61.9 m/s)를 거르려던 값이다.
+  # 9/17 에 거버너 입력을 엔코더 위치차분으로 바꿨는데 상한이 그대로 남아,
+  # **3.0 을 넘는 순간 거버너가 스스로 꺼졌다** — 제일 필요한 지점에서.
+  # 용인은 경사로가 끝나고 4m 뒤 굴절코스다. 3.9 로 내려오면 이탈이다.
+  run('위치차분 3.5 m/s — 예전엔 포기했다. 이제 잡는다',
+      1.11, 3.5, -50.0, f, gov_pwm=50.0, _meas_src='encpos')
+  run('위치차분 5.5 m/s 도 잡는다 (평지 PWM255 정상속도)',
+      1.11, 5.5, -50.0, f, gov_pwm=50.0, _meas_src='encpos')
+  # ⚠ 여기서부터가 **깨뜨리면 안 되는 것**이다.
+  run('위치차분이라도 6.0 초과는 여전히 무시한다 (카운터 오독)',
+      1.11, 6.5, None, f, gov_pwm=50.0, _meas_src='encpos')
+  run('odom 은 상한 그대로 3.0 — 3.5 를 무시한다',
+      1.11, 3.5, None, f, gov_pwm=50.0, _meas_src='odom')
+  run('펌웨어 VEL(enc) 도 상한 그대로 3.0 — 3.5 를 무시한다',
+      1.11, 3.5, None, f, gov_pwm=50.0, _meas_src='enc')
+  run('출처 미상(None)도 상한 그대로 3.0',
+      1.11, 3.5, None, f, gov_pwm=50.0)
+  run('odom 스파이크 61.9 는 출처가 뭐든 무시한다',
+      1.11, 61.9, None, f, gov_pwm=50.0, _meas_src='encpos')
+  # 상한을 올려도 '꺼져 있으면 안 건다' 는 그대로여야 한다
+  run('gov_pwm=0 이면 위치차분 5.0 이어도 안 건다',
+      1.11, 5.0, None, f, gov_pwm=0.0, _meas_src='encpos')
 
   print('\n■ 상한을 낮추면 그만큼만 낸다 (전류 제한)')
   run('gov_pwm=50 이면 역방향 50 을 안 넘는다', 1.0, 3.0, -50.0, f, gov_pwm=50.0)

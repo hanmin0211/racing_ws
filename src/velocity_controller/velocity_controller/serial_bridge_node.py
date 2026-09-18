@@ -726,6 +726,43 @@ class SerialBridgeNode(Node):
     BRAKE_MEAS_FRESH_S = 0.5
     BRAKE_V_PLAUSIBLE = 3.0
 
+    # ★ 2026-09-18 — 거버너만은 이 상한을 **출처에 따라** 다르게 쓴다.
+    #
+    #   위 3.0 은 원래 `/odometry/filtered` 의 twist 스파이크(실측 61.9 m/s)를
+    #   거르려고 넣은 값이다. 그런데 9/17 에 거버너 입력을 **엔코더 위치차분**
+    #   (_enc_pos_update)으로 바꿨다. 위치는 튀지 않으므로 그쪽에는 구조적으로
+    #   스파이크가 생기지 않는다 — **방어 대상은 사라졌는데 방어장치만 남아,
+    #   정상 동작을 막고 있었다.**
+    #
+    #   증상 (tools/ramp_profile.py, 12.5% 내리막, v_max 2.8):
+    #       거버너만 켬 → 내리막 3.92 m/s · 개입 0 회
+    #   3.0 을 넘는 순간 거버너가 스스로 손을 놓는다. 제일 필요한 지점에서.
+    #
+    #   용인은 경사로(s11~54)가 끝나고 **4m 뒤에 굴절코스**가 시작한다.
+    #   3.9 m/s 로 내려오면 4m 로는 3.08 까지밖에 안 줄어 굴절 진입 상한
+    #   3.0 을 넘긴다 = 이탈 = 탈락.
+    #
+    #   ⚠ **능동제동(_brake_pwm)은 그대로 3.0 을 쓴다.** 그쪽은 odom 도
+    #     입력이 될 수 있고, 잘못 풀리면 서 있어야 할 차가 굴러간다.
+    #     여기서 고치려는 것은 거버너 하나다.
+    #
+    #   6.0 의 근거: 평지 최대 PWM 255 의 정상속도가
+    #       (0.0202·255 − 0.37)/0.861 = 5.55 m/s.
+    #   내리막이 얹혀도 6.0 을 넘는 **위치차분** 값은 실제 주행이 아니라
+    #   카운터 오독으로 봐야 한다. 단일 표본 점프는 ENC_JUMP_COUNTS 가 이미
+    #   거르므로, 여기까지 올라오려면 창 전체가 오염돼야 한다.
+    GOV_V_PLAUSIBLE_ENCPOS = 6.0
+
+    def _gov_v_plausible(self):
+        """거버너가 믿을 측정속도 상한. 위치차분이면 높고, 나머지는 3.0.
+
+        'odom' 은 EKF 프레임지연으로 튀고, 'enc'(펌웨어 VEL)는 10ms 미분이라
+        양자화가 그대로 실린다(0.2875 m/s 눈금). 둘 다 예전 상한을 유지한다.
+        """
+        if self._meas_src == 'encpos':
+            return self.GOV_V_PLAUSIBLE_ENCPOS
+        return self.BRAKE_V_PLAUSIBLE
+
     def _governor_pwm(self, cmd_v, ff_pwm, now):
         """과속이면 FF 출력을 **연속적으로 깎는다**. 개입 안 하면 None.
 
@@ -756,7 +793,9 @@ class SerialBridgeNode(Node):
         if self._meas_v is None or (now - self._meas_v_t) >= self.BRAKE_MEAS_FRESH_S:
             return None
         mv = self._meas_v
-        if abs(mv) > self.BRAKE_V_PLAUSIBLE:
+        # 출처별 상한 — 위치차분이면 6.0, odom·펌웨어 VEL 이면 3.0.
+        # (근거는 GOV_V_PLAUSIBLE_ENCPOS 주석)
+        if abs(mv) > self._gov_v_plausible():
             return None
         if (mv > 0) != (cmd_v > 0):
             return None
