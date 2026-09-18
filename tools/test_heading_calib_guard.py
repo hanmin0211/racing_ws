@@ -65,8 +65,14 @@ def quat_from_yaw(y):
 class FakeVehicle(Node):
   """자전거모델 차량 + 가짜 GPS. 측위 오차와 점프를 주입할 수 있다."""
 
-  def __init__(self, jump_at, jump_m, rtk_at):
+  def __init__(self, jump_at, jump_m, rtk_at, openloop_vss=0.0):
     super().__init__('fake_vehicle')
+    # ★ 2026-09-18 — 개루프(ff_mode:=ros) 재현.
+    #   0 이면 명령속도를 그대로 따른다(= 속도제어를 받는 차).
+    #   >0 이면 **명령 크기와 무관하게** 이 정상상태 속도까지 가속한다.
+    #   실차가 그렇다: 명령은 PWM 으로 한 번 변환될 뿐 되먹임이 없다.
+    self.openloop_vss = float(openloop_vss)
+    self.v_cmd = 0.0
     self.x = 0.0          # 참값 [m] (동/북)
     self.y = 0.0
     self.yaw = 0.0        # 참 헤딩 [rad] — 동쪽
@@ -92,13 +98,19 @@ class FakeVehicle(Node):
     self.moved = 0.0
 
   def cmd_cb(self, msg):
-    self.v = float(msg.linear.x)
+    self.v_cmd = float(msg.linear.x)
+    if self.openloop_vss <= 0.0:
+      self.v = self.v_cmd
     self.steer = math.radians(float(msg.angular.z))
 
   def step(self):
     now = time.time()
     dt = now - self.last_step
     self.last_step = now
+    if self.openloop_vss > 0.0:
+      # 개루프: dv/dt = C(v_ss - v). C 는 실측 감쇠(0.861/s, 저장소 상수).
+      target = self.openloop_vss if abs(self.v_cmd) > 1e-3 else 0.0
+      self.v += 0.861 * (target - self.v) * dt
     self.x += self.v * math.cos(self.yaw) * dt
     self.y += self.v * math.sin(self.yaw) * dt
     self.yaw += self.v * math.tan(self.steer) / L * dt
@@ -187,7 +199,7 @@ def _kill_group(proc):
 
 
 def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
-        timeout=45.0):
+        timeout=45.0, openloop_vss=0.0, calib_d=None):
   print('=' * 72)
   print(f'▶ {name}')
   print('=' * 72)
@@ -202,8 +214,9 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
   _case_idx[0] += 1
   os.environ['ROS_DOMAIN_ID'] = domain      # rclpy.init 이 이 값을 읽는다
   env = dict(os.environ, ROS_DOMAIN_ID=domain)
+  calib_d = CALIB_D if calib_d is None else calib_d
   params = [
-      '-p', f'calib_distance:={CALIB_D}',
+      '-p', f'calib_distance:={calib_d}',
       '-p', 'auto_drive:=true',
       '-p', f'auto_speed:={SPEED}',
       '-p', f'auto_countdown:={COUNTDOWN}',
@@ -224,7 +237,7 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
       text=True, bufsize=1, start_new_session=True)
 
   rclpy.init()
-  veh = FakeVehicle(jump_at, jump_m, rtk_at)
+  veh = FakeVehicle(jump_at, jump_m, rtk_at, openloop_vss)
   watch = OffsetWatch()
   ex = rclpy.executors.SingleThreadedExecutor()
   ex.add_node(veh)
@@ -285,8 +298,44 @@ def run(name, expect_ok, extra_params, jump_at, jump_m, rtk_at,
   return ok
 
 
+def arithmetic_check():
+  """게이트 ③ 의 상한을 바꿔도 **사고는 여전히 걸리는가**.
+
+  축소 시뮬레이션이 아니라 **실제로 기록된 두 숫자**를 그대로 넣는다.
+  이게 이 변경의 핵심 안전 논거다.
+  """
+  print('=' * 72)
+  print('▶ 0. 상한 2.0 이 사고를 여전히 거부하는가 (실측값 직접 대입)')
+  print('=' * 72)
+  CAL_D = 10.0
+  cases = [
+      # 이름,                     간 거리, 걸린시간, 거부돼야 하나
+      ('2026-08-24 사고 (측위 점프)', 10.1, 3.4, True),
+      ('2026-09-18 개루프 실주행',    10.1, 9.6, False),
+  ]
+  ok = True
+  for name, dist, took, must_reject in cases:
+    for cap, label in ((1.0, '옛 상한 1.00 (명령 0.5 × 2)'),
+                       (2.0, '새 상한 2.00 (개루프)')):
+      need = CAL_D / cap
+      rejected = took < need
+      mark = ' ' * 4
+      print(f'  {name:28s} {dist:.1f}m/{took:.1f}s = {dist / took:.2f}m/s  '
+            f'│ {label:26s} 최소 {need:.1f}s → '
+            f'{"거부" if rejected else "통과"}')
+    got = took < CAL_D / 2.0
+    if got != must_reject:
+      ok = False
+    print(f'{mark}→ 새 상한에서 {"거부" if got else "통과"}  '
+          f'(기대: {"거부" if must_reject else "통과"})  '
+          f'{"✅" if got == must_reject else "❌"}\n')
+  print(f'  {"✅ PASS" if ok else "❌ FAIL"} — 사고는 막고 실주행은 통과한다\n')
+  return ok
+
+
 def main():
   results = []
+  results.append(arithmetic_check())
 
   # A. 정상 — RTK 처음부터 좋고 점프 없음 → 캘리브가 확정돼야 한다.
   #    (게이트가 멀쩡한 캘리브까지 막아버리면 그게 더 큰 사고다)
@@ -315,6 +364,31 @@ def main():
       expect_ok=False,
       extra_params=['-p', 'require_rtk:=false', '-p', 'max_jump_speed:=999.0'],
       jump_at=5.0, jump_m=7.3, rtk_at=5.0))
+
+  # ─────────────────────────────────────────────────────────────────
+  # E·F. 개루프(ff_mode:=ros) — 2026-09-18 23:55 고장 재현.
+  #
+  #   그날 차는 명령 0.5m/s 로 10m 를 갔는데 구간속도가
+  #   0.89 → 1.59 m/s 로 **매끄럽게 가속**했다(평균 1.05m/s).
+  #   점프가 아니라 속도제어가 없어서다. 그런데 게이트 ③ 의 상한은
+  #   '명령의 2배' = 1.00 이라, **진짜 주행이 무효 처리**됐다.
+  #
+  #   여기서는 정상상태 속도를 명령의 3.4배로 둔다 (실측 비율:
+  #   명령 0.5 → 9m 지점 구간속도 1.59, 아직 가속 중이었다).
+  OL_D = 6.0                    # 가속이 붙을 시간을 주려고 조금 길게
+  OL_VSS = SPEED * 3.4          # = 1.7 m/s
+
+  results.append(run(
+      'E. 개루프 + 옛 상한(명령×2) — 진짜 주행인데 거부된다 (9/18 고장 재현)',
+      expect_ok=False, extra_params=['-p', 'auto_speed_cap:=0.0'],
+      jump_at=0.0, jump_m=0.0, rtk_at=0.0,
+      openloop_vss=OL_VSS, calib_d=OL_D))
+
+  results.append(run(
+      'F. 개루프 + auto_speed_cap:=2.0 — 같은 주행이 확정돼야 한다 (수정 확인)',
+      expect_ok=True, extra_params=['-p', 'auto_speed_cap:=2.0'],
+      jump_at=0.0, jump_m=0.0, rtk_at=0.0,
+      openloop_vss=OL_VSS, calib_d=OL_D))
 
   print('=' * 72)
   n_ok = sum(1 for r in results if r)
