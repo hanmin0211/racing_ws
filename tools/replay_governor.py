@@ -44,9 +44,13 @@ class Rig:
   """serial_bridge_node 의 상태만 흉내 낸 껍데기. 로직은 원본을 그대로 쓴다."""
   for _k in ('ENC_M_PER_COUNT', 'ENC_FORWARD_SIGN', 'ENC_JUMP_COUNTS',
              'ENC_WIN_S', 'ENC_ACC_CAP', 'ENC_ACC_TAU', 'GOV_LEAD_CAP',
-             'BRAKE_MEAS_FRESH_S', 'BRAKE_V_PLAUSIBLE'):
+             'BRAKE_MEAS_FRESH_S', 'BRAKE_V_PLAUSIBLE',
+             'GOV_V_PLAUSIBLE_ENCPOS'):
     locals()[_k] = getattr(N, _k)
   del _k
+
+  # 출처별 상한 판정도 원본 그대로 쓴다 — 여기서 재구현하면 갈라진다.
+  _gov_v_plausible = N._gov_v_plausible
 
   def __init__(self, gov_pwm, gov_deadband, gov_gain, gov_lead_s):
     self.gov_pwm = gov_pwm
