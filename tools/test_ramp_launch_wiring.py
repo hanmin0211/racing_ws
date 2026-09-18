@@ -45,6 +45,7 @@ BRIDGE_ARGS = {
     'gov_deadband': '0.10',
     'gov_gain': '300.0',
     'gov_lead_s': '0.30',
+    'gov_min_grade': '0.0',   # 0 = 자세 게이트 꺼짐(예전 동작)
     'grade_ff_gain': '0.0',    # 0 = 경사 보상 꺼짐
     'grade_ff_max': '70.0',
     'imu_topic': 'handsfree/imu',

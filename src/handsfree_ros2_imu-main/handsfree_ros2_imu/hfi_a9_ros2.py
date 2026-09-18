@@ -49,15 +49,42 @@ class IMUNode(Node):
         self.mag_msg = MagneticField()
 
         try:
-            self.hf_imu = serial.Serial(port=port, baudrate=baudrate, timeout=5.0)
-            if self.hf_imu.is_open:
-                self.get_logger().info(f"Serial port {port} opened successfully")
-            else:
+            # ★ exclusive=True → TIOCEXCL. 다른 프로세스가 이 포트를 여는 것을
+            #   **커널이 막는다.** serial_bridge 가 /dev/arduino 에 쓰는 것과
+            #   같은 방식이다(serial_bridge_node.py 의 _open_no_reset 주석).
+            #
+            # ★ 왜 넣었나 (2026-09-18 밤, 학교)
+            #   런치를 Ctrl-C 로 내려도 이 노드가 **좀비로 살아남는 경우**가 있다.
+            #   그러면 다음 런치의 IMU 노드가 같은 포트를 열고, 둘이 한 스트림을
+            #   나눠 읽으며 서로의 프레임을 깨뜨린다. 증상:
+            #       device reports readiness to read but returned no data
+            #       (device disconnected or **multiple access on port**?)
+            #   재연결이 반복되다 결국 노드가 exit 1 로 죽는다. 그날 세 세션이
+            #   각각 122·127·235초 만에 이렇게 죽었고, 단일 인스턴스일 때는
+            #   330초 넘게 멀쩡했다.
+            #
+            #   이게 왜 위험한가: IMU 가 죽으면 0.5초 뒤 serial_bridge 의
+            #   _grade_pwm() 이 0 을 반환해 **경사 보상이 조용히 사라진다**
+            #   (GRADE_FRESH_S). 경사로 한가운데서 이러면 그대로 못 올라간다.
+            #   그리고 direct_localization 의 yaw 도 같이 얼어붙는다.
+            #
+            #   exclusive=True 면 **두 번째 노드가 즉시 열기에 실패**한다.
+            #   2분 뒤 주행 중에 죽는 대신, 띄우는 순간 큰 소리로 실패한다.
+            self.hf_imu = serial.Serial(port=port, baudrate=baudrate,
+                                        timeout=5.0, exclusive=True)
+            if not self.hf_imu.is_open:
                 self.hf_imu.open()
-                self.get_logger().info(f"Serial port {port} opened successfully")
+            self.get_logger().info(f"Serial port {port} opened successfully")
         except Exception as e:
-            self.get_logger().error(f"Failed to open serial port: {str(e)}")
-            exit(1)
+            self.get_logger().error(
+                f'❌ IMU 시리얼 열기 실패: {port} — {e}\n'
+                '   가장 흔한 원인은 **IMU 노드가 이미 떠 있는 것**이다.\n'
+                '     ps -eo pid,etimes,args | grep [h]fi_a9_ros2\n'
+                '   남아 있으면 정리하고 다시 띄울 것:\n'
+                '     bash tools/ros_cleanup.sh\n'
+                '   포트 자체가 없으면 udev 를 볼 것 (라이다와 같은 CP2102 라\n'
+                '   시리얼 0001 로 구분한다 — /etc/udev/rules.d/99-imu.rules)')
+            raise SystemExit(1)
 
         self.serial_thread = threading.Thread(target=self.read_serial)
         self.serial_thread.daemon = True
@@ -120,8 +147,11 @@ class IMUNode(Node):
                 return
             time.sleep(0.3)
             try:
+                # ★ 재연결에도 exclusive=True. 여기를 빠뜨리면 첫 열기에서만
+                #   막히고, 한 번 끊긴 뒤에는 좀비가 다시 끼어들 수 있다.
                 self.hf_imu = serial.Serial(
-                    port=self.port, baudrate=self.baudrate, timeout=5.0)
+                    port=self.port, baudrate=self.baudrate, timeout=5.0,
+                    exclusive=True)
                 self.get_logger().info(
                     f'✅ IMU 시리얼 재연결 성공: {self.port} '
                     f'(총 {self.reconnect_count}회)')

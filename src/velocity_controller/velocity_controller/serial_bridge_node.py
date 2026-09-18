@@ -225,6 +225,23 @@ class SerialBridgeNode(Node):
         # 선행시간 — 지금 가속도로 이만큼 뒤의 속도를 내다보고 판정한다.
         # 내리막에서 중력이 붙는 속도를 '넘고 나서' 가 아니라 '넘기 전에' 잡는다.
         self.declare_parameter('gov_lead_s', 0.30)    # [s] 0 = 순수 P
+        # ── 거버너 자세 게이트 (2026-09-18) ────────────────────────────
+        # ★ 왜 (2026-09-18 학교 실측)
+        #   거버너는 **중력이 미는 내리막**을 위한 것인데 전 구간에 켜져 있었다.
+        #   그런데 급커브에서는 곡률 제한이 명령을 빠르게 깎고(2.0 → 0.9),
+        #   차는 관성으로 못 따라온다. 그 **추종 지연**을 거버너가 과속으로
+        #   읽는다. 실측: 128m 주행에서 38회 개입, 그중 25회가 깎은 뒤 PWM 이
+        #   구동 문턱 아래였다.
+        #       측정 1.09 > 명령 1.07 (+0.14) → PWM 63 → 50   ← 직후 차가 섰다
+        #   게다가 거버너가 개입하면 ff_min_pwm 을 건너뛴다(내리막에선 옳다).
+        #
+        #   피치로 자세를 보면 이 둘이 깔끔히 갈린다. 내리막일 때만 켠다.
+        #   IMU 부호는 2026-09-18 에 양방향 실측으로 확정했다
+        #   (config/imu_pitch_offset.yaml).
+        #
+        # 값은 **sinθ 기준 내리막 경사**다. 0.03 = 3% 보다 급한 내리막에서만.
+        # 0.0 = 판정 안 함 = 예전과 완전히 같은 동작(항상 허용).
+        self.declare_parameter('gov_min_grade', 0.0)
 
         # ── 경사 보상 (IMU 피치) ───────────────────────────────────────
         # 개루프 FF 는 평지에서 식별한 식이라 경사를 모른다. 12.5% 오르막은
@@ -261,6 +278,7 @@ class SerialBridgeNode(Node):
         self.gov_deadband = float(self.get_parameter('gov_deadband').value)
         self.gov_gain = float(self.get_parameter('gov_gain').value)
         self.gov_lead_s = float(self.get_parameter('gov_lead_s').value)
+        self.gov_min_grade = float(self.get_parameter('gov_min_grade').value)
         self.grade_ff_gain = float(self.get_parameter('grade_ff_gain').value)
         self.grade_ff_max = float(self.get_parameter('grade_ff_max').value)
         self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
@@ -753,6 +771,27 @@ class SerialBridgeNode(Node):
     #   거르므로, 여기까지 올라오려면 창 전체가 오염돼야 한다.
     GOV_V_PLAUSIBLE_ENCPOS = 6.0
 
+    def _gov_grade_ok(self, now):
+        """거버너를 걸어도 되는 **자세**인가. 내리막일 때만 참.
+
+        ★ 왜 자세로 거르나 (근거는 gov_min_grade 선언부 주석)
+          거버너는 중력이 미는 내리막을 위한 것이다. 평지·오르막에서 도는
+          것은 곡률 제한이 만든 **추종 지연**이지 진짜 과속이 아니다.
+          거기서 PWM 을 깎으면 구동 문턱 아래로 떨어져 차가 선다.
+
+        ⚠ **모를 때는 허용한다** — 이 판정의 실패 방향이 안전을 가른다.
+          IMU 가 없거나 낡으면(GRADE_FRESH_S) 자세를 알 수 없다. 그때
+          거버너를 끄면 **내리막에서 못 잡아 이탈**한다. 반대로 켜 두면
+          최악이 '커브에서 한 번 선다' 다. 이탈보다 정지가 싸다.
+          그래서 판단 불가 = 허용이다.
+        """
+        if self.gov_min_grade <= 0.0:
+            return True                      # 게이트 자체가 꺼짐 = 예전 동작
+        if self._pitch is None or (now - self._pitch_t) >= self.GRADE_FRESH_S:
+            return True                      # 모른다 → 안전한 쪽(허용)
+        # 전진 기준 내리막이 음수다(오르막 +). 문턱보다 급한 내리막이어야 한다.
+        return math.sin(self._pitch) <= -self.gov_min_grade
+
     def _gov_v_plausible(self):
         """거버너가 믿을 측정속도 상한. 위치차분이면 높고, 나머지는 3.0.
 
@@ -789,6 +828,9 @@ class SerialBridgeNode(Node):
           · 명령과 측정의 부호가 같을 때만
         """
         if self.gov_pwm <= 0.0 or abs(cmd_v) < self.ff_deadband:
+            return None
+        # 자세 게이트 — 내리막이 아니면 개입하지 않는다 (기본은 판정 안 함).
+        if not self._gov_grade_ok(now):
             return None
         if self._meas_v is None or (now - self._meas_v_t) >= self.BRAKE_MEAS_FRESH_S:
             return None

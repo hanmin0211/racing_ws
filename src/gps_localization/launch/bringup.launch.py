@@ -312,6 +312,7 @@ def generate_launch_description():
       DeclareLaunchArgument('gov_deadband', default_value='0.10'),
       DeclareLaunchArgument('gov_gain', default_value='300.0'),
       DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
+      DeclareLaunchArgument('gov_min_grade', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
       # ★ 정지마찰 하한 — '구르는 중' 하한(ff_min_pwm)과 다른 값이어야 한다.
@@ -485,6 +486,7 @@ def generate_launch_description():
               'gov_deadband': LaunchConfiguration('gov_deadband'),
               'gov_gain': LaunchConfiguration('gov_gain'),
               'gov_lead_s': LaunchConfiguration('gov_lead_s'),
+              'gov_min_grade': LaunchConfiguration('gov_min_grade'),
               'grade_ff_gain': LaunchConfiguration('grade_ff_gain'),
               'grade_ff_max': LaunchConfiguration('grade_ff_max'),
           }.items(),

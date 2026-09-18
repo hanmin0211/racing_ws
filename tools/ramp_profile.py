@@ -153,6 +153,7 @@ class Bridge:
   _enc_pos_update = SB._enc_pos_update
   _imu_cb = SB._imu_cb
   _gov_v_plausible = SB._gov_v_plausible
+  _gov_grade_ok = SB._gov_grade_ok
 
   def __init__(self, a):
     self.clock = _Clock()
@@ -169,6 +170,7 @@ class Bridge:
     self.gov_deadband = a.gov_deadband
     self.gov_gain = a.gov_gain
     self.gov_lead_s = a.gov_lead_s
+    self.gov_min_grade = getattr(a, 'gov_min_grade', 0.0)
     # 경사 보상
     self.grade_ff_gain = a.grade_ff_gain
     self.grade_ff_max = a.grade_ff_max
@@ -533,6 +535,9 @@ def main():
   p.add_argument('--gov-deadband', type=float, default=0.10)
   p.add_argument('--gov-gain', type=float, default=300.0)
   p.add_argument('--gov-lead-s', type=float, default=0.30)
+  p.add_argument('--gov-min-grade', type=float, default=0.0,
+                 help='거버너 자세 게이트 — sinθ 기준 내리막 경사. '
+                      '0=판정 안 함. 0.03 이면 3%% 보다 급한 내리막에서만')
   p.add_argument('--grade-ff-gain', type=float, default=1.0,
                  help='0 = 경사 보상 꺼짐 (노드 기본값)')
   p.add_argument('--grade-ff-max', type=float, default=70.0)
