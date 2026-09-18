@@ -52,6 +52,10 @@ class Stub:
     # ★ 측정 출처. 기본 None = 예전과 같은 상한(3.0). 'encpos' 로 주면
     #   위치차분 상한(6.0)이 적용된다 — 2026-09-18 추가분.
     self._meas_src = None
+    # 자세 게이트용 (2026-09-18). 기본은 게이트 꺼짐 + 피치 없음.
+    self.gov_min_grade = 0.0
+    self._pitch = None
+    self._pitch_t = 0.0
     # 원본의 대문자 상수를 전부 가져온다 (위 S2 주석 참고)
     for _k, _v in vars(SerialBridgeNode).items():
       if _k.isupper() and not callable(_v):
@@ -60,6 +64,7 @@ class Stub:
 
   # 출처별 상한 판정도 **원본을 그대로** 쓴다. 베끼면 갈라진다.
   _gov_v_plausible = SerialBridgeNode._gov_v_plausible
+  _gov_grade_ok = SerialBridgeNode._gov_grade_ok
 
   def get_logger(self): return _Log()
 
@@ -147,6 +152,39 @@ def main():
   # 상한을 올려도 '꺼져 있으면 안 건다' 는 그대로여야 한다
   run('gov_pwm=0 이면 위치차분 5.0 이어도 안 건다',
       1.11, 5.0, None, f, gov_pwm=0.0, _meas_src='encpos')
+
+  print('\n■ ★ 자세 게이트 — 내리막일 때만 개입한다 (2026-09-18)')
+  # 거버너는 중력이 미는 내리막을 위한 것이다. 평지·오르막에서 도는 것은
+  # 곡률 제한이 만든 추종 지연이지 진짜 과속이 아니다. 실측(학교 128m):
+  # 38회 개입 중 25회가 깎은 뒤 PWM 이 구동 문턱 아래였고 차가 섰다.
+  import math as _m
+  DOWN = _m.asin(-0.10)      # 10% 내리막
+  UP   = _m.asin(+0.10)      # 10% 오르막
+  FLAT = 0.0
+  run('게이트 꺼짐(기본 0) 이면 평지에서도 예전처럼 건다',
+      1.0, 1.5, -64.0, f, _pitch=FLAT, _pitch_t=100.0)
+  run('게이트 켜고 **내리막** 이면 건다',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.03, _pitch=DOWN, _pitch_t=100.0)
+  # ⚠ 아래 셋이 이 기능의 존재 이유다
+  run('게이트 켜고 **평지** 면 안 건다 (곡률이 만든 가짜 과속)',
+      1.0, 1.5, None, f, gov_min_grade=0.03, _pitch=FLAT, _pitch_t=100.0)
+  run('게이트 켜고 **오르막** 이면 안 건다',
+      1.0, 1.5, None, f, gov_min_grade=0.03, _pitch=UP, _pitch_t=100.0)
+  run('문턱보다 완만한 내리막(1%)이면 안 건다',
+      1.0, 1.5, None, f, gov_min_grade=0.03, _pitch=_m.asin(-0.01),
+      _pitch_t=100.0)
+  # ⚠ 실패 방향 — 모르면 **허용**해야 한다. 내리막에서 못 잡으면 이탈이고,
+  #   평지에서 잘못 잡으면 최악이 '한 번 선다' 다. 이탈보다 정지가 싸다.
+  run('IMU 가 없으면 허용한다 (모를 때는 안전한 쪽)',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.03, _pitch=None, _pitch_t=100.0)
+  run('IMU 가 0.5s 넘게 낡으면 허용한다',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.03, _pitch=FLAT, _pitch_t=99.0)
+  # 게이트가 열려도 나머지 안전장치는 그대로여야 한다
+  run('게이트 열려도 gov_pwm=0 이면 안 건다',
+      1.0, 1.5, None, f, gov_pwm=0.0, gov_min_grade=0.03, _pitch=DOWN,
+      _pitch_t=100.0)
+  run('게이트 열려도 부호가 다르면 안 건다',
+      1.0, -2.0, None, f, gov_min_grade=0.03, _pitch=DOWN, _pitch_t=100.0)
 
   print('\n■ 상한을 낮추면 그만큼만 낸다 (전류 제한)')
   run('gov_pwm=50 이면 역방향 50 을 안 넘는다', 1.0, 3.0, -50.0, f, gov_pwm=50.0)

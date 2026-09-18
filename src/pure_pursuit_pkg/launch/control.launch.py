@@ -168,6 +168,9 @@ def generate_launch_description():
       DeclareLaunchArgument('gov_deadband', default_value='0.10'),
       DeclareLaunchArgument('gov_gain', default_value='300.0'),
       DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
+      # 거버너 자세 게이트 — sinθ 기준 내리막 경사. 0 = 판정 안 함(예전 동작).
+      # 0.03 이면 3% 보다 급한 내리막에서만 거버너가 일한다.
+      DeclareLaunchArgument('gov_min_grade', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
       DeclareLaunchArgument('imu_topic', default_value='handsfree/imu'),
@@ -290,6 +293,8 @@ def generate_launch_description():
                   LaunchConfiguration('gov_gain'), value_type=float),
               'gov_lead_s': ParameterValue(
                   LaunchConfiguration('gov_lead_s'), value_type=float),
+              'gov_min_grade': ParameterValue(
+                  LaunchConfiguration('gov_min_grade'), value_type=float),
               'grade_ff_gain': ParameterValue(
                   LaunchConfiguration('grade_ff_gain'), value_type=float),
               'grade_ff_max': ParameterValue(
