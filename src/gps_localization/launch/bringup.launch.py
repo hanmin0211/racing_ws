@@ -299,6 +299,21 @@ def generate_launch_description():
       #   감속·장애물 감속 램프를 전부 덮어쓴다(PWM 50 이면 어느 명령이든 50).
       #   obstacle_stop_dist 는 '동력을 끊을 거리' 지 '멈출 거리' 가 아니다.
       DeclareLaunchArgument('ff_min_pwm', default_value='50.0'),
+      # ── 경사로 (2026-09-18 노출) ─────────────────────────────────────
+      # 전부 **꺼짐이 기본**이다. 인자를 안 주면 추가 전과 완전히 같다.
+      # 켜는 순서와 근거는 RAMP_RUNBOOK.md — 특히 grade_ff 는 부호를
+      # tools/imu_grade.py 로 확정하기 전에 켜면 내리막에서 가속한다.
+      # ⚠ v_ramp_* 는 소수점을 찍을 것. `v_ramp_up:=2` 는 노드를 죽인다.
+      DeclareLaunchArgument('ramp_up_arm_topic', default_value=''),
+      DeclareLaunchArgument('ramp_down_arm_topic', default_value=''),
+      DeclareLaunchArgument('v_ramp_up', default_value='0.0'),
+      DeclareLaunchArgument('v_ramp_down', default_value='0.0'),
+      DeclareLaunchArgument('gov_pwm', default_value='0.0'),
+      DeclareLaunchArgument('gov_deadband', default_value='0.10'),
+      DeclareLaunchArgument('gov_gain', default_value='300.0'),
+      DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
+      DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
+      DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
       # ★ 정지마찰 하한 — '구르는 중' 하한(ff_min_pwm)과 다른 값이어야 한다.
       #   9/13 실측: PWM 50 은 출발을 못 하고(모터 잠김, VMIN 2938mV),
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
@@ -454,6 +469,24 @@ def generate_launch_description():
                   LaunchConfiguration('avoid_max_lateral_m'),
               'avoid_max_heading_deg':
                   LaunchConfiguration('avoid_max_heading_deg'),
+              # ── 경사로 (2026-09-18) ───────────────────────────────
+              # ★ 왜 여기까지 이어야 하나
+              #   control.launch.py 는 이 인자들을 예전부터 받고 있었는데,
+              #   bringup 이 **안 넘겼다.** 그래서 자율 주행(웨이포인트)으로
+              #   경사로를 달리면 구간 속도도 거버너도 경사 보상도 켤 수가
+              #   없었다 — teleop 으로만 시험된 이유다.
+              #   증상이 조용하다: 에러 없이 그냥 v_max 로 경사로에 들어간다.
+              'ramp_up_arm_topic': LaunchConfiguration('ramp_up_arm_topic'),
+              'ramp_down_arm_topic':
+                  LaunchConfiguration('ramp_down_arm_topic'),
+              'v_ramp_up': LaunchConfiguration('v_ramp_up'),
+              'v_ramp_down': LaunchConfiguration('v_ramp_down'),
+              'gov_pwm': LaunchConfiguration('gov_pwm'),
+              'gov_deadband': LaunchConfiguration('gov_deadband'),
+              'gov_gain': LaunchConfiguration('gov_gain'),
+              'gov_lead_s': LaunchConfiguration('gov_lead_s'),
+              'grade_ff_gain': LaunchConfiguration('grade_ff_gain'),
+              'grade_ff_max': LaunchConfiguration('grade_ff_max'),
           }.items(),
       ),
 
