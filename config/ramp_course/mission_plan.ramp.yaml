@@ -1,0 +1,105 @@
+# 미션 계획 — 경사로 단독 코스 (헤딩 캘리브 10m + 가속 11m + 경사로)
+# ====================================================================
+# ★ 이 파일이 왜 따로 있는가 (이거 안 하면 오늘 하루가 날아간다)
+#
+#   config/mission_plan.yaml 은 **용인 648m 코스**의 계획이다. 경사로만
+#   찍은 짧은 웨이포인트(수십 m)로 주행하면서 그 파일을 쓰면,
+#   mission_sequencer.check_course() 가 길이 불일치를 잡아내
+#   **모든 미션을 건너뛴다.** 그게 설계된 동작이다(엉뚱한 데서 켜면 탈락).
+#
+#   증상이 고약하다: 노드는 정상이고 에러도 안 나는데 `ramp_up` arm 이
+#   한 번도 안 나가서 **구간 속도가 통째로 안 걸린다.** 그러면 경사로에서
+#   v_max 로 가고, "구간 속도 기능이 고장났나" 로 반나절을 태운다.
+#
+#   그래서 이 코스 전용 계획을 따로 둔다. 런치에서:
+#       mission_plan:=/home/han/racing_ws/config/ramp_course/mission_plan.ramp.yaml
+#
+#   ⚠ 반대로, **용인 전체 코스를 도는 날**에는 이 파일을 쓰면 안 된다.
+#     그때는 config/mission_plan.yaml 의 ramp_up/ramp_down 을 채운다.
+
+# ────────────────────────────────────────────────────────────────────
+# ★ 오늘 현장에서 채울 것 — 순서를 지킬 것
+#
+#   ① 웨이포인트를 기록한다 (출발선 ~ 경사로 끝).
+#      캘리브 10m 구간이 **직선**이어야 한다. heading_init 은 웨이포인트를
+#      안 보고 '차가 향한 방향' 으로 직진하기 때문이다.
+#
+#   ② 길이를 읽는다:
+#        python3 tools/list_waypoints.py
+#      → 아래 course.path_length_m 에 적는다 (허용 오차 10%).
+#
+#   ③ 세 지점의 s 를 실측한다. 차를 그 자리에 세우고 각각:
+#        python3 tools/mission_s.py --waypoints <위 파일> --live --name ramp_up
+#        · 오르막 시작(경사가 실제로 붙는 지점)
+#        · 정상부 시작
+#        · 내리막 끝(평지 복귀)
+#
+#   ④ 검사한다 — 통과 전에는 주행하지 않는다:
+#        python3 tools/mission_plan_check.py \
+#            config/ramp_course/mission_plan.ramp.yaml --include-disabled
+#
+#   ⑤ 예측한다 — 경사도는 tools/imu_grade.py --measure 로 잰 값을 넣는다:
+#        python3 tools/ramp_profile.py --grade <실측%> \
+#            --approach <s_ramp - 10> --ramp-len <오르막> --down-len <내리막>
+#      '못 올라감' / '여유없음' 이 뜨면 **파라미터를 고치고 다시 볼 것.**
+#
+#   ⑥ enabled: true 로 바꾼다.
+# ────────────────────────────────────────────────────────────────────
+
+course:
+  site: "경사로 단독 코스 (2026-09-18)"
+  # ← ② 에서 기록한 파일 경로. 시퀀서가 파일명(basename)까지 대조한다.
+  waypoints: "config/ramp_course/wp_ramp.yaml"
+  # ← ② 의 실측 길이. 실제 경로와 10% 넘게 다르면 미션이 전부 꺼진다.
+  path_length_m: 0.0
+
+missions:
+  # ── 오르막 구간 속도 ──────────────────────────────────────────────
+  # ★ s_enter 를 '오르막 시작' 이 아니라 **캘리브가 끝나는 10.0m** 에 둔다.
+  #
+  #   왜: 헤딩 캘리브(heading_init_node)는 10m 를 직진한 뒤 **차를 세운다**
+  #   (_stop_driving '캘리브 완료' → 1초간 0 → teleop 놓음 → AUTO 인계).
+  #   즉 자율 주행은 s≈10m 에서 **속도 0 으로** 시작한다. 경사로까지 남은
+  #   거리가 가속에 쓸 수 있는 전부다.
+  #
+  #   여기를 v_max 로 두고 오르막 입구에서야 v_ramp_up 으로 올리면, 올리는
+  #   순간 슬루레이트(max_accel 1.0 m/s²)가 경사로 위에서 가속을 시작한다.
+  #   중력을 지고 가속하는 셈이라 제일 불리한 자리다.
+  #
+  #   ⚠ 10.0 미만으로 내리지 말 것. mission_plan_check.py 가 실패로 잡는다.
+  #     그 구간은 먹스에서 teleop 이 자율보다 우선이라 arm 해도 안 먹는다.
+  #
+  # ★ 안전 — 이 구간이 엉뚱한 데 걸려도 되는 이유
+  #   v_ramp_up 은 **기준속도만** 바꾼다. 곡률·정지선·장애물 감속은 그대로
+  #   min 으로 걸린다(tools/test_ramp_section.py 21건이 못 박는다).
+  #   R=6.4m 코너에 잘못 걸려도 곡률 제한이 1.03 m/s 로 누른다.
+  - name: ramp_up
+    enabled: false          # ← ③④⑤ 를 끝낸 뒤에 true
+    arm_topic: /ramp/up_arm
+    exclusive: false        # 배경 기능. done 도 timeout 도 없다
+    trigger:
+      type: course_s
+      s_enter: 10.0         # 캘리브 종료 지점 = 가속 시작. 그대로 둔다
+      s_exit:  0.0          # ← ③ 정상부 시작 s
+    critical: false
+
+  # ── 내리막 구간 속도 ──────────────────────────────────────────────
+  # ⚠ 내리막은 **명령을 낮춰도 안 선다** — 중력이 이긴다.
+  #   serial_bridge 의 gov_pwm(거버너)·grade_ff(IMU 경사보상)를 같이 켠다.
+  #   tools/ramp_profile.py 로 확인한 값(12.5% 기준):
+  #       거버너 켬  → 내리막 최고 1.36 m/s
+  #       거버너 끔  → 내리막 최고 3.36 m/s  (굴절코스 상한 3.0 초과)
+  - name: ramp_down
+    enabled: false
+    arm_topic: /ramp/down_arm
+    exclusive: false
+    trigger:
+      type: course_s
+      s_enter: 0.0          # ← ③ 정상부 시작 s (ramp_up 의 s_exit 와 같게)
+      s_exit:  0.0          # ← ③ 내리막 끝 + 3m (평지 복귀 뒤까지 유지)
+    critical: false
+
+# ★ 규정 항목인 '경사로 정지·출발'(ramp 미션)은 여기 **일부러 없다.**
+#   정지 후 뒤로 밀리는 문제(엔코더 홀드 없음)가 해결되기 전에는 켜지
+#   않는다 — 규정은 후방 50cm 이상 밀리면 5점이다.
+#   HANDOFF_2026-09-18.md §8 미해결 1번 참고.

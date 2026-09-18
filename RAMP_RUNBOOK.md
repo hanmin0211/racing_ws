@@ -114,38 +114,160 @@ cd /home/han/racing_ws && source install/setup.bash && python3 tools/ramp_test.p
 
 끝나면 CSV 경로를 남길 것 — `tools/replay_governor.py` 로 따질 수 있다.
 
-## ⑤ 구간 s 실측 (10분)
+## ⑤ 웨이포인트와 계획 파일 (15분) — 여기서 가장 조용한 고장이 난다
 
-경사로 시작/정상부/끝에 차를 세우고 각각:
+어제까지는 teleop 직진이라 웨이포인트가 없었다. 오늘은 GPS+IMU 헤딩으로
+자율 주행하므로 **경로와 계획이 서로 맞아야** 구간 속도가 켜진다.
+
+### 5-1. 웨이포인트를 기록한다
+
+캘리브 10m 구간이 **직선**이어야 한다. `heading_init_node` 는 웨이포인트를
+안 보고 '차가 향한 방향' 으로 직진하기 때문이다(그 방향이 곧 헤딩 기준이 된다).
+
+기록한 뒤 길이를 읽는다:
 
 ```bash
-cd /home/han/racing_ws && source install/setup.bash && python3 tools/mission_s.py --waypoints config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --live --name ramp_up
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/list_waypoints.py
 ```
 
-`config/mission_plan.yaml` 의 `ramp_up` / `ramp_down` 에 채운다.
+### 5-2. 세 지점의 s 를 잰다
 
-- `ramp_up`: 오르막 진입 **3m 앞** → 정상부
-- `ramp_down`: 정상부 → 내리막 끝 **3m 뒤**
-
-채운 뒤 반드시:
+차를 그 자리에 세우고 각각 실행한다:
 
 ```bash
-cd /home/han/racing_ws && source install/setup.bash && python3 tools/mission_plan_check.py config/mission_plan.yaml --include-disabled
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/mission_s.py --waypoints <위 파일> --live --name ramp_up
 ```
 
-그 다음 `enabled: true` 로 바꾼다. **순서를 바꾸지 말 것** — s 를 모르는 채로
-켜는 것이 이 대회에서 가장 비싼 실수다(엉뚱한 데서 실행 = 이탈 = 탈락).
+- 오르막 시작 (경사가 실제로 붙는 지점)
+- 정상부 시작
+- 내리막 끝 (평지 복귀)
 
-## ⑥ 본 주행에 얹기
+### 5-3. 계획 파일 — ⚠ 용인 계획을 그대로 쓰면 안 된다
+
+`config/mission_plan.yaml` 은 **용인 648m 코스**의 것이다. 경사로만 찍은 짧은
+경로로 달리면서 그걸 쓰면 `mission_sequencer.check_course()` 가 길이 불일치를
+잡아 **모든 미션을 건너뛴다.** 설계된 동작이다(엉뚱한 데서 켜면 탈락).
+
+증상이 고약하다 — 에러도 없고 노드도 정상인데 `/ramp/up_arm` 이 한 번도 안
+나가서 구간 속도가 통째로 안 걸린다. "기능이 고장났나" 로 반나절이 간다.
+
+그래서 경사로 단독 코스는 전용 계획을 쓴다:
+
+```
+config/ramp_course/mission_plan.ramp.yaml
+```
+
+파일 안의 ①~⑥ 순서대로 `course.waypoints` · `path_length_m` · 세 s 값을
+채운다. **용인 전체 코스를 도는 날에는 반대로** `config/mission_plan.yaml` 의
+`ramp_up`/`ramp_down` 을 채운다.
+
+### 5-4. 검사한다 — 통과 전에는 주행하지 않는다
 
 ```bash
-ros2 launch pure_pursuit_pkg control.launch.py ramp_up_arm_topic:=/ramp/up_arm v_ramp_up:=1.6 ramp_down_arm_topic:=/ramp/down_arm v_ramp_down:=1.11
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/mission_plan_check.py config/ramp_course/mission_plan.ramp.yaml --include-disabled
+```
+
+`path_length_m` 이 실제와 10% 넘게 다르면 여기서 잡힌다. 통과하면
+`enabled: true` 로 바꾼다. **순서를 바꾸지 말 것.**
+
+---
+
+## ⑥ 거리 예산 — 21m 를 어떻게 나누는가
+
+```
+s=0 ──── 헤딩 캘리브 10m ────► s=10 (차가 선다) ──── 가속 11m ────► s=21 경사로
+```
+
+★ **캘리브가 끝나면 차는 정지한다.** `heading_init_node` 가 10m 를 채운 뒤
+`_stop_driving('캘리브 완료')` 로 1초간 0 을 쏘고 토픽을 놓는다. 먹스의
+`teleop_timeout`(0.5s)이 지나면 자율로 인계된다. 즉 **자율 주행은 s≈10m 에서
+속도 0 으로 시작하고, 경사로까지 남은 11m 가 가속에 쓸 수 있는 전부다.**
+
+그래서 계획 파일의 `ramp_up.s_enter` 를 오르막 입구가 아니라 **10.0** 에 둔다.
+입구에서야 속도를 올리면 슬루레이트(`max_accel` 1.0 m/s²)가 경사로 **위에서**
+가속을 시작한다 — 중력을 지고 가속하는 제일 불리한 자리다.
+
+⚠ 10.0 미만으로 내리지 말 것. 그 구간은 먹스에서 teleop 이 자율보다
+우선이라 arm 해도 안 먹고, `mission_plan_check.py` 가 실패로 잡는다.
+
+### 11m 로 충분한가 — 실측과 예측
+
+`data/2026-09-17-ramp/ramp_평지기준_2259.csv` (평지, PWM 105 고정):
+
+| 도달 속도 | 걸린 거리 | 걸린 시간 |
+|---|---|---|
+| 1.11 m/s | 0.7 m | 0.9 s |
+| 1.60 m/s | 2.6 m | 2.2 s |
+| 2.00 m/s | 6.8 m | 4.4 s |
+
+11m 면 닿는다. 다만 개루프 FF 는 정상편차가 있어 **2.0 을 시켜도 약 1.8 에서
+물린다** (FF 식 `38.8·v+17.2` 이 실측보다 기울기가 얕다). 고장이 아니다.
+
+### 예측을 돌린다 — 경사도는 ② 에서 잰 값을 넣는다
+
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/ramp_profile.py --grade 12.5 --approach 11 --ramp-len 8 --down-len 8 --v-up 2.0 --v-down 1.11 --grade-ff-gain 1.0 --gov-pwm 50
+```
+
+실제 제어 코드(`decide_target`·`_grade_pwm`·`_governor_pwm`·`_ff_output`)를
+그대로 불러 돌린다. 차량 모델은 위 로그에서 뽑아 **다른 두 로그로
+교차검증**했다(평지 +0.8%, 등반 로그 +19.3% — §3-1 의 독립 역산값과 일치).
+
+**`❌ 못 올라감` 이나 `❌ 여유없음` 이 뜨면 파라미터를 고치고 다시 볼 것.**
+
+경사도를 아직 모르면 훑어서 본다:
+
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/ramp_profile.py --sweep 8,10,12.5,15,19.3 --v-up 2.0 --grade-ff-gain 1.0 --gov-pwm 50
+```
+
+### 왜 grade_ff 가 선택이 아닌가 (예측 결과)
+
+| 경사 | grade_ff 켬 등반최저 | 끔 등반최저 | 끔 + 구동 15% 약화 |
+|---|---|---|---|
+| 10 % | 1.61 m/s | 0.66 m/s | 0.33 m/s |
+| 12.5 % | 1.56 m/s | **0.37 m/s** | **0.04 = 못 넘음** |
+| 15 % | 1.51 m/s | **못 올라감** | 못 올라감 |
+| 19.3 % | 1.24 m/s | **못 올라감** | 못 올라감 |
+
+'구동 15% 약화' 를 같이 보는 이유: 9/17 로그는 같은 PWM 에서 최고속도가
+1.4~2.3 m/s 로 흩어졌다(배터리·노면). 한 점이 통과했다고 '된다' 고 쓰면
+현장에서 그 흩어짐의 나쁜 쪽에 걸린다.
+
+---
+
+## ⑦ 본 주행에 얹기
+
+⚠ **2026-09-18 이전에는 이게 불가능했다.** `gov_pwm`·`grade_ff_gain` 은
+`tools/teleop_drive.launch.py` 에만 있었고, `ramp_up_arm_topic` 은
+`control.launch.py` 에 선언만 돼 있고 `bringup` 이 안 넘겼다. 그래서 자율
+주행으로는 경사로 기능을 하나도 켤 수 없었다. 지금은 셋 다 이어져 있고,
+`tools/test_ramp_launch_wiring.py` 가 그 배선을 지킨다.
+
+```bash
+pgrep -f 'install/[a-z_]+/lib/' | xargs -r kill -9
+```
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py control:=true lidar:=true sequencer:=true waypoints:=<경사로 wp> mission_plan:=/home/han/racing_ws/config/ramp_course/mission_plan.ramp.yaml max_speed:=2.0 auto_calib:=true calib_distance:=10.0 ff_mode:=ros ff_min_pwm:=0.0 ramp_up_arm_topic:=/ramp/up_arm v_ramp_up:=2.0 ramp_down_arm_topic:=/ramp/down_arm v_ramp_down:=1.11 grade_ff_gain:=1.0 gov_pwm:=50.0
 ```
 
 ⚠ **소수점을 꼭 찍을 것.** `v_ramp_up:=2` 는 INTEGER 로 들어가 노드가 즉사한다.
 
-시작 로그에 `★ 오르막 구간 속도 켜짐` / `★ 내리막 구간 속도 켜짐` 이
-찍히는지 확인한다. 안 찍히면 파라미터가 안 들어간 것이다.
+시작 로그에서 **네 줄**을 확인한다. 하나라도 없으면 그 기능은 안 켜진 것이다:
+
+| 로그 | 안 나오면 |
+|---|---|
+| `★ 오르막 구간 속도 켜짐` | `ramp_up_arm_topic`/`v_ramp_up` 이 안 들어갔다 |
+| `★ 내리막 구간 속도 켜짐` | `ramp_down_arm_topic`/`v_ramp_down` 이 안 들어갔다 |
+| `★ 경사 보상 켜짐` + 영점·부호 | ① 을 안 했거나 `grade_ff_gain` 이 0 이다 |
+| `헤딩 초기화(1회성) 시작: 10m` | `auto_calib` 이 꺼져 있다 (사람이 몰아야 한다) |
+
+그리고 주행 중 `/ramp/up_arm` 이 실제로 오는지 본다 — 안 오면 계획의 s 나
+`check_course` 다:
+
+```bash
+ros2 topic echo /ramp/up_arm
+```
 
 ---
 
@@ -165,10 +287,19 @@ ros2 launch pure_pursuit_pkg control.launch.py ramp_up_arm_topic:=/ramp/up_arm v
 
 ## 아직 검증 안 된 것 (정직하게)
 
-- **grade_ff 는 실차에서 한 번도 안 돌았다.** 시험 28건은 전부 합성 입력이다.
-  물리식·부호·안전장치는 못 박았지만, IMU 실제 부호는 ②에서 처음 확인된다.
-- **구간 속도도 실차 미검증.** 시험 23건은 `decide_target()` 을 직접 부른 것이다.
-  시퀀서와의 연동(arm 토픽이 실제로 오는지)은 현장이 처음이다.
+- **grade_ff 는 실차에서 한 번도 안 돌았다.** 시험 29건(`test_grade_ff`)은
+  전부 합성 입력이고, `tools/ramp_profile.py` 의 예측도 **모델**이다.
+  물리식·부호·안전장치는 못 박았지만, **IMU 실제 부호는 ②에서 처음 확인된다.**
+  예측이 말해 주는 건 "부호만 맞으면 넘는다" 까지다.
+- **구간 속도도 실차 미검증.** 시험 21건(`test_ramp_section`)은
+  `decide_target()` 을 직접 부른 것이다. 시퀀서 연동(arm 토픽이 실제로
+  오는지)은 현장이 처음이다 — ⑦ 의 `ros2 topic echo /ramp/up_arm` 으로 본다.
+- **자율(웨이포인트) 경사로 주행 자체가 처음이다.** 어제까지는 teleop
+  직진이었다. 캘리브 → 정지 → AUTO 인계 → 가속 → 경사로 순서는 코드상
+  맞지만(⑥), 실제로 이어서 돌아간 적은 없다.
+- 차량 모델(`ramp_profile.py`)이 안 보는 것: **바퀴 슬립 · 배터리 전압 강하 ·
+  조향 부하.** 그래서 '구동 15% 약화' 칸을 같이 본다. 그 칸이 빠듯하면
+  예측이 맞아도 현장에서 갈린다.
 - 경사로 **정지·출발**(규정 항목, `ramp` 미션)은 이번 작업 범위 밖이다.
   3초 정지 후 재출발, 후방 50cm 이내 — 별도로 검증해야 한다.
 - 어제 내리막에서 **정지 후 뒤로 밀렸다**(엔코더 홀드 없음). 경사로 정지·출발

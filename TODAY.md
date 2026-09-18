@@ -1,80 +1,188 @@
-# 오늘 현장 순서 (2026-08-17) — 목표: **맵 완주**
+# 오늘·내일 할 일 (2026-09-18)
 
-> 원칙: **완주를 먼저 확보하고, 그다음 속도를 올린다.**
-> 지금 설정으로도 완주는 된다(0.33 m/s, 약 8.6분). FF 작업은 속도를 위한 것이지
-> 완주를 위한 게 아니다. 필수 목표를 미검증 변경에 걸지 않는다.
+```
+9/18 (오늘)  마지막 준비일 — 용인 없이 답 낼 수 있는 것 전부
+9/19 (내일)  용인 현장 — 유일한 현장 날. 순서가 생명이다
+9/20         본경기
+```
+
+> **오늘의 원칙**: 내일은 시간이 없다. **현장 없이 알 수 있는 것은 오늘 전부 알아낸다.**
+> IMU 피치 부호는 주차 상태 30분이면 끝나는데, 내일로 미루면 경사로를 아예 못 켠다.
+
+| 실패 비용 | |
+|---|---|
+| 도로/연석 이탈 · 1분 이상 정지 | **탈락** |
+| 미션 실패 · 경사로 부진 | 감점 (회복 가능) |
+| 8분 초과 | 감점 1분당 5점 |
 
 ---
 
-## 0. 도착 직후 — 전원과 연결 (5분)
+# 오늘 (9/18)
 
-**순서를 지킬 것.** 반대로 하면 엔코더가 0을 센다.
+## 0. 전원·연결 — 순서를 지킬 것 (5분)
+
+반대로 하면 엔코더가 0을 센다.
 
 ```
 1) 차량 배터리 ON
-2) 그다음 Arduino USB 연결
-3) GPS(u-blox) USB 연결
-4) IMU USB 연결
+2) Arduino USB
+3) GPS(u-blox) USB
+4) IMU USB
 ```
 
-확인:
 ```bash
-lsusb | grep -iE "u-blox|2341"     # GPS + Arduino 둘 다 보여야 함
-ls -l /dev/imu                      # 심볼릭 링크 존재
+lsusb | grep -iE "u-blox|2341|10c4"
+```
+```bash
+ls -l /dev/imu /dev/arduino
 ```
 
-- `/dev/imu` 가 없으면 → udev 규칙 확인 (HANDOFF 2장)
-- Arduino 안 보이면 → 케이블/허브 교체
-
-**배터리 완충 확인.** 오늘은 랩(8.6분) + 스윕 + 두 번째 랩이라 부하가 크다.
-전에 방전 때문에 조향 breakaway 실패를 하드웨어 고장으로 오진한 적 있다.
+- `/dev/imu` 없으면 → 라이다와 같은 칩(10c4:ea60)이라 **시리얼 `0001`** 로 구분한다
+  (`/etc/udev/rules.d/99-imu.rules`). 다른 CP2102 가 먼저 잡혔는지 확인.
+- **USB 허브를 쓰지 말 것** — 허브 깊이가 시리얼을 끊는다(dmesg `-32` = EPIPE). 직결.
+- **배터리 완충.** ③의 판정이 배터리 상태에 좌우된다. 과거에 방전을 하드웨어
+  고장으로 오진한 적이 있다.
 
 ---
 
-## 1. RTK 확인 (5분)
+## ① IMU 피치 부호 + 실제 경사도 — 30분 · 주차 상태 🔴 최우선
 
-### 터미널 A — RTK
+**차가 움직이지 않는다.** 본 주행과 같은 노드 설정으로 영점을 잡아야 하므로
+평소 런치를 그대로 쓴다 — `control` 기본값이 false 라 모터 체인이 안 켜진다.
+
 ```bash
-cd ~/racing_ws && source install/setup.bash && bash tools/ros_cleanup.sh && ros2 launch ngii_ntrip ngii_rtk.launch.py
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py rviz:=false
 ```
-`[NTRIP 연결됨] RTCM ...프레임 발행` 이 반복되면 정상.
-
-### 터미널 B — 품질 점검
 ```bash
-cd ~/racing_ws && source install/setup.bash && python3 tools/gps_check.py
+cd /home/han/racing_ws && source install/setup.bash && ros2 topic hz handsfree/imu
 ```
 
+`직진하면 헤딩 초기화...` 메시지가 보여도 **무시한다.** `auto_calib` 기본 false 라
+차는 안 움직이고, 캘리브는 yaw 만 건드려 피치와 무관하다.
+
+**평지에 세우고 영점** (손 떼고 대기):
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/imu_grade.py --level
 ```
-  FIXED ✅   σ=  0.6cm | 10.0Hz | RTCM  4.0Hz | x=  -18.19 y=  118.26 | ...
+- 기울기 **5° 넘으면** 마운트가 삐뚤거나 바닥이 안 평평하다
+- 표준편차 **1° 넘으면** 차가 흔들린다 — 다시
+
+**경사 중턱, 코를 위로 두고 측정**:
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/imu_grade.py --measure --expect 12
 ```
 
-| 상태 | 조치 |
+`--expect 12` 는 **부호만 보려고** 넣는 값이다(판정이 `grade * expect < 0`).
+실제 경사가 10이든 15든 상관없다.
+
+| 출력 | 조치 |
 |---|---|
-| `FIXED ✅` σ ≤ 5cm | 진행 |
-| `FLOAT ⚠` | 1~2분 더 대기. 하늘 트인 곳으로 이동 |
-| `단독측위 ❌` / RTCM 0Hz | NTRIP 문제 → `Ctrl-C` 후 `bash tools/ros_cleanup.sh` 하고 재시작 (중복 클라이언트면 401) |
+| `▶ 보정 피치 +7.1° → 경사 +12.5%` | ✅ 통과. **그 12.5% 가 실제 경사도다 — 적어 둘 것** |
+| `❌ 부호가 반대다` | `python3 tools/imu_grade.py --level --sign -1` 후 ② 재측정 |
+| 값이 0 근처 | 차가 경사에 제대로 안 올라가 있다 |
 
-**여기서 `Ctrl-C` 로 터미널 A 를 끈다.** 다음 단계의 bringup 이 RTK 를 포함하고 있어서,
-켜둔 채로 bringup 을 띄우면 NTRIP 이 2개가 되어 401 이 난다.
+> **경사로가 없으면 앞바퀴를 괴면 된다.** 축거 0.785 m 라 `sinθ = h/0.785`:
+> 10 cm → 12.9%(법정과 같음) · 15 cm → 19.5%. 양쪽 앞바퀴를 같은 높이로.
+> 서스펜션이 눌려 크기는 조금 작게 나올 수 있으나 **부호 판정에는 영향 없다.**
+
+**★ 잰 경사도로 파라미터를 정한다**
+
+| 실측 경사 | `grade_ff_max` |
+|---|---|
+| ~14 % | 70 (기본) |
+| **15 % 이상** | **95** ← 기본 70 은 14.4% 까지만 완전보상 |
 
 ---
 
-## 2. ★ 첫 랩 — 최우선 (15분)
+## ② 조향 전원 — 15분 · 바퀴 들고 🔴 가장 큰 미지수
 
-### 터미널 A
 ```bash
-cd ~/racing_ws && source install/setup.bash && bash tools/ros_cleanup.sh && ros2 launch gps_localization bringup.launch.py control:=true auto_calib:=true rviz:=false
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/drive_diag.py --yes
 ```
 
-`rviz:=false` 인 이유: rviz2 가 CPU 112% 를 먹어 토픽 조회가 간헐 실패한 적 있다.
-경로를 보고 싶으면 랩이 끝난 뒤에 켤 것.
+**측정된 것**: 조향 ±18° 에서 레일이 4198 → **2038 mV** 로 무너진다(무부하).
+**미확인**: 그게 실제로 리셋·링크 끊김을 일으키는가. 오히려 **기록된 주행은
+VMIN 2282~2528 로도 완주**했다(과거 리셋선 3483 아래인데도).
 
-### 진행 흐름
+**볼 것**: VCC 가 떨어질 때 **재연결·리셋 로그가 찍히는가.**
+
+| 결과 | 판단 |
+|---|---|
+| 재연결 로그 없음 | 이 항목 내려놓고 경사로에 집중 |
+| 재연결 로그 있음 | **내일 최우선.** S자·굴절에서 조향 공백 → 이탈 위험 |
+
+⚠ "조향 = 탈락" 은 아직 **가설**이다. 사실처럼 말하지 말 것.
+
+---
+
+## ③ 오르막 실주행 — 30분 (①이 통과한 뒤에만)
+
+경사로 **3~5 m 앞**에 세운다. 터미널 2개.
+
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch tools/teleop_drive.launch.py ff_mode:=ros max_speed:=2.0 ff_min_pwm:=0.0 ff_breakaway_pwm:=60.0 grade_ff_gain:=0.5
+```
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/ramp_test.py --label 오르막반 --drive 12 --speed 2.0 --abort-speed 2.8 --stuck-after 5 --seconds 40
+```
+
+**키보드 안 쓴다.** `ramp_test --drive` 가 `/teleop/cmd_vel` 로 자율 주행한다 —
+엔터 치면 차가 12 m 가고 선다. E-stop 만 쥐고 있으면 된다.
+
+- `--drive` = 조주 4 m + 경사 8 m. **경사 진입 후 8 m 면 정상상태에 닿는다**
+- 경사로에서 서면 **뒤로 밀린다**(홀드 없음). `PWM:` 명령은 펌웨어 PID 를
+  우회하므로 모터 부하는 0 이다. 뒤를 비워 둘 것 — 밀림 가속도 약 0.86 m/s²
+
+**볼 숫자** (12.5% 기준 예측):
+
+| | 예상 |
+|---|---|
+| 진입 직후 최저 | 1.5 m/s 로 한 번 떨어짐 (정상) |
+| **정상상태 속도** | **1.8 m/s** |
+| **정상상태 PWM** | **156** (포화 255) |
+
+PWM 이 255 에 붙으면 경사가 예상보다 급하거나 배터리가 빠진 것이다.
+잘 오르면 `grade_ff_gain:=1.0` 으로 한 번 더. **CSV 경로를 남길 것.**
+
+**★ 이 주행이 부호를 다시 증명한다.** 정상상태는 가속도가 0이므로 PWM·속도만으로
+경사를 역산할 수 있다 — IMU 를 안 쓰고:
+
+```
+sinθ = (0.0202·PWM − 0.861·v − 0.37) / 9.81
+```
+
+PWM 156, v 1.80 → 12.6%. ①의 IMU 측정과 **같은 부호·같은 크기면 확정**이다.
+
+---
+
+## ④ 커밋 · 배터리 충전 — 20분
+
+대회 이틀 전에 미커밋 상태로 두지 말 것. 배터리는 전부 충전.
+
+---
+
+# 내일 (9/19) 용인 — 순서를 바꾸면 하루가 날아간다
+
+```
+1. bash tools/use_site.sh yongin      ← 원점이 76.8km 어긋나 있다. 이거 먼저
+2. python3 tools/preflight.py         ← 원점·경로·정지점 일괄 검사
+3. 헤딩 캘리브 + 시운전 1랩            ← 미션 전부 off, 완주만 확인
+4. python3 tools/mission_s.py --live  ← 경사로 시작/정상부/끝 포함, 전 미션
+5. mission_plan.yaml 채우고 mission_plan_check.py 통과 → enabled:true
+6. 경사로 구간 켜고 1랩
+7. 정지점 재기록 (현재 149.7km 어긋남)
+```
+
+⚠ **용인 전체 코스이므로 `config/mission_plan.yaml` 을 쓴다.**
+`config/ramp_course/mission_plan.ramp.yaml` 은 **단독 경사로 코스용**이다.
+섞으면 `check_course` 가 길이 불일치를 잡아 **미션을 전부 끈다**(조용히).
+
+## 첫 랩 진행 흐름
 
 ```
 ① RTK Fixed 대기
 ② 5초 카운트다운
-③ 차가 스스로 0.3 m/s 로 10m 직진      ← ⚠ 앞을 비우고 E-STOP 쥘 것
+③ 차가 스스로 10m 직진          ← ⚠ 앞을 비우고 E-STOP 쥘 것
 ④ 정지 → 직진성 검증
 ⑤ 통과 → yaw_offset 발행
 ⑥ 먹스: "헤딩 캘리브 완료 — 자율 허용"
@@ -82,151 +190,118 @@ cd ~/racing_ws && source install/setup.bash && bash tools/ros_cleanup.sh && ros2
 ```
 
 **⚠ ③은 헤딩을 모르는 개루프 직진이다.** 차가 지금 향한 쪽으로 그냥 간다.
-차를 경로 시작 방향으로 대충 맞춰 놓고 시작할 것. 직선 12m 필요.
+경로 시작 방향으로 대충 맞춰 놓고 시작할 것. 직선 12 m 필요.
 
-### 확인할 로그
+## 경사로를 본 주행에 얹는 명령
 
-```
-[gps_heading_init]  헤딩 오프셋 ...°  ← 캘리브 성공
-[vehicle_cmd_mux]   헤딩 캘리브 완료 (...°) — 자율 허용
-[vehicle_cmd_mux]   모드: AUTO         ← 이게 떠야 달린다
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py control:=true lidar:=true sequencer:=true auto_calib:=true rviz:=false max_speed:=2.0 ff_mode:=ros ff_min_pwm:=0.0 ramp_up_arm_topic:=/ramp/up_arm v_ramp_up:=2.0 ramp_down_arm_topic:=/ramp/down_arm v_ramp_down:=1.11 grade_ff_gain:=1.0 gov_pwm:=50.0
 ```
 
-### 차가 안 갈 때 — 로그로 원인 판별
+⚠ **소수점을 꼭 찍을 것.** `v_ramp_up:=2` 는 INTEGER 로 들어가 노드가 즉사한다.
+
+시작 로그에서 **네 줄**을 확인한다. 없으면 그 기능은 안 켜진 것이다:
+
+| 로그 | 없으면 |
+|---|---|
+| `★ 오르막 구간 속도 켜짐` | `ramp_up_arm_topic`/`v_ramp_up` 미적용 |
+| `★ 내리막 구간 속도 켜짐` | `ramp_down_arm_topic`/`v_ramp_down` 미적용 |
+| `★ 경사 보상 켜짐` + 영점·부호 | ①을 안 했거나 `grade_ff_gain` 이 0 |
+| `헤딩 초기화(1회성) 시작: 10m` | `auto_calib` 꺼짐 |
+
+주행 중 arm 이 실제로 오는지:
+```bash
+ros2 topic echo /ramp/up_arm
+```
+
+## 차가 안 갈 때 — 로그로 원인 판별
 
 | 로그 | 원인 | 조치 |
 |---|---|---|
 | `모드: STOP(헤딩 캘리브 전)` | 캘리브 미완료 | ③~⑤ 다시. 거부됐으면 3초 뒤 자동 재시도 |
 | `모드: STOP(입력끊김)` | `/target_speed` 또는 `/steering_cmd` 없음 | 제어 노드가 떴는지 확인 |
-| `⚠ 경로 ...s 끊김 — 완주 신호 없음` | GPS/IMU 끊김 | `gps_check` 로 RTK 확인, IMU 재연결 |
-| `정지: lookahead가 차량 뒤` | 헤딩이 뒤집혔을 가능성 | `invert_imu_yaw:=true` 로 재시작 |
-| `직진성 검증 실패 (편차 ...°)` | 캘리브 중 휘었다 | 자동 재시도됨. 계속 실패하면 더 평탄한 곳으로 |
+| `⚠ 경로 ...s 끊김 — 완주 신호 없음` | GPS/IMU 끊김 | `gps_check` 로 RTK, IMU 재연결 |
+| `정지: lookahead가 차량 뒤` | 헤딩 뒤집힘 의심 | `invert_imu_yaw:=true` 로 재시작 |
+| `직진성 검증 실패 (편차 ...°)` | 캘리브 중 휘었다 | 자동 재시도. 계속 실패하면 더 평탄한 곳 |
+| 내리막에서 **오히려 빨라진다** | **피치 부호 반대** | **즉시 `grade_ff_gain:=0.0`** → ① 다시 |
 
-### 완주 판정
+## 완주 판정
 
 ```
-[local_sliding_window_node]  ★ 경로 완주 (남은 거리 ...m) → 정지 신호 발행
+[local_sliding_window_node]  ★ 경로 완주 → 정지 신호 발행
 [longitudinal_controller]    🏁 완주 신호 수신 — 감속 정지합니다 (고장 아님)
-[local_pure_pursuit]         정지: 🏁 완주 (정상 종료)
 ```
 
-**`🏁` 가 뜨면 완주다.** `⚠` 는 고장이다. 이 구분을 위해 넣은 것이니 헷갈리지 말 것.
-
-### 캘리브 보너스 — 놓치지 말 것
-
-자동 직진은 조향 0°를 명령하므로, 그래도 호를 그렸다면 **기계의 계통 오차**다.
-노드가 활꼴 높이로 `STEER_CENTER` 오차를 역산해 권장값을 찍는다:
-
-```
-[gps_heading_init] 직진 편차 좌 0.24m → 조향 바이어스 +1.8°, 권장 STEER_CENTER 386
-```
-
-이 값이 나오면 **기록해 둘 것.** 펌웨어에 반영하면 랩 품질이 올라간다.
+**`🏁` 가 뜨면 완주다. `⚠` 는 고장이다.** 이 구분을 위해 넣은 것이니 헷갈리지 말 것.
 
 ---
 
-## 3. FF 스윕 — 완주 확보 후에만 (15분)
+# 판단 근거 — 왜 이 순서인가
 
-### ⚠ 반드시 2단계 스택을 완전히 종료할 것
+| 항목 | 실패하면 | 오늘 가능? | 상태 |
+|---|---|---|---|
+| 조향 전원 | **탈락 가능** | ✅ ② | ❓ 미확인 |
+| 경로 추종 | 탈락 | ✅ 완료 | ✅ 여유 충분 |
+| 경사로 | 감점만 | ✅ ①③ | 예측 완료 |
+| 미션 8개 | 감점만 | ❌ | 내일 s 실측 |
+| 8분 초과 | 감점 5점/분 | — | 무리할 이유 없음 |
 
-제어 체인이 `VEL:` 을 보내면 개루프가 **즉시 해제된다.** 동시 실행하면 스윕이 실패한다.
+## 경로 추종은 폐루프 시뮬로 확인했다 (`tools/tracking_sim.py`)
 
-```bash
-bash ~/racing_ws/tools/ros_cleanup.sh
-```
+용인 648 m · `wp_yongin_drive_0.5.yaml`:
 
-### 터미널 A — RTK 만
-```bash
-cd ~/racing_ws && source install/setup.bash && ros2 launch ngii_ntrip ngii_rtk.launch.py
-```
+| 조건 | 완주 | 최대 이탈 | 조향 포화 |
+|---|---|---|---|
+| 오차 없음 v=2.0 | ✅ | 0.15 m | 0 % (12.9°/18°) |
+| v=2.8 (bringup 기본) | ✅ | 0.19 m | 0 % |
+| 헤딩 편향 5° | ✅ | 0.32 m | 0 % |
+| 헤딩 편향 10° | ✅ | 0.50 m | 0 % |
+| 조향 중립 3° 어긋남 | ✅ | 0.25 m | 0 % |
+| v=2.8 + 헤딩5° + 중립2° | ✅ | 0.27 m | 0 % |
 
-### 터미널 B — serial_bridge
-```bash
-cd ~/racing_ws && source install/setup.bash && ros2 run velocity_controller serial_bridge
-```
+이탈 경고선 0.72 m · 복귀 불가선 0.90 m. **코스 기하는 완주의 병목이 아니다.**
+시뮬이 **안 보는 것**: 조향 전원 강하 · GPS 끊김 · 라이다 회피 override.
 
-### 터미널 C — 스윕
-```bash
-cd ~/racing_ws && source install/setup.bash && ros2 run velocity_controller ff_sweep --ros-args -p max_speed:=1.0 -p ramp_rate:=4.0
-```
+## 경사로는 grade_ff 없이는 안 된다 (`tools/ramp_profile.py`)
 
-| 조건 | |
-|---|---|
-| 장소 | 코스 바닥면 직선 (x −37 ~ +8, 약 45m) |
-| 필요 공간 | **직선 40m** (주행 23m + 감속 여유) |
-| 소요 | 55초 |
-| **최고 속도** | **0.91 m/s — 지금의 약 3배** |
+| 경사 | grade_ff 켬 | 끔 | 끔 + 구동 15% 약화 |
+|---|---|---|---|
+| 10 % | 1.61 m/s | 0.66 | 0.33 |
+| **12.5 %** | **1.56** | **0.37** | **0.04 = 못 넘음** |
+| 15 % | 1.51 | **못 올라감** | 못 올라감 |
 
-⚠ **바퀴 네 개 접지 필수.** 뜬 상태면 1m 지점에서 자동 중단된다.
-⚠ 개루프라 PID 보정이 없다. **E-stop 쥐고, 앞 비우고.**
-
-### 결과 판정
-
-```
-  이동거리 대조 : 엔코더 23.1m / RTK 22.8m       ← 비슷해야 정상
-  ★ STATIC_FF        = xx.x
-  ★ VELOCITY_FF_GAIN = xxx.x                     ← 150~300 이면 정상
-  ★ MAX_DRIVE_PWM 권장 = xxx
-  ★ PID 권장 : velocity_kp = xx, velocity_ki = xx
-```
-
-- **기울기가 60 미만이면 경고가 뜬다 → 그 값은 절대 펌웨어에 넣지 말 것** (바퀴가 떴다는 뜻)
-- **중단 메시지가 뜨면** 결과가 폐기된다. 접지 확인 후 재실행
-
-**결과 전체를 AI에게 붙여넣을 것.** 펌웨어 값을 확정해서 플래시한다.
+어제 로그가 같은 말을 한다(`data/2026-09-17-ramp/ramp_PWM160_2302.csv`):
+**PWM 105 에서 0.37 → 0.23 으로 꺼져 갔고, 160 으로 올리니 올라갔다.**
+자율 FF 가 2.0 m/s 에 내는 PWM 은 **94.8** — 이미 실패한 105 보다 낮다.
+grade_ff 가 +60 을 더해 155 를 만든다 = 어제 손으로 올린 160 과 같은 자리.
 
 ---
 
-## 4. 플래시 + 두 번째 랩 (20분)
-
-FF 반영 후 2장을 반복. 목표 **4분대**.
-
-```bash
-cd ~/racing_ws && source install/setup.bash && bash tools/ros_cleanup.sh && ros2 launch gps_localization bringup.launch.py control:=true auto_calib:=true rviz:=false
-```
-
----
-
-## 5. 정지지점 기록 — 시간 남으면 (10분)
-
-**현장에서만 가능하다.** 기존 `~/stop_points.yaml` 은 충주 좌표라 자동 비활성화돼 있다.
-
-```bash
-cd ~/racing_ws && source install/setup.bash && ros2 run mission_perception stop_point_recorder
-```
-차를 정지선에 세우고 **엔터**. 여러 개면 반복. 끝나면 `Ctrl-C`.
-
----
-
-## 상시 참고
+# 상시 참고
 
 ### 뭔가 이상하면 제일 먼저
 ```bash
-bash ~/racing_ws/tools/ros_cleanup.sh
+bash /home/han/racing_ws/tools/ros_cleanup.sh
 ```
 `pkill -f ros2` 는 런처만 죽인다. 고아 노드가 쌓이면 NTRIP 401 · USB 충돌 ·
 yaw_offset 덮어쓰기가 난다.
-
-### 수동 조작이 필요하면 (별도 터미널)
-```bash
-cd ~/racing_ws && source install/setup.bash && ros2 run velocity_controller teleop_keyboard
-```
-※ `teleop:=true` 런치 인자는 쓰지 말 것 — xterm 이 없어 키 입력을 못 받는다.
-※ **한글 입력 상태면 W 가 ㅈ 으로 들어가 차가 안 움직인다.** 영문 전환 확인.
 
 ### E-stop
 ```bash
 ros2 topic pub --once /e_stop std_msgs/msg/Bool "{data: true}"
 ```
 
-### 시간 배분 (총 약 70분)
+### 수동 조작 (별도 터미널)
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 run velocity_controller teleop_keyboard
 ```
-0. 연결        5분
-1. RTK 확인    5분
-2. 첫 랩      15분   ← 필수
-3. FF 스윕    15분
-4. 두 번째 랩 20분
-5. 정지지점   10분
-```
+※ `teleop:=true` 런치 인자는 쓰지 말 것 — xterm 이 없어 키 입력을 못 받는다.
+※ **한글 입력 상태면 W 가 ㅈ 으로 들어가 차가 안 움직인다.** 영문 전환 확인.
 
-**2번까지 끝나면 오늘 목표는 달성이다.** 3~5는 보너스.
+### 이어서 볼 문서
+
+| 문서 | 내용 |
+|---|---|
+| `RAMP_RUNBOOK.md` | 경사로 현장 절차 ①~⑦ |
+| `HANDOFF_2026-09-18.md` | 저장소 작업 원칙 · 물리 상수 · 실행 위생 |
+| `config/mission_plan.yaml` | 용인 미션 계획 (주석에 규정 조항) |
