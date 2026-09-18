@@ -300,6 +300,8 @@ class SerialBridgeNode(Node):
         self._meas_v_t = 0.0
         self._meas_src = None          # 'encpos' | 'odom' | 'enc' — 이 순서로 우선
         self._gov_gate_open = False    # 거버너 자세 게이트 (히스테리시스)
+        self._gov_a_lp = None          # 게이트 보정용 저역통과 가속도 [m/s²]
+        self._gov_a_lp_t = 0.0
         self._enc_v_buf = []
         # 엔코더 위치차분 추정기 상태 (100Hz STATUS_10ms 마다 갱신)
         self._enc_hist = []            # [(t, counts)] — 창 길이만큼만 유지
@@ -823,10 +825,37 @@ class SerialBridgeNode(Node):
         #   ⚠ grade_ff 에는 적용하지 않는다. 그쪽은 지금 실차에서 잘 돌고 있고,
         #     대회 직전에 검증된 경로를 건드리지 않는다. 여기는 **게이트
         #     판정에만** 쓰이므로 틀려도 최악이 '거버너가 한 박자 늦게 켜짐' 이다.
+        #   ⚠ 위상을 맞춰야 한다 (2026-09-18 23:55 실측으로 드러났다).
+        #     self._pitch 는 GRADE_TAU(0.30s) 로 저역통과돼 있다 — 선언 주석이
+        #     "가감속 피칭을 누른다" 고 적어 둔 바로 그 필터다. 그런데 엔코더
+        #     가속도는 즉시 튄다. 둘을 그대로 빼면 **출발 가속 구간에서
+        #     과보정**이 나서 평지가 순간 내리막으로 읽힌다.
+        #       실측: 출발 1.05초 뒤 게이트가 한 번 열려 PWM 61 → 55.
+        #     IMU 피치는 (참자세 + atan(a/g)) 를 통째로 저역통과한 값이므로,
+        #     빼 줄 값도 **같은 시정수로 누른 가속도**여야 한다.
         pitch = self._pitch
         if (self._meas_a_t > 0.0
                 and (now - self._meas_a_t) < self.BRAKE_MEAS_FRESH_S):
-            pitch -= math.atan(self._meas_a / 9.81)
+            dt = now - self._gov_a_lp_t if self._gov_a_lp_t > 0.0 else 0.0
+            if self._gov_a_lp is None or dt > 1.0:
+                # ⚠ 원값으로 시작하면 안 된다. 그러면 첫 주기에 보정이
+                #   통째로 들어가는데 피치는 아직 14%(=0.05/0.35)밖에 안
+                #   움직였다 — 보정을 안 한 것보다 더 크게 어긋난다.
+                #   (시험: 원값 시작 13/20 주기 오작동, 보정 없을 때 7/20)
+                #   0 에서 시작해 **피치와 같은 속도로 차오르게** 한다.
+                self._gov_a_lp = 0.0
+                self._gov_a_lp_t = now
+            elif dt > 0.0:
+                alpha = dt / (self.GRADE_TAU + dt)
+                self._gov_a_lp += alpha * (self._meas_a - self._gov_a_lp)
+                self._gov_a_lp_t = now
+            # ⚠ dt == 0 (같은 타임스탬프로 두 번 불림) 이면 **그대로 둔다.**
+            #   여기서 초기화하면 수렴한 필터가 통째로 날아간다.
+            pitch -= math.atan(self._gov_a_lp / 9.81)
+        else:
+            # 측정이 낡으면 필터 상태도 버린다 — 낡은 값으로 이어 붙이면
+            # 재개 시점에 엉뚱한 보정이 한 번 튄다.
+            self._gov_a_lp, self._gov_a_lp_t = None, 0.0
         # 전진 기준 내리막이 음수다(오르막 +). 부호를 뒤집어 '내리막이 +' 로 본다.
         down = -math.sin(pitch)
         # ★ 히스테리시스 — 문턱 하나로 켰다 껐다 하면 **연속 조절이 깨진다.**
