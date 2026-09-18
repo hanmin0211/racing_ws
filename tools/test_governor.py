@@ -56,6 +56,7 @@ class Stub:
     self.gov_min_grade = 0.0
     self._pitch = None
     self._pitch_t = 0.0
+    self._gov_gate_open = False
     # 원본의 대문자 상수를 전부 가져온다 (위 S2 주석 참고)
     for _k, _v in vars(SerialBridgeNode).items():
       if _k.isupper() and not callable(_v):
@@ -185,6 +186,60 @@ def main():
       _pitch_t=100.0)
   run('게이트 열려도 부호가 다르면 안 건다',
       1.0, -2.0, None, f, gov_min_grade=0.03, _pitch=DOWN, _pitch_t=100.0)
+
+  print()
+  print('  ─ 히스테리시스: 문턱을 스칠 때 켜졌다 꺼졌다 하면 안 된다 ─')
+  # 거버너 출력은 초과분에 비례하는 **연속값**이다. 게이트가 토글하면 PWM 이
+  # 'FF 하한' 과 '거버너 값' 사이를 왕복해 그 연속성이 깨진다 —
+  # 9/17 에 고쳤던 구동↔제동 왕복(498b867)을 게이트 쪽에서 되살리는 셈이다.
+  st = Stub(gov_min_grade=0.06)
+  st._meas_v, st._meas_v_t = 1.5, 100.0
+  seq = []          # 문턱(6%)을 스치는 피치를 넣어 본다
+  for g in (0.050, 0.058, 0.062, 0.058, 0.055, 0.040, 0.030, 0.020):
+    st._pitch, st._pitch_t = _m.asin(-g), 100.0
+    seq.append(st._gov_grade_ok(100.0))
+  toggles = sum(1 for i in range(1, len(seq)) if seq[i] != seq[i - 1])
+  ok = toggles <= 2 and seq[:2] == [False, False] and seq[2] is True
+  print(f'  {"OK " if ok else "✗  "} 문턱 근처를 오르내려도 토글 {toggles}회 '
+        f'(히스테리시스 없으면 4회)   {["닫"if not x else"열" for x in seq]}')
+  if not ok:
+    f.append('게이트 히스테리시스')
+  # 한 번 열리면 문턱의 60% 아래로 내려가야 닫힌다
+  st2 = Stub(gov_min_grade=0.06)
+  st2._meas_v, st2._meas_v_t = 1.5, 100.0
+  st2._pitch, st2._pitch_t = _m.asin(-0.07), 100.0
+  st2._gov_grade_ok(100.0)                       # 열림
+  st2._pitch = _m.asin(-0.045)                   # 문턱 아래지만 60%(3.6%) 위
+  still = st2._gov_grade_ok(100.0)
+  st2._pitch = _m.asin(-0.030)                   # 60% 아래
+  closed = st2._gov_grade_ok(100.0)
+  ok2 = still and not closed
+  print(f'  {"OK " if ok2 else "✗  "} 열린 뒤 4.5%%에서 유지 · 3.0%%에서 닫힘')
+  if not ok2:
+    f.append('히스테리시스 닫힘 문턱')
+
+  # ★ 문턱값 선택의 근거 — 감속하면 IMU 가 내리막으로 읽는다(atan(a/g)).
+  #   하필 곡률 제한이 명령을 깎는 순간이 감속하는 순간이라, 문턱이 낮으면
+  #   막으려던 바로 그 상황에서 게이트가 무력해진다.
+  #   0.06 을 기본 권고로 삼는 이유를 숫자로 못 박는다.
+  for a_dec, thr, want, why in [
+      (-0.30, 0.03, True,  '감속 0.3 m/s² 가 3% 문턱을 연다 (평지인데!)'),
+      (-0.30, 0.06, False, '같은 감속이 6% 문턱은 못 연다'),
+      (-0.55, 0.06, False, '감속 0.55 m/s² 도 6% 문턱 안'),
+      (-0.80, 0.06, True,  '감속 0.8 m/s² 면 6% 도 열린다 (한계)')]:
+      fake = _m.atan(a_dec / 9.81)          # 감속이 만드는 가짜 피치
+      got = (_m.sin(fake) <= -thr)
+      ok = got == want
+      print(f'  {"OK " if ok else "✗  "} {why}   '
+            f'(가짜 {_m.sin(fake)*100:+.1f}% vs 문턱 {thr*100:.0f}%)')
+      if not ok:
+        f.append(why)
+  # 실제 경사로는 문턱을 여유 있게 넘어야 한다
+  for grade, why in [(0.10, '법정 10%'), (0.125, '법정 12.5%'), (0.193, '학교 19.3%')]:
+      ok = grade > 0.06 * 1.5
+      print(f'  {"OK " if ok else "✗  "} {why} 내리막은 6% 문턱을 여유 있게 넘는다')
+      if not ok:
+        f.append(why)
 
   print('\n■ 상한을 낮추면 그만큼만 낸다 (전류 제한)')
   run('gov_pwm=50 이면 역방향 50 을 안 넘는다', 1.0, 3.0, -50.0, f, gov_pwm=50.0)

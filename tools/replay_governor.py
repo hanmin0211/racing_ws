@@ -42,21 +42,27 @@ class _Log:
 
 class Rig:
   """serial_bridge_node 의 상태만 흉내 낸 껍데기. 로직은 원본을 그대로 쓴다."""
-  for _k in ('ENC_M_PER_COUNT', 'ENC_FORWARD_SIGN', 'ENC_JUMP_COUNTS',
-             'ENC_WIN_S', 'ENC_ACC_CAP', 'ENC_ACC_TAU', 'GOV_LEAD_CAP',
-             'BRAKE_MEAS_FRESH_S', 'BRAKE_V_PLAUSIBLE',
-             'GOV_V_PLAUSIBLE_ENCPOS'):
-    locals()[_k] = getattr(N, _k)
-  del _k
+  # ★ 원본의 **대문자 상수를 전부** 가져온다. 하나씩 베껴 쓰면 원본에 상수가
+  #   늘 때마다 AttributeError 로 죽는다 — GOV_GATE_HYST 를 추가하고 바로
+  #   겪었다(test_governor.py 가 같은 이유로 이미 이 방식을 쓴다).
+  for _k, _v in vars(N).items():
+    if _k.isupper() and not callable(_v):
+      locals()[_k] = _v
+  del _k, _v
 
   # 출처별 상한 판정도 원본 그대로 쓴다 — 여기서 재구현하면 갈라진다.
   _gov_v_plausible = N._gov_v_plausible
+  _gov_grade_ok = N._gov_grade_ok
 
   def __init__(self, gov_pwm, gov_deadband, gov_gain, gov_lead_s):
     self.gov_pwm = gov_pwm
     self.gov_deadband = gov_deadband
     self.gov_gain = gov_gain
     self.gov_lead_s = gov_lead_s
+    self.gov_min_grade = 0.0           # 재생은 게이트 없이 (예전 동작 재현)
+    self._gov_gate_open = False
+    self._pitch = None
+    self._pitch_t = -1e9
     self.ff_deadband = 0.05
     self._enc_hist = []
     self._enc_last_c = None

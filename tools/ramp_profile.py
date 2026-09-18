@@ -137,14 +137,13 @@ class Bridge:
   여기서 재구현한 계산은 하나도 없다 — 있으면 시험이 실제 코드를 안 본다.
   """
 
-  # 원본 클래스 상수를 그대로 가져온다. 값을 베끼면 원본이 바뀔 때 갈라진다.
-  for _k in ('ENC_M_PER_COUNT', 'ENC_FORWARD_SIGN', 'ENC_JUMP_COUNTS',
-             'ENC_WIN_S', 'ENC_ACC_CAP', 'ENC_ACC_TAU', 'GOV_LEAD_CAP',
-             'BRAKE_MEAS_FRESH_S', 'BRAKE_V_PLAUSIBLE', 'GRADE_FRESH_S',
-             'GOV_V_PLAUSIBLE_ENCPOS',
-             'GRADE_MAX_RAD', 'GRADE_TAU', 'K_ACCEL_PER_PWM'):
-    locals()[_k] = getattr(SB, _k)
-  del _k
+  # ★ 원본의 **대문자 상수를 전부** 가져온다. 하나씩 베껴 쓰면 원본에 상수가
+  #   늘 때마다 AttributeError 로 죽는다 — GOV_GATE_HYST 를 추가하고 바로
+  #   겪었다(test_governor.py 가 같은 이유로 이미 이 방식을 쓴다).
+  for _k, _v in vars(SB).items():
+    if _k.isupper() and not callable(_v):
+      locals()[_k] = _v
+  del _k, _v
 
   # 실제 메서드 — 이 네 개가 이 도구가 검증하려는 대상 전부다.
   _grade_pwm = SB._grade_pwm
@@ -171,6 +170,7 @@ class Bridge:
     self.gov_gain = a.gov_gain
     self.gov_lead_s = a.gov_lead_s
     self.gov_min_grade = getattr(a, 'gov_min_grade', 0.0)
+    self._gov_gate_open = False        # 자세 게이트 히스테리시스 상태
     # 경사 보상
     self.grade_ff_gain = a.grade_ff_gain
     self.grade_ff_max = a.grade_ff_max

@@ -239,8 +239,20 @@ class SerialBridgeNode(Node):
         #   IMU 부호는 2026-09-18 에 양방향 실측으로 확정했다
         #   (config/imu_pitch_offset.yaml).
         #
-        # 값은 **sinθ 기준 내리막 경사**다. 0.03 = 3% 보다 급한 내리막에서만.
+        # 값은 **sinθ 기준 내리막 경사**다. 0.06 = 6% 보다 급한 내리막에서만.
         # 0.0 = 판정 안 함 = 예전과 완전히 같은 동작(항상 허용).
+        #
+        # ★ 문턱을 6% 로 잡는 이유 — 감속하면 IMU 가 내리막으로 읽는다
+        #   IMU 는 중력 방향으로 기울기를 잰다. 감속하면 관성력이 반대로
+        #   실려 **코가 내려간 것처럼** 보인다: atan(a/g).
+        #       a = −0.3 m/s² → 가짜 −3.1%     ← 3% 문턱이면 평지에서 열린다
+        #       a = −0.6 m/s² → 가짜 −6.1%
+        #   하필 **곡률 제한이 명령을 깎는 순간이 감속하는 순간**이다. 즉
+        #   막으려던 바로 그 상황에서 문턱이 낮으면 게이트가 무력해진다.
+        #
+        #   0.06 이면 감속 0.59 m/s² 까지 닫혀 있고, 실제 경사로는 법정
+        #   10~12.5% · 학교 19% 라 열리는 데 지장이 없다.
+        #   ⚠ 3% 같은 낮은 값으로 내리지 말 것. 이 함정 때문에 넣은 값이다.
         self.declare_parameter('gov_min_grade', 0.0)
 
         # ── 경사 보상 (IMU 피치) ───────────────────────────────────────
@@ -287,6 +299,7 @@ class SerialBridgeNode(Node):
         self._meas_v = None            # 측정 속도 (없으면 None → 시간상한만)
         self._meas_v_t = 0.0
         self._meas_src = None          # 'encpos' | 'odom' | 'enc' — 이 순서로 우선
+        self._gov_gate_open = False    # 거버너 자세 게이트 (히스테리시스)
         self._enc_v_buf = []
         # 엔코더 위치차분 추정기 상태 (100Hz STATUS_10ms 마다 갱신)
         self._enc_hist = []            # [(t, counts)] — 창 길이만큼만 유지
@@ -771,6 +784,11 @@ class SerialBridgeNode(Node):
     #   거르므로, 여기까지 올라오려면 창 전체가 오염돼야 한다.
     GOV_V_PLAUSIBLE_ENCPOS = 6.0
 
+    # 거버너 자세 게이트의 히스테리시스 비율. 열림은 gov_min_grade,
+    # 닫힘은 그 60% 에서. 피치 저역통과(GRADE_TAU 0.30s)가 있어도 경사로
+    # 진입·정상부에서는 문턱을 스치므로 이만큼 벌려 둔다.
+    GOV_GATE_HYST = 0.6
+
     def _gov_grade_ok(self, now):
         """거버너를 걸어도 되는 **자세**인가. 내리막일 때만 참.
 
@@ -788,9 +806,22 @@ class SerialBridgeNode(Node):
         if self.gov_min_grade <= 0.0:
             return True                      # 게이트 자체가 꺼짐 = 예전 동작
         if self._pitch is None or (now - self._pitch_t) >= self.GRADE_FRESH_S:
+            self._gov_gate_open = True
             return True                      # 모른다 → 안전한 쪽(허용)
-        # 전진 기준 내리막이 음수다(오르막 +). 문턱보다 급한 내리막이어야 한다.
-        return math.sin(self._pitch) <= -self.gov_min_grade
+        # 전진 기준 내리막이 음수다(오르막 +). 부호를 뒤집어 '내리막이 +' 로 본다.
+        down = -math.sin(self._pitch)
+        # ★ 히스테리시스 — 문턱 하나로 켰다 껐다 하면 **연속 조절이 깨진다.**
+        #   거버너 출력은 초과분에 비례하는 연속값인데(out = ff − gain·excess),
+        #   게이트가 매 주기 토글하면 PWM 이 'FF 하한' 과 '거버너 값' 사이를
+        #   왕복한다. 그건 9/17 에 고쳤던 '구동↔제동 왕복'(498b867)을 게이트
+        #   쪽에서 되살리는 것이다.
+        #   경사로 진입·정상부 통과처럼 피치가 문턱을 스치는 구간이 정확히
+        #   그 상황이라, 열 때와 닫을 때의 문턱을 다르게 둔다.
+        if self._gov_gate_open:
+            self._gov_gate_open = down > self.gov_min_grade * self.GOV_GATE_HYST
+        else:
+            self._gov_gate_open = down >= self.gov_min_grade
+        return self._gov_gate_open
 
     def _gov_v_plausible(self):
         """거버너가 믿을 측정속도 상한. 위치차분이면 높고, 나머지는 3.0.
