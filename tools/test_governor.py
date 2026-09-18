@@ -188,6 +188,38 @@ def main():
       1.0, -2.0, None, f, gov_min_grade=0.03, _pitch=DOWN, _pitch_t=100.0)
 
   print()
+  print('  ─ 가속 오염 보정: 감속이 만드는 가짜 내리막을 뺀다 ─')
+  # 2026-09-18 실측 재현 — 캘리브 중 실제로 일어난 일:
+  #   차를 세우고 잰 그 자리는 −2.0% 인데, 저속 서다가다 주행에서는
+  #   −6~7% 로 읽혀 6% 문턱이 열렸고 거버너가 PWM 을 9 까지 깎았다.
+  REAL = _m.asin(-0.020)          # 실제 −2.0% 내리막
+  DECEL = -0.50                   # 감속 0.5 m/s² (가짜 −5.1% 를 더한다)
+  fake = REAL + _m.atan(DECEL / 9.81)
+  print(f'  (실제 {_m.sin(REAL)*100:+.1f}% · 감속 {DECEL} m/s² → IMU 는 '
+        f'{_m.sin(fake)*100:+.1f}% 로 읽는다)')
+  run('보정 없으면 평지가 내리막으로 읽혀 게이트가 열렸다 → 이제 안 열린다',
+      1.0, 1.5, None, f, gov_min_grade=0.06, _pitch=fake, _pitch_t=100.0,
+      _meas_a=DECEL, _meas_a_t=100.0)
+  # 보정이 진짜 내리막까지 지워 버리면 안 된다
+  TRUE_DOWN = _m.asin(-0.125) + _m.atan(DECEL / 9.81)   # 12.5% 내리막 + 같은 감속
+  run('진짜 12.5% 내리막은 같은 감속 중에도 연다',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=TRUE_DOWN,
+      _pitch_t=100.0, _meas_a=DECEL, _meas_a_t=100.0)
+  # 가속(코 들림)도 반대로 보정돼야 한다
+  ACC = +0.80
+  up_fake = _m.asin(-0.125) + _m.atan(ACC / 9.81)       # 내리막인데 가속해 평지처럼 보임
+  run('가속으로 평지처럼 보여도 진짜 내리막이면 연다',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=up_fake,
+      _pitch_t=100.0, _meas_a=ACC, _meas_a_t=100.0)
+  # 가속도가 낡으면 보정하지 않는다(있는 그대로 판정)
+  # ⚠ 가속도가 낡으면 보정을 **안 한다** → 있는 그대로(−7.1%) 판정해 열린다.
+  #   IMU 가 없을 때와 같은 '모르면 허용' 방향이다. 내리막에서 못 잡으면
+  #   이탈이고, 잘못 잡으면 최악이 '한 번 선다' 다.
+  run('가속도가 0.5s 넘게 낡으면 보정 없이 판정한다 (모르면 허용)',
+      1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=fake, _pitch_t=100.0,
+      _meas_a=DECEL, _meas_a_t=99.0)
+
+  print()
   print('  ─ 히스테리시스: 문턱을 스칠 때 켜졌다 꺼졌다 하면 안 된다 ─')
   # 거버너 출력은 초과분에 비례하는 **연속값**이다. 게이트가 토글하면 PWM 이
   # 'FF 하한' 과 '거버너 값' 사이를 왕복해 그 연속성이 깨진다 —
@@ -214,7 +246,7 @@ def main():
   st2._pitch = _m.asin(-0.030)                   # 60% 아래
   closed = st2._gov_grade_ok(100.0)
   ok2 = still and not closed
-  print(f'  {"OK " if ok2 else "✗  "} 열린 뒤 4.5%%에서 유지 · 3.0%%에서 닫힘')
+  print(f'  {"OK " if ok2 else "✗  "} 열린 뒤 4.5%에서 유지 · 3.0%에서 닫힘')
   if not ok2:
     f.append('히스테리시스 닫힘 문턱')
 

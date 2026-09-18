@@ -808,8 +808,27 @@ class SerialBridgeNode(Node):
         if self._pitch is None or (now - self._pitch_t) >= self.GRADE_FRESH_S:
             self._gov_gate_open = True
             return True                      # 모른다 → 안전한 쪽(허용)
+        # ★ 가속 오염 보정 (2026-09-18 밤, 실측으로 필요성이 드러났다)
+        #   IMU 는 중력 방향으로 기울기를 잰다. 가감속하면 관성력이 섞여
+        #   **가짜 피치**가 생긴다: atan(a/g). 1 m/s² 면 5.8° = 10% 다.
+        #
+        #   실측(학교, 캘리브 중): 차를 세우고 잰 그 자리가 −2.0% 인데,
+        #   저속 서다가다 주행에서는 −6~7% 로 읽혀 6% 문턱이 열렸다.
+        #   거버너가 PWM 을 9 까지 깎아 캘리브가 기어갔다.
+        #
+        #   그런데 그 가속도를 우리는 **이미 알고 있다** — 엔코더 위치차분
+        #   추정기가 내는 self._meas_a 다(거버너 선행항이 쓰는 그 값).
+        #   빼 주면 자세만 남는다. 캘리브든 주행이든 같은 식으로 해결된다.
+        #
+        #   ⚠ grade_ff 에는 적용하지 않는다. 그쪽은 지금 실차에서 잘 돌고 있고,
+        #     대회 직전에 검증된 경로를 건드리지 않는다. 여기는 **게이트
+        #     판정에만** 쓰이므로 틀려도 최악이 '거버너가 한 박자 늦게 켜짐' 이다.
+        pitch = self._pitch
+        if (self._meas_a_t > 0.0
+                and (now - self._meas_a_t) < self.BRAKE_MEAS_FRESH_S):
+            pitch -= math.atan(self._meas_a / 9.81)
         # 전진 기준 내리막이 음수다(오르막 +). 부호를 뒤집어 '내리막이 +' 로 본다.
-        down = -math.sin(self._pitch)
+        down = -math.sin(pitch)
         # ★ 히스테리시스 — 문턱 하나로 켰다 껐다 하면 **연속 조절이 깨진다.**
         #   거버너 출력은 초과분에 비례하는 연속값인데(out = ff − gain·excess),
         #   게이트가 매 주기 토글하면 PWM 이 'FF 하한' 과 '거버너 값' 사이를
