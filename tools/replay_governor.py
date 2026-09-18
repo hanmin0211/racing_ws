@@ -16,7 +16,7 @@
   가짜 정지구간이 생겨 가속도가 ±8 로 요동친다 — 노드에서는 안 일어나는
   일이다. 기본값은 --dedupe(카운트가 바뀐 행만) 이며, 이게 노드와 같다.
 
-  python3 tools/replay_governor.py /tmp/ramp_5키로_2338.csv --speed 1.11
+  python3 tools/replay_governor.py data/2026-09-17-ramp/ramp_5키로_2338.csv --speed 1.11
 """
 
 import argparse
