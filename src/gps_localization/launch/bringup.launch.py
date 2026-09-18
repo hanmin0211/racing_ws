@@ -235,6 +235,24 @@ def generate_launch_description():
       #   펌웨어를 올바른 상수로 다시 구웠다면 ff_mode:=firmware.
       DeclareLaunchArgument('ff_mode', default_value='ros',
                             choices=['ros', 'firmware']),
+      # ★ 2026-09-18 — 헤딩 캘리브 '최소 소요시간' 게이트의 속도상한[m/s].
+      #   그 게이트는 '자동직진은 속도제어를 받으므로 명령의 2배를 못 넘는다'
+      #   를 전제로 한다. **ff_mode:=ros 는 개루프라 그 전제가 깨진다** —
+      #   명령 0.5m/s 로도 차가 10m 동안 0.89→1.59m/s 로 가속해(23:55 실측)
+      #   평균 1.05m/s, 상한 1.00 을 넘어 캘리브가 통째로 무효가 됐다.
+      #   (같은 고장이 9/12 에 펌웨어 FF 로도 났다 — 위 ff_mode 주석 참고.
+      #    그때는 FF 를 고쳤지만, 원인은 '명령속도로 상한을 잡은 것' 이다)
+      #
+      #   그래서 개루프면 2.0 을 쓴다. 이 값은 이 노드가 이미 '물리적으로
+      #   불가능' 의 기준으로 쓰는 값이고(calib_jump_speed), 2026-08-24 사고
+      #   (10.1m/3.4s = 2.97m/s)는 그대로 거부한다. 실주행 1.05 와 사고 2.97
+      #   사이에 있어 양쪽으로 여유가 있다.
+      #   firmware 모드면 0.0 = 예전 그대로(명령의 2배).
+      DeclareLaunchArgument(
+          'calib_speed_cap',
+          default_value=PythonExpression(
+              ["'2.0' if '", LaunchConfiguration('ff_mode'),
+               "' == 'ros' else '0.0'"])),
       # 회피 기하 — 근거는 아래 cluster_plot_node 주석의 비교표.
       # ★ 2026-09-13 규정 도면 대조 (차량규격 PDF p6) 로 확정.
       #   실제 도로 폭은 **2700mm** (중앙선 위 1400 + 아래 1300) 이지만
@@ -398,6 +416,9 @@ def generate_launch_description():
                                           value_type=float),
               'max_jump_speed': ParameterValue(
                   LaunchConfiguration('calib_jump_speed'), value_type=float),
+              # 개루프에서는 명령속도로 상한을 못 잡는다 (선언부 주석 참고)
+              'auto_speed_cap': ParameterValue(
+                  LaunchConfiguration('calib_speed_cap'), value_type=float),
               'retry_start_radius': ParameterValue(
                   LaunchConfiguration('calib_retry_radius'), value_type=float),
           }],

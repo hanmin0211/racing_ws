@@ -102,6 +102,26 @@ class HeadingInitNode(Node):
     self.declare_parameter('auto_speed', 0.3)
     self.declare_parameter('auto_countdown', 5.0)
     self.declare_parameter('auto_timeout', 90.0)
+    # ★ 2026-09-18 — 아래 ③ 최소 소요시간 게이트의 **속도상한**[m/s].
+    #   0 이면 auto_speed × 2 (= '자동직진은 속도제어를 받는다' 는 전제).
+    #
+    #   ⚠ ff_mode:=ros 는 **개루프**다. 속도제어가 없어서 명령 0.5m/s 는
+    #     PWM 으로 한 번 변환될 뿐이고, 차는 정상상태 속도까지 계속 가속한다.
+    #     그래서 '명령의 2배' 라는 상한이 성립하지 않는다.
+    #
+    #     실측 (2026-09-18 23:55, ff_static 46 / ff_gain 42.6 / 개루프):
+    #       1m 구간속도  0.89 → 1.01 → 1.22 → 1.19 → 1.36 → 1.41 → 1.45 → 1.59
+    #       10.1m 를 9.6초 = 평균 1.05m/s  →  상한 1.00 을 넘어 무효 처리됐다.
+    #     매끄럽게 단조증가한다 — 점프면 계단이 나온다. 진짜 주행이었다.
+    #
+    #   ⚠ 이 상한을 올려도 2026-08-24 사고는 여전히 걸린다:
+    #     사고는 10.1m 를 3.4초 = 2.97m/s 였다. 2.0 으로 두면 사고(2.97)는
+    #     거부하고 실주행(1.05)은 통과한다. 게다가 2.0 은 이 노드가 이미
+    #     '물리적으로 불가능' 의 기준으로 쓰는 값이다(max_jump_speed, 그리고
+    #     사람이 미는 경우의 상한도 같은 값이다).
+    #
+    #   bringup 이 ff_mode 를 보고 자동으로 넣는다 — 운전자가 기억할 필요 없다.
+    self.declare_parameter('auto_speed_cap', 0.0)
     # 자동 직진 중 헤딩 유지 (절대 헤딩을 몰라도 '출발 시점 대비 변화'로 곧게 간다)
     self.declare_parameter('auto_heading_gain', 1.5)   # 도/도
     self.declare_parameter('auto_max_correction', 5.0)  # 보정 조향각 상한[도]
@@ -202,6 +222,8 @@ class HeadingInitNode(Node):
 
     self.auto_drive = bool(self.get_parameter('auto_drive').value)
     self.auto_speed = float(self.get_parameter('auto_speed').value)
+    self.auto_speed_cap = float(
+        self.get_parameter('auto_speed_cap').value)
     self.auto_countdown = float(self.get_parameter('auto_countdown').value)
     self.auto_timeout = float(self.get_parameter('auto_timeout').value)
     self.auto_heading_gain = float(self.get_parameter('auto_heading_gain').value)
@@ -648,10 +670,16 @@ class HeadingInitNode(Node):
 
       # ③ 최소 소요시간 게이트 — 10m 를 물리적으로 가능한 시간보다 빨리
       #    '갔다'면 그건 주행이 아니라 측위 점프의 누적이다.
-      #    자동직진은 속도제어를 받으므로 auto_speed 의 2배를 넘을 수 없다.
-      #    (사고 때: 출발 3.4초 만에 10.1m '완주' → 여기서 걸린다)
+      #    (사고 때: 출발 3.4초 만에 10.1m '완주' = 2.97m/s → 여기서 걸린다)
+      #
+      #    ⚠ 상한을 '명령의 2배' 로 잡던 근거는 **속도제어를 받는다** 는
+      #      전제였다. ff_mode:=ros 는 개루프라 그 전제가 깨진다 — 명령
+      #      0.5m/s 로도 차가 1.6m/s 까지 가속한다(2026-09-18 실측).
+      #      그래서 개루프일 때 쓸 상한을 auto_speed_cap 으로 따로 받는다.
+      #      (선언부 주석에 실측 구간속도와 사고 값의 비교가 있다)
       if self.auto_drive and self.drive_started_t is not None:
-        v_cap = max(0.05, self.auto_speed * 2.0)
+        v_cap = (self.auto_speed_cap if self.auto_speed_cap > 0.0
+                 else max(0.05, self.auto_speed * 2.0))
         t_ref = self.drive_started_t
       else:
         v_cap = self.max_jump_speed          # 사람이 미는 경우
