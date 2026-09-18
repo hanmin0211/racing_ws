@@ -17,6 +17,8 @@
 #   bash tools/drive_school.sh --speed 0.5
 #   bash tools/drive_school.sh --min-pwm 55   # 크리프 하한을 직접 지정
 #   bash tools/drive_school.sh --extra ff_brake_pwm:=50   # 임의 런치 인자
+#   bash tools/drive_school.sh --waypoints <경로>.yaml     # 다른 장소 (용인 등)
+#   bash tools/drive_school.sh --plan <계획>.yaml          # 미션 계획 교체
 #
 # ★ --min-pwm 을 쓰는 경우 (2026-09-13)
 #   breakaway(출발용 60)는 정지마찰을 뚫는 값이고, ff_min_pwm(크리프)은
@@ -36,6 +38,9 @@
 #     계속 동작한다. 앞에 뭐가 있으면 여전히 선다.
 set -u
 WS=/home/han/racing_ws
+# 기본은 학교 트랙. 다른 장소는 --waypoints / --plan 으로 준다.
+# ⚠ --extra waypoints:= 로 주면 인자가 **중복**되고 '뒤가 이긴다' 에 의존하게 된다.
+#   대회장에서 제일 중요한 인자를 그런 규칙에 맡기지 않는다 (2026-09-19).
 WP=$WS/config/chungju_school/wp_school_track_0.5.yaml
 PLAN=$WS/config/chungju_school/mission_plan_school.yaml
 MISSIONS=0; SPEED=0.7; YAW=""; NOAVOID=0; FORCE_PWM=""; MINRANGE=""
@@ -50,10 +55,17 @@ while [ $# -gt 0 ]; do
     # 중복 차단·라이다 드라이버·로그)을 잃지 않고 새 인자를 시험하기 위해서다.
     #   bash tools/drive_school.sh --missions --extra ff_brake_pwm:=50
     --extra) EXTRA+=("$2"); shift 2;;
+    # 경로/계획을 제대로 된 옵션으로 받는다 (중복 인자를 만들지 않는다).
+    --waypoints) WP="$2"; shift 2;;
+    --plan) PLAN="$2"; shift 2;;
     --speed) SPEED="$2"; shift 2;;
     --yaw-offset) YAW="$2"; shift 2;;
     *) echo "모르는 인자: $1" >&2; exit 1;;
   esac
+done
+
+for f in "$WP" "$PLAN"; do
+  [ -e "$f" ] || { echo "❌ 파일이 없다: $f" >&2; exit 1; }
 done
 
 cd "$WS" || exit 1
