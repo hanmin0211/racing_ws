@@ -57,10 +57,13 @@ class Stub:
     self._pitch = None
     self._pitch_t = 0.0
     self._gov_gate_open = False
+    self._gov_a_lp = None          # 게이트 보정용 저역통과 가속도
+    self._gov_a_lp_t = 0.0
     # 원본의 대문자 상수를 전부 가져온다 (위 S2 주석 참고)
     for _k, _v in vars(SerialBridgeNode).items():
       if _k.isupper() and not callable(_v):
         setattr(self, _k, _v)
+    kw.pop('settle', None)      # run() 전용 플래그 — 노드에는 없는 속성이다
     self.__dict__.update(kw)
 
   # 출처별 상한 판정도 **원본을 그대로** 쓴다. 베끼면 갈라진다.
@@ -78,6 +81,17 @@ def run(name, cmd_v, meas_v, want, fails, ff=None, **kw):
   st = Stub(**kw)
   st._meas_v = meas_v
   st._meas_v_t = kw.get('meas_t', 100.0)
+  # ★ settle — 자세 게이트의 가속도 보정은 GRADE_TAU(0.30s) 로 **차오른다**
+  #   (피치가 저역통과돼 있어서 위상을 맞춰야 한다, 노드 주석 참고).
+  #   '지속되는 가감속' 을 시험하려면 한 번만 부르면 안 된다. 실제 신호
+  #   경로대로 수렴시킨 뒤 판정한다. 과도구간은 따로 시험한다.
+  if kw.get('settle') and st._pitch is not None:
+    for _i in range(40):                     # 2초 = 6.7 τ
+      _t = 100.0 - 2.0 + 0.05 * (_i + 1)
+      st._pitch_t = _t
+      st._meas_a_t = _t
+      st._gov_grade_ok(_t)
+    st._pitch_t = st._meas_a_t = kw.get('meas_t', 100.0)
   if ff is None:
     ff = 38.8 * abs(cmd_v) + 17.2
   got = GOV(st, cmd_v, ff, 100.0)
@@ -199,18 +213,18 @@ def main():
         f'{_m.sin(fake)*100:+.1f}% 로 읽는다)')
   run('보정 없으면 평지가 내리막으로 읽혀 게이트가 열렸다 → 이제 안 열린다',
       1.0, 1.5, None, f, gov_min_grade=0.06, _pitch=fake, _pitch_t=100.0,
-      _meas_a=DECEL, _meas_a_t=100.0)
+      _meas_a=DECEL, _meas_a_t=100.0, settle=True)
   # 보정이 진짜 내리막까지 지워 버리면 안 된다
   TRUE_DOWN = _m.asin(-0.125) + _m.atan(DECEL / 9.81)   # 12.5% 내리막 + 같은 감속
   run('진짜 12.5% 내리막은 같은 감속 중에도 연다',
       1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=TRUE_DOWN,
-      _pitch_t=100.0, _meas_a=DECEL, _meas_a_t=100.0)
+      _pitch_t=100.0, _meas_a=DECEL, _meas_a_t=100.0, settle=True)
   # 가속(코 들림)도 반대로 보정돼야 한다
   ACC = +0.80
   up_fake = _m.asin(-0.125) + _m.atan(ACC / 9.81)       # 내리막인데 가속해 평지처럼 보임
   run('가속으로 평지처럼 보여도 진짜 내리막이면 연다',
       1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=up_fake,
-      _pitch_t=100.0, _meas_a=ACC, _meas_a_t=100.0)
+      _pitch_t=100.0, _meas_a=ACC, _meas_a_t=100.0, settle=True)
   # 가속도가 낡으면 보정하지 않는다(있는 그대로 판정)
   # ⚠ 가속도가 낡으면 보정을 **안 한다** → 있는 그대로(−7.1%) 판정해 열린다.
   #   IMU 가 없을 때와 같은 '모르면 허용' 방향이다. 내리막에서 못 잡으면
@@ -218,6 +232,57 @@ def main():
   run('가속도가 0.5s 넘게 낡으면 보정 없이 판정한다 (모르면 허용)',
       1.0, 1.5, -64.0, f, gov_min_grade=0.06, _pitch=fake, _pitch_t=100.0,
       _meas_a=DECEL, _meas_a_t=99.0)
+
+  print()
+  print('  ─ 출발 가속 과도구간: 위상이 안 맞으면 평지가 내리막으로 읽힌다 ─')
+  # 2026-09-18 23:55 실측 재현.
+  #   self._pitch 는 GRADE_TAU(0.30s) 로 **저역통과**돼 있는데 엔코더 가속도는
+  #   즉시 튄다. 그대로 빼면 출발 1초 구간에서 과보정이 나서 게이트가 한 번
+  #   열렸다 (PWM 61 → 55). IMU 피치는 (참자세 + atan(a/g)) 를 통째로 누른
+  #   값이므로, 빼 줄 값도 같은 시정수로 누른 가속도여야 한다.
+  TAU = SerialBridgeNode.GRADE_TAU
+  A_BURST = 1.20                  # 정지마찰 돌파 PWM 90 → 급가속
+  st = Stub(gov_min_grade=0.06)
+  st._meas_v, st._meas_v_t = 0.43, 100.0
+  pitch_lp = REAL                 # 서 있을 때는 참자세 그대로
+  opened, naive_opened = [], []
+  t = 100.0
+  for _ in range(20):             # 0.05s × 20 = 1.0초, 실측과 같은 구간
+    t += 0.05
+    raw = REAL + _m.atan(A_BURST / 9.81)      # IMU 가 실제로 보는 값
+    alpha = 0.05 / (TAU + 0.05)
+    pitch_lp += alpha * (raw - pitch_lp)      # 노드와 같은 저역통과
+    st._pitch, st._pitch_t = pitch_lp, t
+    st._meas_a, st._meas_a_t = A_BURST, t
+    opened.append(st._gov_grade_ok(t))
+    # 위상을 안 맞췄다면(=즉시 빼면) 어떻게 되는지 — 이 시험의 이빨
+    naive_opened.append(-_m.sin(pitch_lp - _m.atan(A_BURST / 9.81))
+                        >= 0.06)
+  ok = not any(opened)
+  print(f'  {"OK " if ok else "✗  "} 평지({_m.sin(REAL)*100:+.1f}%)에서 '
+        f'{A_BURST} m/s² 로 출발해도 게이트가 안 열린다 '
+        f'(열린 주기 {sum(opened)}/20)')
+  if not ok:
+    f.append('출발 가속 과도구간')
+  ok2 = any(naive_opened)
+  print(f'  {"OK " if ok2 else "✗  "} 위상을 안 맞추면 열린다 — 시험에 이빨이 '
+        f'있다 (열린 주기 {sum(naive_opened)}/20)')
+  if not ok2:
+    f.append('과도구간 시험 이빨 없음')
+  # 가속이 끝나고 정상주행이 되면 보정은 다시 정상 동작해야 한다
+  st2 = Stub(gov_min_grade=0.06)
+  st2._meas_v, st2._meas_v_t = 1.5, 100.0
+  t = 100.0
+  for _ in range(40):             # 2초간 감속 −0.5 유지 → 필터가 수렴한다
+    t += 0.05
+    st2._pitch, st2._pitch_t = fake, t
+    st2._meas_a, st2._meas_a_t = DECEL, t
+    st2._gov_grade_ok(t)
+  ok3 = st2._gov_gate_open is False
+  print(f'  {"OK " if ok3 else "✗  "} 감속이 지속되면 필터가 수렴해 '
+        f'가짜 내리막을 계속 막는다')
+  if not ok3:
+    f.append('지속 감속 수렴')
 
   print()
   print('  ─ 히스테리시스: 문턱을 스칠 때 켜졌다 꺼졌다 하면 안 된다 ─')
