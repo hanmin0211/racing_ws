@@ -144,6 +144,34 @@ def generate_launch_description():
       DeclareLaunchArgument('v_ramp_up', default_value='0.0'),
       DeclareLaunchArgument('v_ramp_down', default_value='0.0'),
 
+      # ── 경사로: 거버너 · IMU 경사 보상 (serial_bridge) ─────────────
+      # ★ 구간 속도(v_ramp_up/down)만으로는 경사로가 안 된다.
+      #   구간 속도는 '어디서 얼마의 속도를 낼지' 만 정한다. 그 속도를 내려면
+      #   PWM 이 얼마여야 하는지는 개루프 FF 가 모른다 — 평지에서 식별한
+      #   식이라 중력이 안 들어 있다. 그래서 셋이 같이 필요하다:
+      #       구간 속도  어디서 얼마로        (여기, longitudinal)
+      #       grade_ff   그러려면 PWM 얼마    (아래, serial_bridge · IMU 피치)
+      #       거버너     그래도 빨라지면 깎음 (아래, serial_bridge · 엔코더)
+      #
+      #   근거: tools/ramp_profile.py --sweep 6,8,10,12.5,15,19.3
+      #     grade_ff 꺼짐 → 12.5% 에서 등반 0.37 m/s, 구동 15% 약화면 못 넘음
+      #     grade_ff 켬   → 19.3% 까지 등반 1.24 m/s 이상
+      #
+      # ⚠ grade_ff 는 **부호를 현장에서 확정한 뒤에만** 켠다. 반대면
+      #   내리막에서 가속한다(시뮬에서 오르막 −0.19 m/s = 뒤로 밀림).
+      #       python3 tools/imu_grade.py --level                 (평지 영점)
+      #       python3 tools/imu_grade.py --measure --expect 12.5 (경사 부호)
+      #   절차 전체는 RAMP_RUNBOOK.md.
+      #
+      # 기본값은 노드 기본값과 같다 = 전부 꺼짐. 안 주면 예전과 똑같이 돈다.
+      DeclareLaunchArgument('gov_pwm', default_value='0.0'),
+      DeclareLaunchArgument('gov_deadband', default_value='0.10'),
+      DeclareLaunchArgument('gov_gain', default_value='300.0'),
+      DeclareLaunchArgument('gov_lead_s', default_value='0.30'),
+      DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
+      DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
+      DeclareLaunchArgument('imu_topic', default_value='handsfree/imu'),
+
       # ★ 2026-09-16 — 회피 override 유지시간 / 이탈 상한 (먹스).
       #   근거와 실측은 vehicle_cmd_mux_node.py 의 avoid_hold_s 주석 참고.
       #   셋 다 기본 0 = 꺼짐. drive_0337 은 이 기능들 없이 완주했다 —
@@ -239,6 +267,35 @@ def generate_launch_description():
                   LaunchConfiguration('ff_brake_pwm'), value_type=float),
               'ff_brake_ms': ParameterValue(
                   LaunchConfiguration('ff_brake_ms'), value_type=float),
+              # ── 경사로 (2026-09-18 노출) ───────────────────────────
+              # ★ 왜 여기 추가했나
+              #   거버너(gov_*)와 경사 보상(grade_ff_*)은 지금까지
+              #   tools/teleop_drive.launch.py 에만 있었다. 그래서 **자율
+              #   주행으로는 켤 방법이 아예 없었다.** 경사로를 웨이포인트로
+              #   달리려면 이 둘이 필요한데(tools/ramp_profile.py: 12.5%
+              #   에서 grade_ff 없이는 구동이 15% 만 약해져도 못 넘는다),
+              #   런치에 인자가 없으니 teleop 으로만 시험할 수 있었다.
+              #
+              # ⚠ 기본값은 **노드 기본값과 같다**(gov_pwm 0 = 꺼짐,
+              #   grade_ff_gain 0 = 꺼짐). 인자를 안 주면 이 블록이
+              #   추가되기 전과 **완전히 같은 동작**이다.
+              #
+              # ⚠ 전부 float 강제 — `gov_pwm:=50` 은 INTEGER 로 들어가
+              #   노드가 즉사한다(런치 인자 함정).
+              'gov_pwm': ParameterValue(
+                  LaunchConfiguration('gov_pwm'), value_type=float),
+              'gov_deadband': ParameterValue(
+                  LaunchConfiguration('gov_deadband'), value_type=float),
+              'gov_gain': ParameterValue(
+                  LaunchConfiguration('gov_gain'), value_type=float),
+              'gov_lead_s': ParameterValue(
+                  LaunchConfiguration('gov_lead_s'), value_type=float),
+              'grade_ff_gain': ParameterValue(
+                  LaunchConfiguration('grade_ff_gain'), value_type=float),
+              'grade_ff_max': ParameterValue(
+                  LaunchConfiguration('grade_ff_max'), value_type=float),
+              'imu_topic': ParameterValue(
+                  LaunchConfiguration('imu_topic'), value_type=str),
           }],
       ),
 
