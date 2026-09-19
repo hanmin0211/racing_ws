@@ -6,19 +6,60 @@
 
 ---
 
-## 1. 명령 (그대로 복사)
+## 1. ★ 내일 아침 명령 — 터미널 4개, 이 순서대로
+
+### 터미널 1 — 정리 (제일 먼저, 한 번만)
+```bash
+pkill -f teleop_keyboard; cd /home/han/racing_ws && bash tools/ros_cleanup.sh
+```
+`✅ 없음` 이 떠야 한다.
+
+### 터미널 1 — 라이다 드라이버 (계속 켜 둘 것)
+```bash
+cd /home/han/racing_ws && bash tools/lidar_up.sh 12
+```
+⚠ 이 스크립트의 `✅` 는 **발행자 수만 본다. 믿지 말 것**(9/19 에 세 번 오판했다).
+반드시 데이터로 확인한다 — **11~12 Hz** 가 찍혀야 한다:
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 topic hz /scan_front
+```
+확인되면 이 `hz` 만 Ctrl+C. **드라이버 터미널은 닫지 않는다.**
+안 뜨면 `lidar_up.sh` 를 다시. 여러 번 실패해도 갑자기 붙는다(간헐적이다).
+끝내 안 붙으면 아래에서 `lidar:=true` → `lidar:=false` 로만 바꾼다.
+
+### 터미널 2 — 주행
+
+차를 **코스 출발점 (56.09, 5.39)** 에, **앞바퀴 중앙**(ADC 412 ±41)으로 놓는다.
 
 ```bash
-cd /home/han/racing_ws && bash tools/ros_cleanup.sh
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py control:=true sequencer:=false lidar:=true rviz:=true auto_calib:=true waypoints:=/home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml max_speed:=1.6 curvature_gain:=6.0 calib_distance:=10.0 auto_calib_speed:=0.5 calib_jump_speed:=3.0 ff_mode:=ros ff_static:=46.0 ff_gain:=42.6 ff_min_pwm:=0.0 ff_breakaway_pwm:=90.0 ff_breakaway_ms:=1200.0 grade_ff_gain:=1.0 grade_ff_max:=95.0 gov_pwm:=60.0 gov_min_grade:=0.06 gov_gain:=300.0 gov_lead_s:=0.3 gov_deadband:=0.20 2>&1 | tee /tmp/run.log
 ```
 
-`✅ 없음` 확인 후, **차를 코스 출발점 (56.09, 5.39) 에 놓고**:
+**손 안 댄다.** 5초 카운트다운 → 스스로 10m 직진 → 캘리브 → AUTO.
 
+### 터미널 3 — 기록 (선택, 권장)
 ```bash
-cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py control:=true sequencer:=false lidar:=false rviz:=true auto_calib:=true waypoints:=/home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml max_speed:=1.6 curvature_gain:=6.0 calib_distance:=10.0 auto_calib_speed:=0.5 ff_mode:=ros ff_static:=46.0 ff_gain:=42.6 ff_min_pwm:=0.0 ff_breakaway_pwm:=90.0 ff_breakaway_ms:=1200.0 grade_ff_gain:=1.0 grade_ff_max:=95.0 gov_pwm:=60.0 gov_min_grade:=0.06 gov_gain:=300.0 gov_lead_s:=0.3 gov_deadband:=0.20 2>&1 | tee /tmp/calib.log
+cd /home/han/racing_ws && bash tools/record_run.sh mainlap_full
 ```
 
-**손 안 댄다.** 5초 카운트다운 후 차가 스스로 10m 직진 → 캘리브 → AUTO.
+### 터미널 4 — teleop (비상정지) — **`모드: AUTO` 가 뜬 뒤에만**
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 run velocity_controller teleop_keyboard
+```
+`E` = 정지 토글. 한 번 더 누르면 그 자리에서 이어서 간다.
+⚠ **끌 때는 `E` 로 해제부터.** Ctrl+C 로 끄면 `/e_stop=False` 를 쏴서 차가 출발한다.
+⚠ **AUTO 전에 띄우면 차가 안 나간다**(§1-B).
+
+---
+
+## 1-A. 출발 전 4가지 (9/19 에 이걸로 네 번 막혔다)
+
+```
+① 앞바퀴 중앙        꺾여 있으면 heading_init 이 출발을 거부한다
+② teleop 꺼져 있나    떠 있으면 /teleop/cmd_vel 에 0 을 덮어쓴다
+③ 차가 출발점에      (56.09, 5.39)
+④ 라이다 11~12 Hz    발행자 수 말고 hz 로 확인
+```
 
 ## 1-B. ★ 순서 — 이걸 어기면 차가 안 나간다 (2026-09-19 16:16 에 당했다)
 
