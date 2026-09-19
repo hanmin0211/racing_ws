@@ -72,10 +72,27 @@ cd /home/han/racing_ws && source install/setup.bash && python3 tools/lidar_mount
 cd /home/han/racing_ws && bash tools/drive_school.sh --speed 1.6 --min-pwm 0 --waypoints /home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --extra ff_mode:=ros --extra ff_static:=46.0 --extra ff_gain:=42.6 --extra ff_breakaway_pwm:=90.0 --extra ff_breakaway_ms:=1200.0 --extra auto_calib_speed:=0.5 --extra calib_distance:=10.0 --extra curvature_gain:=6.0 --extra avoid_steer_rate_deg:=90.0 --extra grade_ff_gain:=1.0 --extra grade_ff_max:=95.0 --extra gov_pwm:=60.0 --extra gov_min_grade:=0.06 --extra gov_gain:=300.0 --extra gov_lead_s:=0.3 --extra gov_deadband:=0.20
 ```
 
-기록 (별 터미널):
+**기록 (별 터미널) — 주행마다 반드시**
+
 ```bash
-cd /home/han/racing_ws && source install/setup.bash && python3 tools/drive_record.py --yaw-offset 180 --out /tmp/yongin_$(date +%H%M).csv
+cd /home/han/racing_ws && bash tools/record_run.sh yongin_1st
 ```
+
+주행 하나를 통째로 `data/<날짜>/<이름>_<시각>/` 에 남긴다:
+
+```
+drive.csv        궤적·모드·조향·전압 (20Hz)
+drive_scan.csv   라이다 점을 지도좌표로
+params/          그 주행의 런치 파라미터 덤프   ← /tmp 는 재부팅하면 사라진다
+roslog/          그 세션의 노드 stdout
+run.txt          런치 명령줄 · 커밋 · 원점 · IMU 영점 · 노드 목록
+```
+
+`Ctrl-C` 로 끝내면 그때 설정 스냅샷을 뜬다. **런치를 먼저 띄우고** 실행할 것 —
+아니면 "이 주행 중에 만들어진 ROS 세션이 없다" 고 경고하고 로그를 안 남긴다.
+
+⚠ `drive_record.py` 를 직접 돌리면 **궤적만** 남는다. 어떤 설정으로 돌았는지가
+없어서 나중에 분석이 안 된다 — 어젯밤 파라미터 덤프가 실제로 전부 날아갔다.
 
 **`exec` 직전 출력에서 눈으로 확인:**
 

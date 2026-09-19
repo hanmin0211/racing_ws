@@ -60,6 +60,14 @@ cd /home/han/racing_ws && source install/setup.bash && ros2 run velocity_control
 
 **⑤ 출발** — E-stop 을 걸었으면 `E` 로 해제. 안 걸었으면 캘리브 완료 1.4초 뒤 자동으로 출발한다.
 
+## 기록
+
+```bash
+cd /home/han/racing_ws && bash tools/record_run.sh prelim_gujeol
+```
+
+별 터미널에서. 주행 하나를 통째로 `data/<날짜>/` 에 남긴다 — 상세는 `START.md` §5.
+
 ## ⚠ 알아 둘 것
 
 - **E-stop 은 모터만 막는다.** 손으로 미는 건 안 막히고, 캘리브는 GPS·IMU 만
