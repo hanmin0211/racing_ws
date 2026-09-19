@@ -20,6 +20,30 @@ cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localizat
 
 **손 안 댄다.** 5초 카운트다운 후 차가 스스로 10m 직진 → 캘리브 → AUTO.
 
+## 1-B. ★ 순서 — 이걸 어기면 차가 안 나간다 (2026-09-19 16:16 에 당했다)
+
+```
+① bash tools/ros_cleanup.sh   +   pkill -f teleop_keyboard
+② (라이다 쓸 때만) 터미널1: bash tools/lidar_up.sh 12   ← 계속 켜 둔다
+③ 터미널2: 위 §1 런치.  차는 출발점에, 앞바퀴는 중앙(ADC 412±41)
+④ **`모드: AUTO` 가 뜬 뒤에** 터미널3: ros2 run velocity_controller teleop_keyboard
+```
+
+⚠ **teleop 을 캘리브 전에 띄우면 차가 못 나간다.**
+  `heading_init` 의 자가 직진은 **`/teleop/cmd_vel` 에 0.5 를 발행**한다.
+  teleop 은 W/S 를 안 눌러도 **데드맨으로 0 을 20Hz 로 발행**한다.
+  같은 토픽이라 0 이 덮어쓴다 — 실측 분포 `{0.0: 60건, 0.5: 34건}`.
+  증상은 조용하다: 로그가 `직진 기준 헤딩 고정` 에서 멈추고 차는 안 움직인다
+  (`직진 중... 1.0/10m` 은 1m 를 가야 찍히므로 아예 안 나온다).
+
+⚠ **teleop 은 한 개만.** 두 개면 E-stop 상태가 서로 엇갈린다(16:12 에 2개 떠 있었다).
+
+⚠ **teleop 종료는 반드시 `E` 키로 해제 후.** `Ctrl+C` 로 끄면 종료 시
+  `/e_stop=False` 를 발행해 **차가 출발한다**(teleop_keyboard_node.py:143).
+
+⚠ **`lidar:=true` 는 드라이버를 안 띄운다.** 클러스터링만 띄우고 `/scan_front` 는
+  외부(`lidar_up.sh`)에서 오길 기대한다. 그 드라이버를 죽이면 런치가 통째로 내려간다.
+
 ## 2. 이 줄들이 나오면 정상 (15:36 실측)
 
 ```
@@ -84,3 +108,7 @@ VMIN 4106 mV (리셋선 3483 — 뚫지 않았다)
 | `❌ 헤딩 캘리브 무효 ... 속도상한` | 개루프 과속 | 이미 고쳤다(`283d654`). `ff_mode:=ros` 면 `auto_speed_cap` 이 2.0 으로 자동 전달된다 — `ros2 param get /gps_heading_init auto_speed_cap` 으로 확인 |
 | `↩ 차를 시작점으로 되돌리세요` | 실패 후 10m 앞에 서 있다 | 출발점으로 되돌리면 자동 재출발 |
 | 스택이 두 벌 | 정리 없이 겹쳐 띄웠다. `/global_path` 에 경로 2종이 번갈아 올라온다 | 반드시 `ros_cleanup.sh` 먼저 |
+| 차가 안 나가고 로그가 `직진 기준 헤딩 고정` 에서 멈춤 | **teleop 이 떠 있다** — `/teleop/cmd_vel` 에 0 을 덮어쓴다 | `pkill -f teleop_keyboard`. 런치는 그대로 둬도 바로 출발한다 |
+| `❌ 헤딩 캘리브 무효: 주행 중 측위 점프 ... = 2.0m/s (상한 2.0m/s)` | 개루프 캘리브가 **가속한다**(실측 1.01→1.69 m/s). 진짜 점프가 아니다 | `calib_jump_speed:=3.0`. 2026-08-24 사고는 19m/s 라 3.0 으로도 잡힌다 |
+| `앞바퀴가 우로 N° 꺾여 있다` + `STALL: steer=1` | 정지 상태 아스팔트 조향이 못 이긴다 | 손으로 앞바퀴를 중앙에. 차를 몇 cm 굴리면 스스로 찾는다 |
+| `FollowGap: mode=BLOCKED, front=0.3~0.9m` | 라이다가 지면/차체를 때린다 | `python3 tools/lidar_mount_check.py` 로 마운트 확인 |
