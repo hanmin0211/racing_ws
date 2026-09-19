@@ -1,0 +1,555 @@
+[INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-09-19-15-36-05-400808-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-29872
+[INFO] [launch]: Default logging verbosity is set to INFO
+[bringup] ⚠ /home/han/stop_points.yaml 에 정지지점이 없다 — 신호등 정지 비활성
+[control] ⚠ xterm 이 없다. teleop:=true 는 키 입력을 못 받는다.
+[control]   별도 터미널에서 실행할 것: ros2 run velocity_controller teleop_keyboard
+[control] ⚠ xterm 이 없다. teleop:=true 는 키 입력을 못 받는다.
+[control]   별도 터미널에서 실행할 것: ros2 run velocity_controller teleop_keyboard
+[INFO] [launch.user]: 
+════════════════════════════════════════════════════════════
+  ⚠⚠  회피 꺼짐 (lidar:=false)  —  장애물을 그대로 들이받는다
+       장애물·S코스·돌발정지 구간을 달릴 거면 lidar:=true
+════════════════════════════════════════════════════════════
+[INFO] [ublox_dgnss_node-1]: process started with pid [29874]
+[INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [29876]
+[INFO] [vrs_ntrip_client-3]: process started with pid [29878]
+[INFO] [hfi_a9_ros2-4]: process started with pid [29880]
+[INFO] [heading_init_node-5]: process started with pid [29882]
+[INFO] [direct_localization_node-6]: process started with pid [29884]
+[INFO] [global_path_publisher-7]: process started with pid [29886]
+[INFO] [local_sliding_window_node-8]: process started with pid [29888]
+[INFO] [local_pure_pursuit_node-9]: process started with pid [29890]
+[INFO] [longitudinal_controller-10]: process started with pid [29892]
+[INFO] [vehicle_cmd_mux-11]: process started with pid [29894]
+[INFO] [serial_bridge-12]: process started with pid [29896]
+[INFO] [rviz2-13]: process started with pid [29898]
+[ublox_nav_sat_fix_hp-2] [INFO] [1789799765.463882453] [ublox_nav_sat_fix_hp]: starting ublox_nav_sat_fix_hp
+[ublox_dgnss_node-1] [INFO] [1789799765.464699025] [ublox_dgnss]: starting ublox_dgnss
+[ublox_dgnss_node-1] [INFO] [1789799765.466498343] [ublox_dgnss]: Device family: F9P - High-precision GNSS (Product IDs: [0x01a9], Reliable iSerial: NO)
+[ublox_dgnss_node-1] [INFO] [1789799765.466549540] [ublox_dgnss]: Parameter DEVICE_SERIAL_STRING not found, will use first F9P device.
+[ublox_dgnss_node-1] [INFO] [1789799765.466585758] [ublox_dgnss]: Parameter FRAME_ID found with value: gps
+[ublox_dgnss_node-1] [INFO] [1789799765.466591960] [ublox_dgnss]: ParameterManager initialized
+[ublox_dgnss_node-1] [INFO] [1789799765.466733167] [ublox_dgnss]: Loading default UBX config for F9P: /opt/ros/humble/share/ublox_dgnss/config/f9p_ubx_config.toml
+[ublox_dgnss_node-1] [INFO] [1789799765.466886446] [ublox_dgnss]: Loaded 127 parameters from F9P TOML
+[ublox_dgnss_node-1] [INFO] [1789799765.466911894] [ublox_dgnss]: Loaded 127 UBX config items
+[ublox_dgnss_node-1] [INFO] [1789799765.466922174] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_COV_USB
+[ublox_dgnss_node-1] [INFO] [1789799765.466934367] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB
+[ublox_dgnss_node-1] [INFO] [1789799765.466938164] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_STATUS_USB
+[ublox_dgnss_node-1] [INFO] [1789799765.466941530] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_RXM_RTCM_USB
+[ublox_dgnss_node-1] [INFO] [1789799765.466945237] [ublox_dgnss]: parameter supplied: CFG_NAVHPG_DGNSSMODE
+[ublox_dgnss_node-1] [INFO] [1789799765.466950487] [ublox_dgnss]: parameter supplied: CFG_NAVSPG_DYNMODEL
+[ublox_dgnss_node-1] [INFO] [1789799765.466954925] [ublox_dgnss]: parameter supplied: CFG_RATE_MEAS
+[ublox_dgnss_node-1] [INFO] [1789799765.466960606] [ublox_dgnss]: parameter supplied: CFG_RATE_NAV
+[ublox_dgnss_node-1] [INFO] [1789799765.466965535] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_BDS_ENA
+[ublox_dgnss_node-1] [INFO] [1789799765.466969152] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GAL_ENA
+[ublox_dgnss_node-1] [INFO] [1789799765.466972378] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GLO_ENA
+[ublox_dgnss_node-1] [INFO] [1789799765.466975514] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GPS_ENA
+[ublox_dgnss_node-1] [INFO] [1789799765.466978750] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_QZSS_ENA
+[ublox_dgnss_node-1] [INFO] [1789799765.466981976] [ublox_dgnss]: parameter supplied: CFG_USBOUTPROT_NMEA
+[ublox_dgnss_node-1] [INFO] [1789799765.475314532] [ublox_dgnss]: input param ESF_MEAS_INPUT_ENABLED: true
+[ublox_dgnss_node-1] [INFO] [1789799765.475348686] [ublox_dgnss]: input param RTCM_INPUT_ENABLED: true
+[ublox_dgnss_node-1] [INFO] [1789799765.475578991] [ublox_dgnss]: input param RXM_PMP_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789799765.475607705] [ublox_dgnss]: input param RXM_QZSSL6_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789799765.475629276] [ublox_dgnss]: input param RXM_SPARTNKEY_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789799765.475649214] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475668881] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475685272] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475705220] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475722392] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475742370] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475759181] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475785100] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475803275] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475821289] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475845514] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475870712] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475889347] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475907071] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475924233] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475941987] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475960341] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.475978005] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476006488] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476049740] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476071271] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476091058] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476110505] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476129090] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476150721] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476174355] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476193061] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476212347] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476231984] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476250559] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476273733] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476303018] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476328176] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476348605] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476366789] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476387879] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476413848] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476434918] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476453162] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476478560] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476497636] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476520008] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476537962] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476555205] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476570584] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476587496] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476606081] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476625127] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476648100] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476667667] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476685491] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476709636] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476735465] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476755393] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476773627] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476795278] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476813663] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476831587] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476855552] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476875710] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.476894375] [ublox_dgnss]: parameter set CFG_SEC_JAMDET_SENSITIVITY_HI: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476918471] [ublox_dgnss]: parameter set CFG_SEC_SPOOFDET_SIM_SIG_DIS: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476938158] [ublox_dgnss]: parameter set CFG_SIGNAL_BDS_B1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476957334] [ublox_dgnss]: parameter set CFG_SIGNAL_BDS_B2_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.476980698] [ublox_dgnss]: parameter set CFG_SIGNAL_GAL_E1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477017207] [ublox_dgnss]: parameter set CFG_SIGNAL_GAL_E5B_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477039389] [ublox_dgnss]: parameter set CFG_SIGNAL_GLO_L1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477062112] [ublox_dgnss]: parameter set CFG_SIGNAL_GLO_L2_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477087380] [ublox_dgnss]: parameter set CFG_SIGNAL_GPS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477106556] [ublox_dgnss]: parameter set CFG_SIGNAL_GPS_L2C_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477125331] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477144828] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477164445] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477183982] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477208017] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477235519] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477255146] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477273461] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477291786] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477309820] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477329637] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477351308] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477374031] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477394089] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477425799] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477457188] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477478548] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477499788] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477520407] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477539363] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477561295] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477580471] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477600429] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477623622] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477644372] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477665121] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477691430] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477711739] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477731336] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477755221] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477774177] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477793132] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477816406] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477838518] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477858336] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477886940] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477907098] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477927035] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.477960589] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.477981428] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.478006085] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.478029138] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789799765.478052913] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799765.485326659] [ublox_dgnss]: Starting USB initialization
+[ublox_dgnss_node-1] [INFO] [1789799765.491919348] [ublox_dgnss]: Initial device connection completed
+[ublox_dgnss_node-1] [INFO] [1789799765.492014238] [ublox_dgnss]: usb vendor_id: 0x1546 product_id: 0x01a9 serial_str:  bus: 003 address: 038 port_number: 3 speed: SPEED_FULL (12 MBit/s) num_interfaces: 2 ep_data out: 0x01 in: 0x82 ep_comms in: 0x83
+[ublox_dgnss_node-1] [INFO] [1789799765.492024076] [ublox_dgnss]: ublox_dgnss_init_async start
+[ublox_dgnss_node-1] [INFO] [1789799765.492039716] [ublox_dgnss]: Sending user parameters to device
+[ublox_dgnss_node-1] [INFO] [1789799765.492134675] [ublox_dgnss]: Sent 14 user parameters to device
+[ublox_dgnss_node-1] [INFO] [1789799765.492142259] [ublox_dgnss]: Fetching configuration parameter values from device
+[ublox_dgnss_node-1] [INFO] [1789799765.492157438] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_INFMSG_NMEA_USB CFG_INFMSG_UBX_USB CFG_MSGOUT_RTCM_3X_TYPE1005_USB CFG_MSGOUT_RTCM_3X_TYPE1074_UART2 CFG_MSGOUT_RTCM_3X_TYPE1077_USB CFG_MSGOUT_RTCM_3X_TYPE1084_UART2 CFG_MSGOUT_RTCM_3X_TYPE1087_USB CFG_MSGOUT_RTCM_3X_TYPE1094_UART2 CFG_MSGOUT_RTCM_3X_TYPE1097_USB CFG_MSGOUT_RTCM_3X_TYPE1124_UART2 
+[ublox_dgnss_node-1] [INFO] [1789799765.492178187] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_RTCM_3X_TYPE1127_USB CFG_MSGOUT_RTCM_3X_TYPE1230_UART2 CFG_MSGOUT_RTCM_3X_TYPE1230_USB CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2 CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB CFG_MSGOUT_UBX_MON_COMMS_USB CFG_MSGOUT_UBX_NAV_CLOCK_USB CFG_MSGOUT_UBX_NAV_COV_UART1 CFG_MSGOUT_UBX_NAV_COV_UART2 CFG_MSGOUT_UBX_NAV_DOP_USB 
+[ublox_dgnss_node-1] [INFO] [1789799765.492191863] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_NAV_EOE_USB CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1 CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2 CFG_MSGOUT_UBX_NAV_ODO_USB CFG_MSGOUT_UBX_NAV_ORB_USB CFG_MSGOUT_UBX_NAV_POSECEF_USB CFG_MSGOUT_UBX_NAV_POSLLH_USB CFG_MSGOUT_UBX_NAV_PVT_USB CFG_MSGOUT_UBX_NAV_RELPOSNED_USB 
+[ublox_dgnss_node-1] [INFO] [1789799765.492206340] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_NAV_SAT_USB CFG_MSGOUT_UBX_NAV_SIG_USB CFG_MSGOUT_UBX_NAV_STATUS_UART1 CFG_MSGOUT_UBX_NAV_STATUS_UART2 CFG_MSGOUT_UBX_NAV_SVIN_USB CFG_MSGOUT_UBX_NAV_TIMEUTC_USB CFG_MSGOUT_UBX_NAV_VELECEF_USB CFG_MSGOUT_UBX_NAV_VELNED_USB CFG_MSGOUT_UBX_RXM_COR_UART1 CFG_MSGOUT_UBX_RXM_COR_UART2 
+[ublox_dgnss_node-1] [INFO] [1789799765.492220928] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_RXM_COR_USB CFG_MSGOUT_UBX_RXM_MEASX_USB CFG_MSGOUT_UBX_RXM_RAWX_USB CFG_MSGOUT_UBX_RXM_SFRBX_USB CFG_MSGOUT_UBX_RXM_SPARTN_USB CFG_MSGOUT_UBX_SEC_SIGLOG_USB CFG_MSGOUT_UBX_SEC_SIG_USB CFG_NAVSPG_FIXMODE CFG_NAVSPG_INIFIX3D CFG_NAVSPG_UTCSTANDARD 
+[ublox_dgnss_node-1] [INFO] [1789799765.492238982] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_ODO_COGLPGAIN CFG_ODO_COGMAXPOSACC CFG_ODO_COGMAXSPEED CFG_ODO_OUTLPCOG CFG_ODO_OUTLPVEL CFG_ODO_PROFILE CFG_ODO_USE_COG CFG_ODO_USE_ODO CFG_ODO_VELLPGAIN CFG_RATE_TIMEREF 
+[ublox_dgnss_node-1] [INFO] [1789799765.492254391] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_SEC_JAMDET_SENSITIVITY_HI CFG_SEC_SPOOFDET_SIM_SIG_DIS CFG_SIGNAL_BDS_B1_ENA CFG_SIGNAL_BDS_B2_ENA CFG_SIGNAL_GAL_E1_ENA CFG_SIGNAL_GAL_E5B_ENA CFG_SIGNAL_GLO_L1_ENA CFG_SIGNAL_GLO_L2_ENA CFG_SIGNAL_GPS_L1CA_ENA CFG_SIGNAL_GPS_L2C_ENA 
+[ublox_dgnss_node-1] [INFO] [1789799765.492270361] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_SIGNAL_QZSS_L1CA_ENA CFG_SIGNAL_QZSS_L1S_ENA CFG_SIGNAL_QZSS_L2C_ENA CFG_SIGNAL_SBAS_ENA CFG_SIGNAL_SBAS_L1CA_ENA CFG_SPARTN_USE_SOURCE CFG_TMODE_ECEF_X CFG_TMODE_ECEF_X_HP CFG_TMODE_ECEF_Y CFG_TMODE_ECEF_Y_HP 
+[ublox_dgnss_node-1] [INFO] [1789799765.492284007] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_TMODE_ECEF_Z CFG_TMODE_ECEF_Z_HP CFG_TMODE_FIXED_POS_ACC CFG_TMODE_HEIGHT CFG_TMODE_HEIGHT_HP CFG_TMODE_LAT CFG_TMODE_LAT_HP CFG_TMODE_LON CFG_TMODE_LON_HP CFG_TMODE_MODE 
+[ublox_dgnss_node-1] [INFO] [1789799765.492297503] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_TMODE_POS_TYPE CFG_TMODE_SVIN_ACC_LIMIT CFG_TMODE_SVIN_MIN_DUR CFG_UART1INPROT_NMEA CFG_UART1INPROT_RTCM3X CFG_UART1INPROT_SPARTN CFG_UART1INPROT_UBX CFG_UART1OUTPROT_NMEA CFG_UART1OUTPROT_RTCM3X CFG_UART1OUTPROT_UBX 
+[ublox_dgnss_node-1] [INFO] [1789799765.492322450] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_UART2INPROT_NMEA CFG_UART2INPROT_RTCM3X CFG_UART2INPROT_SPARTN CFG_UART2INPROT_UBX CFG_UART2OUTPROT_NMEA CFG_UART2OUTPROT_RTCM3X CFG_UART2OUTPROT_UBX CFG_UART2_BAUDRATE CFG_USBINPROT_NMEA CFG_USBINPROT_RTCM3X 
+[ublox_dgnss_node-1] [INFO] [1789799765.492342588] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_USBINPROT_UBX CFG_USBOUTPROT_RTCM3X CFG_USBOUTPROT_UBX 
+[ublox_dgnss_node-1] [INFO] [1789799765.492353629] [ublox_dgnss]: Requested 113 device parameter values via CFG-VALGET
+[ublox_dgnss_node-1] [INFO] [1789799765.492358357] [ublox_dgnss]: ublox_dgnss_init_async finished
+[ublox_dgnss_node-1] [INFO] [1789799765.492362625] [ublox_dgnss]: USB initialization completed successfully
+[ublox_dgnss_node-1] [INFO] [1789799765.605382022] [ublox_dgnss]: ubx sec unique_id: 0x5540823D1E
+[ublox_dgnss_node-1] [INFO] [1789799765.705586008] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 7
+[ublox_dgnss_node-1] [INFO] [1789799765.708442602] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.709007720] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.709077592] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.709816216] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.710455894] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.710550142] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.710677403] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.710725293] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.710991606] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[longitudinal_controller-10] [INFO] [1789799765.720511674] [longitudinal_controller]: 종방향 제어 시작: v_max=1.6 v_min=0.25 (목표속도만 발행 — PWM은 펌웨어 PID가 담당)
+[ublox_dgnss_node-1] [INFO] [1789799765.725396699] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 7
+[ublox_dgnss_node-1] [INFO] [1789799765.725559166] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.725993205] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726090709] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726123521] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726150282] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726169368] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726186751] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726205767] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.726222518] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[local_sliding_window_node-8] [INFO] [1789799765.732878878] [local_sliding_window_node]: local_sliding_window_node 시작 (odom=/odometry/filtered, window=5+20, lookahead=10.0m, 곡률 preview=4.0m)
+[rviz2-13] [INFO] [1789799765.733903212] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-13] [INFO] [1789799765.734090075] [rviz2]: OpenGl version: 4.5 (GLSL 4.5)
+[vrs_ntrip_client-3] [INFO] [1789799765.744102052] [ngii_vrs_ntrip_client]: NGII VRS NTRIP 클라이언트 시작: RTS2.ngii.go.kr:2101/VRS-RTCM32 (id=<NGII_ID>) → /ntrip_client/rtcm
+[ublox_dgnss_node-1] [INFO] [1789799765.745420963] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745501906] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745529558] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745548443] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745566798] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745589070] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745609859] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745628725] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745651418] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.745671295] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[local_pure_pursuit_node-9] [INFO] [1789799765.748513863] [local_pure_pursuit]: local_pure_pursuit 시작: L=0.785m, max=18°, target_speed=0.5m/s, /local_path→/cmd_vel
+[vehicle_cmd_mux-11] [INFO] [1789799765.751619859] [vehicle_cmd_mux]: 명령 먹스 시작: 조향±18.0° 속도 -0.6~1.6m/s (E-stop > teleop > 자율)
+[vehicle_cmd_mux-11] [WARN] [1789799765.751963357] [vehicle_cmd_mux]: 헤딩 캘리브 대기 — /heading/yaw_offset 을 받기 전에는 자율(AUTO)을 거부한다. teleop 으로 10m 직진해 캘리브를 끝낼 것.
+[heading_init_node-5] [INFO] [1789799765.761453148] [gps_heading_init]: 헤딩 초기화(1회성) 시작: 10m 직진하면 yaw_offset 계산 후 자동 종료 (fix=/fix, imu=handsfree/imu)
+[heading_init_node-5] [WARN] [1789799765.761789022] [gps_heading_init]: ⚠ 자동 직진 켜짐: GPS 수신 후 5초 뒤 0.50m/s로 스스로 10m 전진한다. 앞을 비우고 E-stop을 손에 쥘 것.
+[ublox_dgnss_node-1] [INFO] [1789799765.765455085] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765575082] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765613314] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765644293] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765677095] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765714906] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765762476] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765779308] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765795548] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.765811178] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[rviz2-13] [INFO] [1789799765.774628769] [rviz2]: Stereo is NOT SUPPORTED
+[local_pure_pursuit_node-9] [WARN] [1789799765.784274103] [local_pure_pursuit]: 정지: 경로 대기중
+[ublox_dgnss_node-1] [INFO] [1789799765.785367348] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785439193] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785459191] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785476103] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785493806] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785509386] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785524815] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785540194] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785555613] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.785570561] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[vehicle_cmd_mux-11] [INFO] [1789799765.788169569] [vehicle_cmd_mux]: 모드: STOP(헤딩 캘리브 전)
+[hfi_a9_ros2-4] [INFO] [1789799765.790511662] [imu]: Serial port /dev/imu opened successfully
+[ublox_dgnss_node-1] [INFO] [1789799765.805399777] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805480389] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805501529] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805519423] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805541204] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805559469] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805578194] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805596949] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805615835] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.805633989] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[direct_localization_node-6] [INFO] [1789799765.813689341] [direct_localization]: 로컬 원점: 332200.0, 4128600.0 (EPSG:32652) — 용인 (2026-09-05)
+[direct_localization_node-6] [INFO] [1789799765.824600135] [direct_localization]: 직접 로컬라이제이션 시작: /fix+handsfree/imu → /odometry/filtered (map 프레임, 원점 332200,4128600, 30Hz)
+[ublox_dgnss_node-1] [INFO] [1789799765.825471671] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825579605] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825616735] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825651831] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825685996] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825710191] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825728326] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825758012] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825776266] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.825844986] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845578691] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845833192] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845871544] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845898455] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845928001] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845962215] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.845988385] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.846094305] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.846169938] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.846188142] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865390013] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865508407] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865529847] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865550917] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865568660] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865588568] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865607003] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.865627602] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 3
+[ublox_dgnss_node-1] [INFO] [1789799765.865646848] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789799765.865664592] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885371316] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885467077] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885486794] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885506261] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885527461] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885545254] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885562407] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.885582164] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 3
+[ublox_dgnss_node-1] [INFO] [1789799765.885603805] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789799765.885621037] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[global_path_publisher-7] [INFO] [1789799765.902067094] [global_path_publisher]: 전역 경로 로드 완료: /home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml (총 1298개 점, 648.3m)
+[global_path_publisher-7] [INFO] [1789799765.902330522] [global_path_publisher]:   로컬 범위 x[-38.5, 56.1] y[-62.0, 25.7] (정상이면 0~수백 m)
+[ublox_dgnss_node-1] [INFO] [1789799765.905351978] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 76
+[ublox_dgnss_node-1] [INFO] [1789799765.905408334] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 50
+[ublox_dgnss_node-1] [INFO] [1789799765.905423122] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 10
+[ublox_dgnss_node-1] [INFO] [1789799765.905436527] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.905457447] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789799765.905473367] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.905487614] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.905500127] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789799765.905514354] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 153
+[ublox_dgnss_node-1] [INFO] [1789799765.905529974] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 1
+[ublox_dgnss_node-1] [INFO] [1789799765.925367495] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 76
+[ublox_dgnss_node-1] [INFO] [1789799765.925499584] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 50
+[ublox_dgnss_node-1] [INFO] [1789799765.925517809] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 10
+[ublox_dgnss_node-1] [INFO] [1789799765.925535723] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.925557203] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789799765.925576390] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.925594233] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789799765.925613389] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789799765.925631644] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 153
+[ublox_dgnss_node-1] [INFO] [1789799765.925651101] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 1
+[ublox_dgnss_node-1] [WARN] [1789799765.945367443] [ublox_dgnss]: ubx class: 0x05 id: 0x00 ack nak payload - class: 0x06 id: 0x8b
+[local_sliding_window_node-8] [INFO] [1789799765.949633249] [local_sliding_window_node]: 전역 경로 수신: 1298점, 시작-끝 21.02m → 열린 경로
+[ublox_dgnss_node-1] [WARN] [1789799765.955349914] [ublox_dgnss]: ubx class: 0x05 id: 0x00 ack nak payload - class: 0x06 id: 0x8b
+[ublox_dgnss_node-1] [INFO] [1789799765.965434037] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.965522825] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.965543674] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.965563191] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.965581916] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.965604759] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.965655976] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.965677597] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.965698556] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.965719215] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.985351098] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.985404449] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789799765.985429236] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.985459132] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.985488969] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789799765.985509568] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.985537901] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.985560654] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.985584179] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789799765.985606992] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005350976] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005409527] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005437600] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005464471] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005491041] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005517551] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005551184] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005582133] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005610767] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.005635193] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025350794] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025414805] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025442127] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025467104] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025489626] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025512099] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025534431] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025557765] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025581149] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.025608481] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.045399725] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.045507729] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.045538757] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.045566069] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045589012] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045612346] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045635550] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045657672] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045674273] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.045690875] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065353155] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.065402849] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.065434338] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.065457953] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065481377] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065504461] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065546410] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065570506] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065592377] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.065615390] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085354566] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799766.085421522] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085456869] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085487607] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085515740] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799766.085551718] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085581464] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799766.085612723] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.085644143] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.085675753] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105351939] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799766.105401343] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105425458] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105445456] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105464933] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789799766.105485181] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105510449] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789799766.105532120] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789799766.105554161] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789799766.105575261] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.125512741] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.125616026] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.125646754] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.145410817] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789799766.145510715] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789799766.145547445] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: true
+[vrs_ntrip_client-3] [INFO] [1789799766.148352372] [ngii_vrs_ntrip_client]: NTRIP 연결 성공: ICY 200 OK
+[heading_init_node-5] [WARN] [1789799766.166041346] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=0 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[heading_init_node-5] [INFO] [1789799766.205859729] [gps_heading_init]: RTK 수렴 (수평 σ=1.5cm (상한 5cm), status=1) — 헤딩 캘리브를 시작한다.
+[heading_init_node-5] [INFO] [1789799766.206117235] [gps_heading_init]: 시작점 기록: (37.2889314, 127.1076395). 직진 시작하세요.
+[heading_init_node-5] [WARN] [1789799766.247500714] [gps_heading_init]: 자동 직진 5초 전... (E-stop 준비)
+[vehicle_cmd_mux-11] [INFO] [1789799766.288139737] [vehicle_cmd_mux]: 모드: TELEOP
+[heading_init_node-5] [INFO] [1789799766.315890863] [gps_heading_init]: 직진 중... 0.0/10m
+[heading_init_node-5] [WARN] [1789799767.247514461] [gps_heading_init]: 자동 직진 4초 전... (E-stop 준비)
+[serial_bridge-12] [INFO] [1789799767.763852000] [serial_bridge_node]: 시리얼 포트 연결 성공: /dev/arduino @ 57600bps
+[serial_bridge-12] [WARN] [1789799767.776062058] [serial_bridge_node]: ★ 경사 보상 켜짐 — handsfree/imu 피치로 PWM 을 보정한다 (이득 1.00, 상한 95). 영점 +3.81° · 부호 -1. ⚠ 부호가 틀리면 내리막에서 가속한다 — tools/imu_grade.py 로 확인했는지 볼 것.
+[serial_bridge-12] [WARN] [1789799767.776334292] [serial_bridge_node]: ★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 0.20m/s 넘게 빠르면 역 PWM 을 낸다 (초과 1m/s 당 300, 상한 60, 선행 0.30s). ⚠ 플러깅이라 전류가 크다 — 상한을 함부로 올리지 말 것.
+[serial_bridge-12] [WARN] [1789799767.776565308] [serial_bridge_node]: ★ ROS 쪽 FF 사용: PWM = 42.6·v + 46.0 (펌웨어 FF 우회). 엔코더 복구 후에는 ff_mode:=firmware 로 되돌릴 것.
+[serial_bridge-12] [INFO] [1789799767.781552787] [serial_bridge_node]: Serial read thread started
+[serial_bridge-12] [WARN] [1789799767.782540442] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4183mV — 배터리/전원 확인
+[heading_init_node-5] [WARN] [1789799768.247549913] [gps_heading_init]: 자동 직진 3초 전... (E-stop 준비)
+[direct_localization_node-6] [INFO] [1789799768.824842251] [direct_localization]: pose: x=56.26 y=3.83 yaw=119.8° v=-0.02m/s [헤딩 미정렬(10m직진 필요)]
+[heading_init_node-5] [WARN] [1789799769.247497531] [gps_heading_init]: 자동 직진 2초 전... (E-stop 준비)
+[heading_init_node-5] [WARN] [1789799770.247494666] [gps_heading_init]: 자동 직진 1초 전... (E-stop 준비)
+[ublox_dgnss_node-1] [ERROR] [1789799770.510135524] [ublox_dgnss]: Parameter fetch TIMEOUT after 5 seconds! 10 parameters stuck in PARAM_VALGET:
+[ublox_dgnss_node-1] [ERROR] [1789799770.510195948] [ublox_dgnss]:   Missing response: CFG_SEC_JAMDET_SENSITIVITY_HI
+[ublox_dgnss_node-1] [ERROR] [1789799770.510205536] [ublox_dgnss]:   Missing response: CFG_SEC_SPOOFDET_SIM_SIG_DIS
+[ublox_dgnss_node-1] [ERROR] [1789799770.510212970] [ublox_dgnss]:   Missing response: CFG_SIGNAL_BDS_B1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510220264] [ublox_dgnss]:   Missing response: CFG_SIGNAL_BDS_B2_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510228088] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GAL_E1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510235993] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GAL_E5B_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510243017] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GLO_L1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510250270] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GLO_L2_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510257414] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GPS_L1CA_ENA
+[ublox_dgnss_node-1] [ERROR] [1789799770.510269096] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GPS_L2C_ENA
+[ublox_dgnss_node-1] [WARN] [1789799770.510276400] [ublox_dgnss]: Proceeding with partial parameter initialization (degraded mode)
+[vrs_ntrip_client-3] [INFO] [1789799770.730564737] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 20프레임 발행, GGA 실측(37.28893,127.10764)
+[serial_bridge-12] [WARN] [1789799770.795887925] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4198mV — 배터리/전원 확인
+[heading_init_node-5] [INFO] [1789799771.247455937] [gps_heading_init]: 직진 기준 헤딩 고정: 119.8° (절대값은 무의미, 변화량만 사용)
+[serial_bridge-12] [INFO] [1789799771.330365386] [serial_bridge_node]: 출발 — 정지마찰 하한 90 을 1200ms 인가한다
+[direct_localization_node-6] [INFO] [1789799771.824821309] [direct_localization]: pose: x=56.22 y=3.83 yaw=119.8° v=0.08m/s [헤딩 미정렬(10m직진 필요)]
+[serial_bridge-12] [INFO] [1789799772.530462993] [serial_bridge_node]: 거버너 — 측정 0.60+0.24(선행) > 명령 0.50 (+0.34) → PWM 69 → 28
+[heading_init_node-5] [INFO] [1789799773.506083244] [gps_heading_init]: 직진 중... 1.0/10m
+[serial_bridge-12] [WARN] [1789799773.806482418] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4062mV — 배터리/전원 확인
+[heading_init_node-5] [INFO] [1789799774.616178537] [gps_heading_init]: 직진 중... 2.1/10m
+[direct_localization_node-6] [INFO] [1789799774.824683966] [direct_localization]: pose: x=54.08 y=4.70 yaw=118.5° v=0.99m/s [헤딩 미정렬(10m직진 필요)]
+[heading_init_node-5] [INFO] [1789799775.416216478] [gps_heading_init]: 직진 중... 3.1/10m
+[vrs_ntrip_client-3] [INFO] [1789799775.730493742] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 48프레임 발행, GGA 실측(37.28894,127.10760)
+[heading_init_node-5] [INFO] [1789799776.206171941] [gps_heading_init]: 직진 중... 4.1/10m
+[serial_bridge-12] [WARN] [1789799776.812897567] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3907mV — 배터리/전원 확인
+[heading_init_node-5] [INFO] [1789799776.916087035] [gps_heading_init]: 직진 중... 5.1/10m
+[heading_init_node-5] [INFO] [1789799777.606113191] [gps_heading_init]: 직진 중... 6.1/10m
+[direct_localization_node-6] [INFO] [1789799777.824667259] [direct_localization]: pose: x=50.29 y=6.23 yaw=118.9° v=1.19m/s [헤딩 미정렬(10m직진 필요)]
+[heading_init_node-5] [INFO] [1789799778.306121580] [gps_heading_init]: 직진 중... 7.2/10m
+[local_pure_pursuit_node-9] [WARN] [1789799778.824940082] [local_pure_pursuit]: odom 속도 19.5m/s — 비현실적이라 버린다 (직전 1.20 유지, 누적 1회). EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.
+[heading_init_node-5] [INFO] [1789799778.916141301] [gps_heading_init]: 직진 중... 8.1/10m
+[heading_init_node-5] [INFO] [1789799779.516095364] [gps_heading_init]: 직진 중... 9.0/10m
+[serial_bridge-12] [WARN] [1789799779.827219617] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4018mV — 배터리/전원 확인
+[heading_init_node-5] [INFO] [1789799780.316155250] [gps_heading_init]: ✅ 헤딩 초기화 완료: 10.3m 직진 (최대 편차 1°). GPS course=159.4°, IMU yaw=120.0°, → yaw_offset=39.5°
+[heading_init_node-5] [INFO] [1789799780.316471878] [gps_heading_init]: 조향 중앙 점검: 횡편차 +0.04m — STEER_CENTER 412 양호 (보정 불필요)
+[heading_init_node-5] [INFO] [1789799780.316661646] [gps_heading_init]: 자동 직진 종료: 캘리브 완료
+[direct_localization_node-6] [INFO] [1789799780.316673629] [direct_localization]: 헤딩 오프셋 수신: 39.5° — 헤딩 정렬 적용됨.
+[vehicle_cmd_mux-11] [INFO] [1789799780.316675612] [vehicle_cmd_mux]: 헤딩 캘리브 완료 (39.5°) — 자율 허용
+[vrs_ntrip_client-3] [INFO] [1789799780.730482067] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 68프레임 발행, GGA 실측(37.28897,127.10752)
+[direct_localization_node-6] [INFO] [1789799780.824723418] [direct_localization]: pose: x=45.93 y=7.91 yaw=159.5° v=1.52m/s [헤딩 정렬됨]
+[heading_init_node-5] [INFO] [1789799781.347579399] [gps_heading_init]: yaw_offset 발행 완료 → 노드 자동 종료.
+[vehicle_cmd_mux-11] [INFO] [1789799781.788008240] [vehicle_cmd_mux]: 모드: AUTO
+[serial_bridge-12] [INFO] [1789799781.830350942] [serial_bridge_node]: 출발 — 정지마찰 하한 90 을 1200ms 인가한다
+[serial_bridge-12] [WARN] [1789799783.689806223] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4262mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799783.824836653] [direct_localization]: pose: x=42.71 y=9.79 yaw=137.1° v=1.76m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799785.730600298] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 96프레임 발행, GGA 실측(37.28900,127.10745)
+[serial_bridge-12] [WARN] [1789799786.700736383] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4033mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799786.824639321] [direct_localization]: pose: x=36.86 y=12.61 yaw=168.5° v=2.45m/s [헤딩 정렬됨]
+[direct_localization_node-6] [INFO] [1789799789.824782369] [direct_localization]: pose: x=30.71 y=14.52 yaw=153.0° v=2.00m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799789.860330150] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4295mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799790.730512798] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 116프레임 발행, GGA 실측(37.28903,127.10733)
+[direct_localization_node-6] [INFO] [1789799792.824688167] [direct_localization]: pose: x=25.34 y=16.82 yaw=165.5° v=1.75m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799792.868808909] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3880mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799795.730640662] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 144프레임 발행, GGA 실측(37.28906,127.10722)
+[direct_localization_node-6] [INFO] [1789799795.824644869] [direct_localization]: pose: x=19.72 y=18.36 yaw=157.4° v=2.30m/s [헤딩 정렬됨]
+[serial_bridge-12] [INFO] [1789799796.080339719] [serial_bridge_node]: 거버너 — 측정 2.37+0.17(선행) > 명령 1.50 (+1.05) → PWM 97 → 제동 -60
+[serial_bridge-12] [WARN] [1789799796.883224000] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4278mV — 배터리/전원 확인
+[serial_bridge-12] [INFO] [1789799797.080371654] [serial_bridge_node]: 거버너 — 측정 2.04-0.04(선행) > 명령 1.51 (+0.49) → PWM 57 → 제동 -29
+[serial_bridge-12] [INFO] [1789799798.130559602] [serial_bridge_node]: 거버너 — 측정 2.00+0.09(선행) > 명령 1.55 (+0.54) → PWM 63 → 제동 -38
+[direct_localization_node-6] [INFO] [1789799798.824839177] [direct_localization]: pose: x=13.64 y=21.02 yaw=160.1° v=2.14m/s [헤딩 정렬됨]
+[serial_bridge-12] [INFO] [1789799799.180306040] [serial_bridge_node]: 거버너 — 측정 2.00-0.13(선행) > 명령 1.57 (+0.30) → PWM 66 → 35
+[serial_bridge-12] [WARN] [1789799799.889639426] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4047mV — 배터리/전원 확인
+[serial_bridge-12] [INFO] [1789799800.180528765] [serial_bridge_node]: 거버너 — 측정 2.05-0.02(선행) > 명령 1.57 (+0.47) → PWM 61 → 제동 -19
+[vrs_ntrip_client-3] [INFO] [1789799800.730492000] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 164프레임 발행, GGA 실측(37.28909,127.10711)
+[serial_bridge-12] [INFO] [1789799801.230304033] [serial_bridge_node]: 거버너 — 측정 2.10-0.13(선행) > 명령 1.52 (+0.45) → PWM 59 → 제동 -17
+[direct_localization_node-6] [INFO] [1789799801.824656038] [direct_localization]: pose: x=7.73 y=22.89 yaw=158.3° v=2.05m/s [헤딩 정렬됨]
+[serial_bridge-12] [INFO] [1789799802.230329180] [serial_bridge_node]: 거버너 — 측정 1.99-0.09(선행) > 명령 1.55 (+0.35) → PWM 62 → 17
+[serial_bridge-12] [WARN] [1789799802.998331691] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4246mV — 배터리/전원 확인
+[serial_bridge-12] [INFO] [1789799803.230338932] [serial_bridge_node]: 거버너 — 측정 1.89+0.08(선행) > 명령 1.56 (+0.41) → PWM 67 → 5
+[serial_bridge-12] [INFO] [1789799804.280435778] [serial_bridge_node]: 거버너 — 측정 1.81-0.18(선행) > 명령 1.11 (+0.52) → PWM 55 → 제동 -41
+[direct_localization_node-6] [INFO] [1789799804.824695267] [direct_localization]: pose: x=2.47 y=25.19 yaw=160.2° v=1.72m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799805.730767843] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 192프레임 발행, GGA 실측(37.28912,127.10701)
+[serial_bridge-12] [WARN] [1789799806.004691516] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3430mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799807.824626210] [direct_localization]: pose: x=-3.31 y=25.48 yaw=-164.0° v=1.93m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799809.015413680] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3125mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799810.730412521] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 212프레임 발행, GGA 실측(37.28908,127.10692)
+[direct_localization_node-6] [INFO] [1789799810.824657427] [direct_localization]: pose: x=-7.59 y=21.48 yaw=-118.4° v=2.19m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799812.025909269] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4183mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799813.824631141] [direct_localization]: pose: x=-10.87 y=15.12 yaw=-121.9° v=2.47m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799815.032623725] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3430mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799815.730410938] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 240프레임 발행, GGA 실측(37.28899,127.10686)
+[direct_localization_node-6] [INFO] [1789799816.824912513] [direct_localization]: pose: x=-13.09 y=8.76 yaw=-81.5° v=2.15m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799818.042811997] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=2758mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799819.824953246] [direct_localization]: pose: x=-8.91 y=4.27 yaw=-29.1° v=2.22m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799820.730591643] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 260프레임 발행, GGA 실측(37.28892,127.10693)
+[serial_bridge-12] [WARN] [1789799821.053788304] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4214mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799822.824828173] [direct_localization]: pose: x=-3.11 y=1.06 yaw=-27.6° v=1.99m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799824.059748995] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=2679mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799825.730507941] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 288프레임 발행, GGA 실측(37.28890,127.10703)
+[direct_localization_node-6] [INFO] [1789799825.824654445] [direct_localization]: pose: x=2.83 y=1.87 yaw=55.0° v=1.96m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799827.074449399] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4062mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799828.824742047] [direct_localization]: pose: x=5.73 y=8.69 yaw=59.8° v=2.57m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799830.730539009] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 308프레임 발행, GGA 실측(37.28899,127.10711)
+[direct_localization_node-6] [INFO] [1789799831.824718244] [direct_localization]: pose: x=11.81 y=11.62 yaw=-16.2° v=2.45m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799832.792286933] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4278mV — 배터리/전원 확인
+[local_pure_pursuit_node-9] [WARN] [1789799833.325164262] [local_pure_pursuit]: odom 속도 3.0m/s — 비현실적이라 버린다 (직전 2.04 유지, 누적 7회). EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.
+[direct_localization_node-6] [INFO] [1789799834.824677465] [direct_localization]: pose: x=18.62 y=7.97 yaw=-22.7° v=2.61m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799835.730673876] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 336프레임 발행, GGA 실측(37.28895,127.10724)
+[direct_localization_node-6] [INFO] [1789799837.824800931] [direct_localization]: pose: x=24.31 y=3.38 yaw=-73.1° v=2.37m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799840.009657132] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4246mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799840.730479981] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 356프레임 발행, GGA 실측(37.28886,127.10726)
+[direct_localization_node-6] [INFO] [1789799840.824819143] [direct_localization]: pose: x=22.43 y=-3.17 yaw=-115.1° v=2.07m/s [헤딩 정렬됨]
+[direct_localization_node-6] [INFO] [1789799843.824633768] [direct_localization]: pose: x=21.29 y=-7.93 yaw=-104.4° v=1.54m/s [헤딩 정렬됨]
+[serial_bridge-12] [WARN] [1789799845.432723478] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4198mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799845.730611443] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 384프레임 발행, GGA 실측(37.28879,127.10723)
+[direct_localization_node-6] [INFO] [1789799846.824681528] [direct_localization]: pose: x=18.12 y=-13.00 yaw=-119.3° v=2.44m/s [헤딩 정렬됨]
+[local_pure_pursuit_node-9] [WARN] [1789799848.325150512] [local_pure_pursuit]: odom 속도 3.2m/s — 비현실적이라 버린다 (직전 1.82 유지, 누적 14회). EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.
+[serial_bridge-12] [WARN] [1789799848.438974787] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3934mV — 배터리/전원 확인
+[local_pure_pursuit_node-9] [WARN] [1789799848.984313213] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[direct_localization_node-6] [INFO] [1789799849.824823268] [direct_localization]: pose: x=15.66 y=-20.33 yaw=-107.7° v=2.84m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799850.730596576] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 404프레임 발행, GGA 실측(37.28869,127.10718)
+[serial_bridge-12] [WARN] [1789799851.703672268] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4262mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789799852.824762591] [direct_localization]: pose: x=12.05 y=-27.37 yaw=-120.1° v=3.09m/s [헤딩 정렬됨]
+[local_pure_pursuit_node-9] [WARN] [1789799853.358200297] [local_pure_pursuit]: odom 속도 3.1m/s — 비현실적이라 버린다 (직전 2.56 유지, 누적 42회). EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.
+[serial_bridge-12] [WARN] [1789799854.710161676] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4106mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789799855.730443164] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 432프레임 발행, GGA 실측(37.28857,127.10712)
+[direct_localization_node-6] [INFO] [1789799855.824697139] [direct_localization]: pose: x=9.41 y=-35.23 yaw=-110.7° v=2.70m/s [헤딩 정렬됨]
+[direct_localization_node-6] [INFO] [1789799858.824689532] [direct_localization]: pose: x=5.07 y=-41.92 yaw=-137.6° v=2.43m/s [헤딩 정렬됨]
+[vrs_ntrip_client-3] [INFO] [1789799860.730520969] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 452프레임 발행, GGA 실측(37.28849,127.10704)
+[direct_localization_node-6] [INFO] [1789799861.824666379] [direct_localization]: pose: x=0.75 y=-44.26 yaw=-169.0° v=0.69m/s [헤딩 정렬됨]

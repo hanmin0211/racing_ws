@@ -1,0 +1,33 @@
+1789794832.3319147 [INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-09-19-14-13-52-331457-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-11054
+1789794832.3319850 [INFO] [launch]: Default logging verbosity is set to INFO
+1789794832.3775191 [INFO] [launch.user]: 
+════════════════════════════════════════════════════════════
+  ⚠⚠  회피 꺼짐 (lidar:=false)  —  장애물을 그대로 들이받는다
+       장애물·S코스·돌발정지 구간을 달릴 거면 lidar:=true
+════════════════════════════════════════════════════════════
+1789794832.3848174 [INFO] [ublox_dgnss_node-1]: process started with pid [11055]
+1789794832.3849177 [INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [11057]
+1789794832.3849547 [INFO] [vrs_ntrip_client-3]: process started with pid [11059]
+1789794832.3849838 [INFO] [hfi_a9_ros2-4]: process started with pid [11061]
+1789794832.3850205 [INFO] [heading_init_node-5]: process started with pid [11063]
+1789794832.3850491 [INFO] [direct_localization_node-6]: process started with pid [11065]
+1789794832.3850746 [INFO] [global_path_publisher-7]: process started with pid [11067]
+1789794832.3850987 [INFO] [local_sliding_window_node-8]: process started with pid [11069]
+1789794832.3851223 [INFO] [local_pure_pursuit_node-9]: process started with pid [11071]
+1789794832.3851452 [INFO] [longitudinal_controller-10]: process started with pid [11073]
+1789794832.3851681 [INFO] [vehicle_cmd_mux-11]: process started with pid [11075]
+1789794832.3851905 [INFO] [serial_bridge-12]: process started with pid [11077]
+1789794860.0090375 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1789794860.0165808 [ERROR] [ublox_dgnss_node-1]: process has died [pid 11055, exit code -11, cmd '/opt/ros/humble/lib/ublox_dgnss_node/ublox_dgnss_node --ros-args -r __node:=ublox_dgnss --params-file /tmp/launch_params_s64a2we_'].
+1789794860.1185760 [INFO] [ublox_nav_sat_fix_hp-2]: process has finished cleanly [pid 11057]
+1789794860.1538050 [INFO] [global_path_publisher-7]: process has finished cleanly [pid 11067]
+1789794860.1552825 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT) again, ignoring...
+1789794860.1562002 [INFO] [local_sliding_window_node-8]: process has finished cleanly [pid 11069]
+1789794860.1575167 [INFO] [longitudinal_controller-10]: process has finished cleanly [pid 11073]
+1789794860.1649449 [ERROR] [vrs_ntrip_client-3]: process has died [pid 11059, exit code -2, cmd '/home/han/racing_ws/install/ngii_ntrip/lib/ngii_ntrip/vrs_ntrip_client --ros-args -r __node:=ngii_vrs_ntrip_client --params-file /tmp/launch_params_knygogbf'].
+1789794860.1655521 [ERROR] [direct_localization_node-6]: process has died [pid 11065, exit code -2, cmd '/home/han/racing_ws/install/gps_localization/lib/gps_localization/direct_localization_node --ros-args -r __node:=direct_localization --params-file /tmp/launch_params_82gk14h8'].
+1789794860.1658866 [ERROR] [local_pure_pursuit_node-9]: process has died [pid 11071, exit code -2, cmd '/home/han/racing_ws/install/pure_pursuit_pkg/lib/pure_pursuit_pkg/local_pure_pursuit_node --ros-args -r __node:=local_pure_pursuit --params-file /home/han/racing_ws/install/pure_pursuit_pkg/share/pure_pursuit_pkg/config/pure_pursuit_params.yaml --params-file /tmp/launch_params_u4bfmtph'].
+1789794860.1664684 [ERROR] [heading_init_node-5]: process has died [pid 11063, exit code -2, cmd '/home/han/racing_ws/install/gps_heading_init/lib/gps_heading_init/heading_init_node --ros-args -r __node:=gps_heading_init --params-file /tmp/launch_params_dt9mzugt'].
+1789794860.1668744 [ERROR] [hfi_a9_ros2-4]: process has died [pid 11061, exit code -2, cmd '/home/han/racing_ws/install/handsfree_ros2_imu/lib/handsfree_ros2_imu/hfi_a9_ros2 --ros-args -r __node:=imu --params-file /tmp/launch_params__nvdtmpe'].
+1789794860.1676135 [ERROR] [vehicle_cmd_mux-11]: process has died [pid 11075, exit code -2, cmd '/home/han/racing_ws/install/velocity_controller/lib/velocity_controller/vehicle_cmd_mux --ros-args -r __node:=vehicle_cmd_mux --params-file /tmp/launch_params_ugn1unim'].
+1789794860.1681981 [ERROR] [serial_bridge-12]: process has died [pid 11077, exit code -2, cmd '/home/han/racing_ws/install/velocity_controller/lib/velocity_controller/serial_bridge --ros-args -r __node:=serial_bridge_node --params-file /tmp/launch_params_z16kr0vm'].

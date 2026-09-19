@@ -1,0 +1,9 @@
+/**:
+  ros__parameters:
+    curvature_gain: 6.0
+    obstacle_stop_dist: 0.8
+    ramp_down_arm_topic: ''
+    ramp_up_arm_topic: ''
+    v_max: 1.6
+    v_ramp_down: 0.0
+    v_ramp_up: 0.0

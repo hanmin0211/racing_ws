@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    gga_interval: 1.0
+    height: 100.0
+    host: RTS2.ngii.go.kr
+    lat: 36.9706
+    lon: 127.8748
+    mountpoint: VRS-RTCM32
+    password: ngii
+    port: 2101
+    rtcm_topic: /ntrip_client/rtcm
+    username: <NGII_ID>

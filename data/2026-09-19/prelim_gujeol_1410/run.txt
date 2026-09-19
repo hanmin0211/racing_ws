@@ -1,0 +1,32 @@
+# 주행 기록 — prelim_gujeol
+일시   : 2026-09-19 14:10:49 KST
+브랜치 : yongin-2026-09-05
+커밋   : 2775d2f
+⚠ 커밋 안 된 변경 3 건 — 이 주행은 커밋 상태와 다르다
+
+## 런치 명령줄
+/usr/bin/python3 /opt/ros/humble/bin/ros2 launch gps_localization bringup.launch.py control:=true sequencer:=false lidar:=false rviz:=false auto_calib:=false waypoints:=/home/han/racing_ws/config/yongin_2026-09-05/wp_prelim_gujeol_s7.yaml max_speed:=1.6 curvature_gain:=6.0 calib_distance:=6.0 auto_calib_speed:=0.5 ff_mode:=ros ff_static:=46.0 ff_gain:=42.6 ff_min_pwm:=0.0 ff_breakaway_pwm:=90.0 ff_breakaway_ms:=1200.0 grade_ff_gain:=1.0 grade_ff_max:=95.0 gov_pwm:=60.0 gov_min_grade:=0.06 gov_gain:=300.0 gov_lead_s:=0.3 gov_deadband:=0.20 
+
+## 원점 (config/site_origin.yaml)
+  site: "용인 (2026-09-05)"
+  utm_epsg: 32652
+  origin_x: 332200.0
+  origin_y: 4128600.0
+
+## IMU 영점 (config/imu_pitch_offset.yaml)
+  pitch_offset_rad: 0.066447
+  sign: -1.0
+
+## 노드
+  /direct_localization
+  /global_path_publisher
+  /gps_heading_init
+  /imu
+  /local_pure_pursuit
+  /local_sliding_window_node
+  /longitudinal_controller
+  /ngii_vrs_ntrip_client
+  /serial_bridge_node
+  /ublox_dgnss
+  /ublox_nav_sat_fix_hp
+  /vehicle_cmd_mux

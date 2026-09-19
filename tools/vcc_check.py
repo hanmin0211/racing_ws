@@ -49,7 +49,7 @@ def pick_port(argv):
 
 def main():
   port = pick_port(sys.argv)
-  print(f'포트 {port} @ {BAUD} — VCC 감시. Ctrl-C 정지.\n')
+  print(f'포트 {port} @ {BAUD} — VCC 감시. Ctrl-C 정지.\n', flush=True)
   ser = serial.Serial(port, BAUD, timeout=1)
   win = []
   allv = []
@@ -66,7 +66,9 @@ def main():
     if now - t_last >= 1.0 and win:
       cur = win[-1]
       lo, hi = min(win), max(win)
-      print(f'VCC {cur:5d} mV   (min {lo}  max {hi})   {verdict(cur)}')
+      # ⚠ flush 필수 — 파이프로 넘기면 블록버퍼라 timeout/SIGTERM 때 통째로 날아간다.
+      #   (2026-09-19: `timeout 25 ... | tail` 로 돌렸다가 측정 한 번을 통째로 잃었다)
+      print(f'VCC {cur:5d} mV   (min {lo}  max {hi})   {verdict(cur)}', flush=True)
       win = []
       t_last = now
 
