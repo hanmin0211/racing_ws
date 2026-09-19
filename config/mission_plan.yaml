@@ -129,24 +129,48 @@ missions:
   # ⚠ s 를 실측하기 전에는 enabled:false 로 둘 것. 0.0~0.0 은 빈 구간이라
   #   켜도 arm 이 안 나가지만, 잘못 채운 값으로 켜는 것이 가장 비싼 실수다.
   #   python3 tools/mission_s.py --waypoints <용인파일> --live --name ramp_up
-  - name: ramp_up
+  # ★ 2026-09-19 — 이 두 슬롯을 **굴절코스·S자 감속**에 쓴다.
+  #   이름이 ramp_up/ramp_down 이지만 기능은 '구간에서 기준속도를 바꾼다' 일
+  #   뿐이라 경사로 전용이 아니다. 경사로(s11~54)는 등판에 힘이 필요해서
+  #   전역 max_speed 1.6 을 그대로 쓰므로 슬롯이 남는다.
+  #
+  #   왜 필요한가 (실측 근거):
+  #     급커브 자체는 곡률 제한기가 이미 5.0 km/h 로 누른다. 그런데
+  #     **커브 사이 직선에서 8.9 km/h 로 튄다.** 구간 전체를 고정해야 한다.
+  #       굴절코스  현재 5.0~8.9 km/h (평균 6.9)  →  0.55 적용시 4.8~5.0
+  #       S자       현재 5.2~8.9 km/h (평균 6.6)  →  0.55 적용시 4.8~5.0
+  #     대가는 완주 +33초 (305s → 338s). 8분 예산에 2.4분 여유가 남는다.
+  #
+  #   ⚠ 이 차의 **최저 속도는 4.8 km/h** 다 (개루프 PWM 바닥 67).
+  #     4 km/h 는 PWM 58 이라 정지마찰을 못 넘어 차가 선다 — 불가능하다.
+  #     v_ramp_* 0.55 가 5.0 km/h 이고 그 밑으로는 의미가 없다.
+  #
+  #   런치 인자 (셋 다 있어야 동작한다):
+  #     sequencer:=true
+  #     ramp_up_arm_topic:=/ramp/up_arm  ramp_down_arm_topic:=/ramp/down_arm
+  #     v_ramp_up:=0.55  v_ramp_down:=0.55      ← 소수점 필수
+  #
+  #   ⚠ 아래 s 는 **추정값이다.** 현장에서 확정하기 전에는 enabled:false 로 둘 것:
+  #     python3 tools/mission_s.py --waypoints config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --live
+  #   틀려도 안전하다(기준속도만 낮춘다). 다만 엉뚱한 데서 느려져 시간만 잃는다.
+  - name: ramp_up            # ← 굴절코스 감속
     enabled: false
     arm_topic: /ramp/up_arm
     exclusive: false
     trigger:
       type: course_s
-      s_enter: 0.0          # ← 오르막 시작 (경사 진입 3m 앞)
-      s_exit:  0.0          # ← 정상부
+      s_enter: 58.0         # ← 굴절코스 진입 (추정, 현장 확정 필요)
+      s_exit:  140.0        # ← 굴절코스 탈출 (추정)
     critical: false
 
-  - name: ramp_down
+  - name: ramp_down          # ← S자+장애물 감속
     enabled: false
     arm_topic: /ramp/down_arm
     exclusive: false
     trigger:
       type: course_s
-      s_enter: 0.0          # ← 정상부
-      s_exit:  0.0          # ← 내리막 끝 (평지 복귀 3m 뒤)
+      s_enter: 176.0        # ← S자 진입 (추정, 현장 확정 필요)
+      s_exit:  250.0        # ← S자 탈출 (추정)
     critical: false
 
   # ── 신호교차로 (규정 항목 5) ──────────────────────────────────────

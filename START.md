@@ -69,7 +69,7 @@ cd /home/han/racing_ws && source install/setup.bash && python3 tools/lidar_mount
 ## 5. ★ 출발 — 용인 트랙 주행
 
 ```bash
-cd /home/han/racing_ws && bash tools/drive_school.sh --speed 1.6 --min-pwm 0 --waypoints /home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --extra ff_mode:=ros --extra ff_static:=46.0 --extra ff_gain:=42.6 --extra ff_breakaway_pwm:=90.0 --extra ff_breakaway_ms:=1200.0 --extra calib_distance:=10.0 --extra curvature_gain:=6.0 --extra avoid_steer_rate_deg:=90.0 --extra grade_ff_gain:=1.0 --extra grade_ff_max:=95.0 --extra gov_pwm:=60.0 --extra gov_min_grade:=0.06 --extra gov_gain:=300.0 --extra gov_lead_s:=0.3 --extra gov_deadband:=0.20
+cd /home/han/racing_ws && bash tools/drive_school.sh --speed 1.6 --min-pwm 0 --waypoints /home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --extra ff_mode:=ros --extra ff_static:=46.0 --extra ff_gain:=42.6 --extra ff_breakaway_pwm:=90.0 --extra ff_breakaway_ms:=1200.0 --extra auto_calib_speed:=0.5 --extra calib_distance:=10.0 --extra curvature_gain:=6.0 --extra avoid_steer_rate_deg:=90.0 --extra grade_ff_gain:=1.0 --extra grade_ff_max:=95.0 --extra gov_pwm:=60.0 --extra gov_min_grade:=0.06 --extra gov_gain:=300.0 --extra gov_lead_s:=0.3 --extra gov_deadband:=0.20
 ```
 
 기록 (별 터미널):
@@ -122,6 +122,7 @@ max_speed:=1.6
 | 출발하자마자 영원히 정지 | 라이다가 지면을 때림 | `python3 tools/lidar_mount_check.py` |
 | 스택이 시작 거부 | 노드가 이미 돈다 | `bash tools/ros_cleanup.sh` |
 | 캘리브가 기어감 | 거버너 헛개입 | `gov_deadband:=0.20` 확인 |
+| **`❌ 캘리브 무효: 10m 를 N초 만에`** | **`auto_calib_speed` 가 전압 때문에 올라갔다** | `--extra auto_calib_speed:=0.5` 가 있는지 확인. 없으면 스크립트가 전압 4700mV 밑에서 최대 1.2 까지 올린다 → 게이트 여유 +49%→−3% |
 | 경사로에서 1.4 m/s 밑 | 속도가 낮다 | `--speed 1.8` |
 | 커브에서 크게 벌어짐 | 속도가 높다 | `--speed 1.4`. 8분 예산에 여유가 있다(1.2 여도 6.0분) |
 
@@ -167,3 +168,44 @@ cd /home/han/racing_ws && bash tools/use_site.sh chungju
 ```
 경로도 `config/chungju_school/...` 로 바꿀 것. **원점만 바꾸고 경로를 안 바꾸면
 (또는 그 반대면) 발행이 거부된다** — 그게 안전장치다.
+
+---
+
+# 구간 감속 (굴절코스·S자를 5 km/h 로 고정)
+
+**필요할 때만.** 트랙 주행이 먼저 되고 나서 얹어라.
+
+급커브 자체는 곡률 제한기가 이미 5.0 km/h 로 누른다. 문제는 **커브 사이 직선에서
+8.9 km/h 로 튀는 것**이다. 구간 전체를 고정하려면 구간속도를 쓴다.
+
+```
+                 지금              v_ramp 0.55
+굴절코스     5.0~8.9 km/h  →   4.8~5.0 km/h
+S자+장애물   5.2~8.9 km/h  →   4.8~5.0 km/h
+나머지 구간  5.1~8.9 km/h  →   그대로 (안 건드린다)
+완주         5.1분         →   5.6분  (+33초, 8분에 2.4분 여유)
+```
+
+⚠ **이 차의 최저 속도는 4.8 km/h 다.** 4 km/h 는 PWM 58 이라 정지마찰을 못 넘어
+차가 선다 — 불가능하다.
+
+**순서**
+
+1. s 를 실측한다 (추정값으로 켜지 말 것)
+```bash
+cd /home/han/racing_ws && source install/setup.bash && python3 tools/mission_s.py --waypoints config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml --live
+```
+2. `config/mission_plan.yaml` 의 `ramp_up`(굴절) · `ramp_down`(S자) 에 s 를 넣고
+   `enabled: true` 로 바꾼다
+3. 주행 명령에 인자 5개를 더한다
+
+```
+--extra sequencer:=true --extra ramp_up_arm_topic:=/ramp/up_arm --extra ramp_down_arm_topic:=/ramp/down_arm --extra v_ramp_up:=0.55 --extra v_ramp_down:=0.55
+```
+
+⚠ **`0.55` 는 소수점을 꼭 찍어라.** `v_ramp_up:=1` 처럼 정수면 노드가 즉사한다.
+
+**안전장치 (실제 노드 코드로 확인함)**
+- 기준속도만 바꾼다 — 곡률·정지선·장애물 감속은 그대로 걸린다
+- 시퀀서가 죽으면 1초 뒤 `v_max` 로 복귀한다
+- s 가 틀려도 엉뚱한 데서 느려질 뿐이다(안전 문제 아님)
