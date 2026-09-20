@@ -1,0 +1,11 @@
+/**:
+  ros__parameters:
+    auto_drive: true
+    auto_speed: 0.5
+    auto_speed_cap: 2.0
+    calib_distance: 10.0
+    fix_topic: /fix
+    imu_topic: handsfree/imu
+    invert_imu_yaw: false
+    max_jump_speed: 3.0
+    retry_start_radius: 2.0

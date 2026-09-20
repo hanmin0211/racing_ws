@@ -1,0 +1,22 @@
+/**:
+  ros__parameters:
+    baud: 57600
+    ff_brake_ms: 800.0
+    ff_brake_pwm: 0.0
+    ff_breakaway_ms: 1200.0
+    ff_breakaway_pwm: 90.0
+    ff_gain: 42.6
+    ff_min_pwm: 0.0
+    ff_mode: ros
+    ff_static: 46.0
+    gov_deadband: 0.2
+    gov_gain: 300.0
+    gov_lead_s: 0.3
+    gov_min_grade: 0.06
+    gov_pwm: 60.0
+    grade_ff_gain: 1.0
+    grade_ff_max: 95.0
+    imu_topic: handsfree/imu
+    max_steer_deg: 18.0
+    port: auto
+    watchdog_timeout: 0.5

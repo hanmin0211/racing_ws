@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    avoid_steer_rate_deg: 0.0
+    enable_plot: false
+    fg_min_range: 0.3
+    fg_obstacle_trigger: 4.0
+    fg_planning_lookahead: 1.5
+    fg_prefer_path_gap: true
+    fg_track_width: 2.4
+    fg_yaw_offset_deg: 180.0
+    require_arm_for_steer: false
+    scan_topic: /scan_front

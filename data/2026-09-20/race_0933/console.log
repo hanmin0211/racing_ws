@@ -1,0 +1,1457 @@
+[INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-09-20-09-33-17-288072-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-78118
+[INFO] [launch]: Default logging verbosity is set to INFO
+[bringup] ⚠ /home/han/stop_points.yaml 에 정지지점이 없다 — 신호등 정지 비활성
+[control] ⚠ xterm 이 없다. teleop:=true 는 키 입력을 못 받는다.
+[control]   별도 터미널에서 실행할 것: ros2 run velocity_controller teleop_keyboard
+[control] ⚠ xterm 이 없다. teleop:=true 는 키 입력을 못 받는다.
+[control]   별도 터미널에서 실행할 것: ros2 run velocity_controller teleop_keyboard
+[INFO] [ublox_dgnss_node-1]: process started with pid [78120]
+[INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [78122]
+[INFO] [vrs_ntrip_client-3]: process started with pid [78124]
+[INFO] [hfi_a9_ros2-4]: process started with pid [78126]
+[INFO] [heading_init_node-5]: process started with pid [78128]
+[INFO] [direct_localization_node-6]: process started with pid [78130]
+[INFO] [global_path_publisher-7]: process started with pid [78132]
+[INFO] [local_sliding_window_node-8]: process started with pid [78134]
+[INFO] [local_pure_pursuit_node-9]: process started with pid [78136]
+[INFO] [longitudinal_controller-10]: process started with pid [78138]
+[INFO] [vehicle_cmd_mux-11]: process started with pid [78140]
+[INFO] [serial_bridge-12]: process started with pid [78142]
+[INFO] [cluster_plot_node-13]: process started with pid [78144]
+[INFO] [rviz2-14]: process started with pid [78146]
+[ublox_nav_sat_fix_hp-2] [INFO] [1789864397.355430090] [ublox_nav_sat_fix_hp]: starting ublox_nav_sat_fix_hp
+[ublox_dgnss_node-1] [INFO] [1789864397.356195792] [ublox_dgnss]: starting ublox_dgnss
+[ublox_dgnss_node-1] [INFO] [1789864397.357986107] [ublox_dgnss]: Device family: F9P - High-precision GNSS (Product IDs: [0x01a9], Reliable iSerial: NO)
+[ublox_dgnss_node-1] [INFO] [1789864397.358030679] [ublox_dgnss]: Parameter DEVICE_SERIAL_STRING not found, will use first F9P device.
+[ublox_dgnss_node-1] [INFO] [1789864397.358069952] [ublox_dgnss]: Parameter FRAME_ID found with value: gps
+[ublox_dgnss_node-1] [INFO] [1789864397.358075793] [ublox_dgnss]: ParameterManager initialized
+[ublox_dgnss_node-1] [INFO] [1789864397.358221814] [ublox_dgnss]: Loading default UBX config for F9P: /opt/ros/humble/share/ublox_dgnss/config/f9p_ubx_config.toml
+[ublox_dgnss_node-1] [INFO] [1789864397.358384927] [ublox_dgnss]: Loaded 127 parameters from F9P TOML
+[ublox_dgnss_node-1] [INFO] [1789864397.358411116] [ublox_dgnss]: Loaded 127 UBX config items
+[ublox_dgnss_node-1] [INFO] [1789864397.358420313] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_COV_USB
+[ublox_dgnss_node-1] [INFO] [1789864397.358429480] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB
+[ublox_dgnss_node-1] [INFO] [1789864397.358433067] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_NAV_STATUS_USB
+[ublox_dgnss_node-1] [INFO] [1789864397.358436513] [ublox_dgnss]: parameter supplied: CFG_MSGOUT_UBX_RXM_RTCM_USB
+[ublox_dgnss_node-1] [INFO] [1789864397.358441172] [ublox_dgnss]: parameter supplied: CFG_NAVHPG_DGNSSMODE
+[ublox_dgnss_node-1] [INFO] [1789864397.358444728] [ublox_dgnss]: parameter supplied: CFG_NAVSPG_DYNMODEL
+[ublox_dgnss_node-1] [INFO] [1789864397.358448165] [ublox_dgnss]: parameter supplied: CFG_RATE_MEAS
+[ublox_dgnss_node-1] [INFO] [1789864397.358451521] [ublox_dgnss]: parameter supplied: CFG_RATE_NAV
+[ublox_dgnss_node-1] [INFO] [1789864397.358454907] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_BDS_ENA
+[ublox_dgnss_node-1] [INFO] [1789864397.358458474] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GAL_ENA
+[ublox_dgnss_node-1] [INFO] [1789864397.358461820] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GLO_ENA
+[ublox_dgnss_node-1] [INFO] [1789864397.358465056] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_GPS_ENA
+[ublox_dgnss_node-1] [INFO] [1789864397.358468432] [ublox_dgnss]: parameter supplied: CFG_SIGNAL_QZSS_ENA
+[ublox_dgnss_node-1] [INFO] [1789864397.358473221] [ublox_dgnss]: parameter supplied: CFG_USBOUTPROT_NMEA
+[ublox_dgnss_node-1] [INFO] [1789864397.373215917] [ublox_dgnss]: input param ESF_MEAS_INPUT_ENABLED: true
+[ublox_dgnss_node-1] [INFO] [1789864397.373258406] [ublox_dgnss]: input param RTCM_INPUT_ENABLED: true
+[ublox_dgnss_node-1] [INFO] [1789864397.373488884] [ublox_dgnss]: input param RXM_PMP_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789864397.373518629] [ublox_dgnss]: input param RXM_QZSSL6_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789864397.373538786] [ublox_dgnss]: input param RXM_SPARTNKEY_INPUT_ENABLED: false
+[ublox_dgnss_node-1] [INFO] [1789864397.373556569] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373578801] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373598177] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373617062] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373635816] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373655082] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373673897] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373697261] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373714342] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373734951] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373755960] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373773532] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373791996] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373808798] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373826991] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373846227] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373864301] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373881643] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373900308] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373936855] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373955781] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373974485] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.373996426] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374015562] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374033555] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374052059] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374070253] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374087355] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374109686] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374129693] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374157836] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374178594] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374195666] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374213730] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374235610] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374254275] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374293688] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374313936] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374332650] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374350964] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374372224] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374392451] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374410535] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374430642] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374448225] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374465637] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374484082] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374502095] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374520459] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374539394] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374556917] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374577866] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374594857] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374612260] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374630914] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374653827] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374673383] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374694132] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374711724] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374733795] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.374751839] [ublox_dgnss]: parameter set CFG_SEC_JAMDET_SENSITIVITY_HI: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374776685] [ublox_dgnss]: parameter set CFG_SEC_SPOOFDET_SIM_SIG_DIS: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374802012] [ublox_dgnss]: parameter set CFG_SIGNAL_BDS_B1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374821368] [ublox_dgnss]: parameter set CFG_SIGNAL_BDS_B2_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374841185] [ublox_dgnss]: parameter set CFG_SIGNAL_GAL_E1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374868205] [ublox_dgnss]: parameter set CFG_SIGNAL_GAL_E5B_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374886379] [ublox_dgnss]: parameter set CFG_SIGNAL_GLO_L1_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374907488] [ublox_dgnss]: parameter set CFG_SIGNAL_GLO_L2_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374926854] [ublox_dgnss]: parameter set CFG_SIGNAL_GPS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374946420] [ublox_dgnss]: parameter set CFG_SIGNAL_GPS_L2C_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374965325] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.374985483] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375010168] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375033121] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375052597] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375073867] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375094745] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375112709] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375131904] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375151200] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375177008] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375198708] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375220649] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375248100] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375265703] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375288455] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375308472] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375328389] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375347014] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375364967] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375382179] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375400062] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375418487] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375438023] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375459653] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375478648] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375504466] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375523371] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375541295] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375562945] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375580998] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375599543] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375618799] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375643044] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375662039] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375681315] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375700039] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375719065] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.375738972] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375760983] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375786079] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375807609] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: false
+[ublox_dgnss_node-1] [INFO] [1789864397.375830993] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.383228188] [ublox_dgnss]: Starting USB initialization
+[ublox_dgnss_node-1] [INFO] [1789864397.390102183] [ublox_dgnss]: Initial device connection completed
+[ublox_dgnss_node-1] [INFO] [1789864397.390201226] [ublox_dgnss]: usb vendor_id: 0x1546 product_id: 0x01a9 serial_str:  bus: 003 address: 119 port_number: 3 speed: SPEED_FULL (12 MBit/s) num_interfaces: 2 ep_data out: 0x01 in: 0x82 ep_comms in: 0x83
+[ublox_dgnss_node-1] [INFO] [1789864397.390210754] [ublox_dgnss]: ublox_dgnss_init_async start
+[ublox_dgnss_node-1] [INFO] [1789864397.390229870] [ublox_dgnss]: Sending user parameters to device
+[ublox_dgnss_node-1] [INFO] [1789864397.390365491] [ublox_dgnss]: Sent 14 user parameters to device
+[ublox_dgnss_node-1] [INFO] [1789864397.390978981] [ublox_dgnss]: Fetching configuration parameter values from device
+[ublox_dgnss_node-1] [INFO] [1789864397.390996844] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_INFMSG_NMEA_USB CFG_INFMSG_UBX_USB CFG_MSGOUT_RTCM_3X_TYPE1005_USB CFG_MSGOUT_RTCM_3X_TYPE1074_UART2 CFG_MSGOUT_RTCM_3X_TYPE1077_USB CFG_MSGOUT_RTCM_3X_TYPE1084_UART2 CFG_MSGOUT_RTCM_3X_TYPE1087_USB CFG_MSGOUT_RTCM_3X_TYPE1094_UART2 CFG_MSGOUT_RTCM_3X_TYPE1097_USB CFG_MSGOUT_RTCM_3X_TYPE1124_UART2 
+[ublox_dgnss_node-1] [INFO] [1789864397.391020909] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_RTCM_3X_TYPE1127_USB CFG_MSGOUT_RTCM_3X_TYPE1230_UART2 CFG_MSGOUT_RTCM_3X_TYPE1230_USB CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2 CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB CFG_MSGOUT_UBX_MON_COMMS_USB CFG_MSGOUT_UBX_NAV_CLOCK_USB CFG_MSGOUT_UBX_NAV_COV_UART1 CFG_MSGOUT_UBX_NAV_COV_UART2 CFG_MSGOUT_UBX_NAV_DOP_USB 
+[ublox_dgnss_node-1] [INFO] [1789864397.391035876] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_NAV_EOE_USB CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1 CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2 CFG_MSGOUT_UBX_NAV_ODO_USB CFG_MSGOUT_UBX_NAV_ORB_USB CFG_MSGOUT_UBX_NAV_POSECEF_USB CFG_MSGOUT_UBX_NAV_POSLLH_USB CFG_MSGOUT_UBX_NAV_PVT_USB CFG_MSGOUT_UBX_NAV_RELPOSNED_USB 
+[ublox_dgnss_node-1] [INFO] [1789864397.391050614] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_NAV_SAT_USB CFG_MSGOUT_UBX_NAV_SIG_USB CFG_MSGOUT_UBX_NAV_STATUS_UART1 CFG_MSGOUT_UBX_NAV_STATUS_UART2 CFG_MSGOUT_UBX_NAV_SVIN_USB CFG_MSGOUT_UBX_NAV_TIMEUTC_USB CFG_MSGOUT_UBX_NAV_VELECEF_USB CFG_MSGOUT_UBX_NAV_VELNED_USB CFG_MSGOUT_UBX_RXM_COR_UART1 CFG_MSGOUT_UBX_RXM_COR_UART2 
+[ublox_dgnss_node-1] [INFO] [1789864397.391065000] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_MSGOUT_UBX_RXM_COR_USB CFG_MSGOUT_UBX_RXM_MEASX_USB CFG_MSGOUT_UBX_RXM_RAWX_USB CFG_MSGOUT_UBX_RXM_SFRBX_USB CFG_MSGOUT_UBX_RXM_SPARTN_USB CFG_MSGOUT_UBX_SEC_SIGLOG_USB CFG_MSGOUT_UBX_SEC_SIG_USB CFG_NAVSPG_FIXMODE CFG_NAVSPG_INIFIX3D CFG_NAVSPG_UTCSTANDARD 
+[ublox_dgnss_node-1] [INFO] [1789864397.391079487] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_ODO_COGLPGAIN CFG_ODO_COGMAXPOSACC CFG_ODO_COGMAXSPEED CFG_ODO_OUTLPCOG CFG_ODO_OUTLPVEL CFG_ODO_PROFILE CFG_ODO_USE_COG CFG_ODO_USE_ODO CFG_ODO_VELLPGAIN CFG_RATE_TIMEREF 
+[ublox_dgnss_node-1] [INFO] [1789864397.391096429] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_SEC_JAMDET_SENSITIVITY_HI CFG_SEC_SPOOFDET_SIM_SIG_DIS CFG_SIGNAL_BDS_B1_ENA CFG_SIGNAL_BDS_B2_ENA CFG_SIGNAL_GAL_E1_ENA CFG_SIGNAL_GAL_E5B_ENA CFG_SIGNAL_GLO_L1_ENA CFG_SIGNAL_GLO_L2_ENA CFG_SIGNAL_GPS_L1CA_ENA CFG_SIGNAL_GPS_L2C_ENA 
+[ublox_dgnss_node-1] [INFO] [1789864397.391111026] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_SIGNAL_QZSS_L1CA_ENA CFG_SIGNAL_QZSS_L1S_ENA CFG_SIGNAL_QZSS_L2C_ENA CFG_SIGNAL_SBAS_ENA CFG_SIGNAL_SBAS_L1CA_ENA CFG_SPARTN_USE_SOURCE CFG_TMODE_ECEF_X CFG_TMODE_ECEF_X_HP CFG_TMODE_ECEF_Y CFG_TMODE_ECEF_Y_HP 
+[ublox_dgnss_node-1] [INFO] [1789864397.391125573] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_TMODE_ECEF_Z CFG_TMODE_ECEF_Z_HP CFG_TMODE_FIXED_POS_ACC CFG_TMODE_HEIGHT CFG_TMODE_HEIGHT_HP CFG_TMODE_LAT CFG_TMODE_LAT_HP CFG_TMODE_LON CFG_TMODE_LON_HP CFG_TMODE_MODE 
+[ublox_dgnss_node-1] [INFO] [1789864397.391140661] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_TMODE_POS_TYPE CFG_TMODE_SVIN_ACC_LIMIT CFG_TMODE_SVIN_MIN_DUR CFG_UART1INPROT_NMEA CFG_UART1INPROT_RTCM3X CFG_UART1INPROT_SPARTN CFG_UART1INPROT_UBX CFG_UART1OUTPROT_NMEA CFG_UART1OUTPROT_RTCM3X CFG_UART1OUTPROT_UBX 
+[ublox_dgnss_node-1] [INFO] [1789864397.391177008] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_UART2INPROT_NMEA CFG_UART2INPROT_RTCM3X CFG_UART2INPROT_SPARTN CFG_UART2INPROT_UBX CFG_UART2OUTPROT_NMEA CFG_UART2OUTPROT_RTCM3X CFG_UART2OUTPROT_UBX CFG_UART2_BAUDRATE CFG_USBINPROT_NMEA CFG_USBINPROT_RTCM3X 
+[ublox_dgnss_node-1] [INFO] [1789864397.391194311] [ublox_dgnss]: cfg_val_get_poll_async_all_layers ... CFG_USBINPROT_UBX CFG_USBOUTPROT_RTCM3X CFG_USBOUTPROT_UBX 
+[ublox_dgnss_node-1] [INFO] [1789864397.391206884] [ublox_dgnss]: Requested 113 device parameter values via CFG-VALGET
+[ublox_dgnss_node-1] [INFO] [1789864397.391212104] [ublox_dgnss]: ublox_dgnss_init_async finished
+[ublox_dgnss_node-1] [INFO] [1789864397.391216702] [ublox_dgnss]: USB initialization completed successfully
+[ublox_dgnss_node-1] [INFO] [1789864397.513356732] [ublox_dgnss]: ubx sec unique_id: 0x5540823D1E
+[ublox_dgnss_node-1] [INFO] [1789864397.613310475] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 7
+[ublox_dgnss_node-1] [INFO] [1789864397.613451838] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.613643213] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.614918531] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.614975296] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.615841986] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.615897539] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.615921523] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.616832385] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.617203855] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.633312416] [ublox_dgnss]: parameter set CFG_INFMSG_NMEA_USB: 7
+[ublox_dgnss_node-1] [INFO] [1789864397.633438150] [ublox_dgnss]: parameter set CFG_INFMSG_UBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635546886] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1005_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635608139] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1074_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635644026] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1077_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635672138] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1084_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635720698] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1087_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635812739] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1094_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635844989] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1097_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.635872881] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1124_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653224531] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653347670] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653404215] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653445171] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653479124] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653514760] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653554654] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653594528] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653650322] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.653683283] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[vehicle_cmd_mux-11] [INFO] [1789864397.660082405] [vehicle_cmd_mux]: 명령 먹스 시작: 조향±18.0° 속도 -0.6~1.6m/s (E-stop > teleop > 자율)
+[vehicle_cmd_mux-11] [WARN] [1789864397.660498558] [vehicle_cmd_mux]: 헤딩 캘리브 대기 — /heading/yaw_offset 을 받기 전에는 자율(AUTO)을 거부한다. teleop 으로 10m 직진해 캘리브를 끝낼 것.
+[rviz2-14] [INFO] [1789864397.665691180] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-14] [INFO] [1789864397.665826982] [rviz2]: OpenGl version: 4.5 (GLSL 4.5)
+[longitudinal_controller-10] [INFO] [1789864397.670289959] [longitudinal_controller]: 종방향 제어 시작: v_max=1.6 v_min=0.25 (목표속도만 발행 — PWM은 펌웨어 PID가 담당)
+[ublox_dgnss_node-1] [INFO] [1789864397.673342127] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1127_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674810033] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674866047] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE1230_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674893398] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674918624] [ublox_dgnss]: parameter set CFG_MSGOUT_RTCM_3X_TYPE4072_0_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674946176] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_MON_COMMS_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.674991309] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_CLOCK_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.675017628] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.675042344] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_COV_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.675063854] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_DOP_USB: 0
+[local_pure_pursuit_node-9] [INFO] [1789864397.676574920] [local_pure_pursuit]: local_pure_pursuit 시작: L=0.785m, max=18°, target_speed=0.5m/s, /local_path→/cmd_vel
+[vrs_ntrip_client-3] [INFO] [1789864397.676679504] [ngii_vrs_ntrip_client]: NGII VRS NTRIP 클라이언트 시작: RTS2.ngii.go.kr:2101/VRS-RTCM32 (id=<NGII_ID>) → /ntrip_client/rtcm
+[local_sliding_window_node-8] [INFO] [1789864397.687064077] [local_sliding_window_node]: local_sliding_window_node 시작 (odom=/odometry/filtered, window=5+20, lookahead=10.0m, 곡률 preview=4.0m)
+[ublox_dgnss_node-1] [INFO] [1789864397.693255654] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693345170] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693385635] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693408498] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693576290] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693615041] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693667469] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693816355] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693854396] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.693874633] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[vehicle_cmd_mux-11] [INFO] [1789864397.695260627] [vehicle_cmd_mux]: 모드: STOP(헤딩 캘리브 전)
+[hfi_a9_ros2-4] [INFO] [1789864397.709657330] [imu]: Serial port /dev/imu opened successfully
+[local_pure_pursuit_node-9] [WARN] [1789864397.710243619] [local_pure_pursuit]: 정지: 경로 대기중
+[rviz2-14] [INFO] [1789864397.711154380] [rviz2]: Stereo is NOT SUPPORTED
+[ublox_dgnss_node-1] [INFO] [1789864397.713247607] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_EOE_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713328197] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713356429] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713378931] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_HPPOSLLH_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713400862] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ODO_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713424485] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_ORB_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713445705] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713465662] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_POSLLH_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713497291] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_PVT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.713948709] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_RELPOSNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733244108] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733322464] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733351377] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733378368] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733417520] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733450391] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733469537] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733489263] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733508399] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.733527835] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[heading_init_node-5] [INFO] [1789864397.743031643] [gps_heading_init]: 헤딩 초기화(1회성) 시작: 10m 직진하면 yaw_offset 계산 후 자동 종료 (fix=/fix, imu=handsfree/imu)
+[heading_init_node-5] [WARN] [1789864397.743467863] [gps_heading_init]: ⚠ 자동 직진 켜짐: GPS 수신 후 5초 뒤 0.50m/s로 스스로 10m 전진한다. 앞을 비우고 E-stop을 손에 쥘 것.
+[ublox_dgnss_node-1] [INFO] [1789864397.753238476] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SAT_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753303677] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753326479] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753347448] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_STATUS_UART2: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753368888] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_SVIN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753398312] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_TIMEUTC_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753419812] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELECEF_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753441062] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_NAV_VELNED_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753461389] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART1: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.753481928] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_UART2: 0
+[direct_localization_node-6] [INFO] [1789864397.761866817] [direct_localization]: 로컬 원점: 332200.0, 4128600.0 (EPSG:32652) — 용인 (2026-09-05)
+[direct_localization_node-6] [INFO] [1789864397.772009511] [direct_localization]: 직접 로컬라이제이션 시작: /fix+handsfree/imu → /odometry/filtered (map 프레임, 원점 332200,4128600, 30Hz)
+[ublox_dgnss_node-1] [INFO] [1789864397.773311990] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773435309] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773453783] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773478769] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773505499] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773533631] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773556474] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.773579276] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 3
+[ublox_dgnss_node-1] [INFO] [1789864397.773601708] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789864397.773623348] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793298683] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_COR_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793412244] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_MEASX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793445004] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_RAWX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793480390] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SFRBX_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793512720] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_RXM_SPARTN_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793563154] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIGLOG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793613297] [ublox_dgnss]: parameter set CFG_MSGOUT_UBX_SEC_SIG_USB: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.793652810] [ublox_dgnss]: parameter set CFG_NAVSPG_FIXMODE: 3
+[ublox_dgnss_node-1] [INFO] [1789864397.793695209] [ublox_dgnss]: parameter set CFG_NAVSPG_INIFIX3D: false
+[ublox_dgnss_node-1] [INFO] [1789864397.793730545] [ublox_dgnss]: parameter set CFG_NAVSPG_UTCSTANDARD: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.813245652] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 76
+[ublox_dgnss_node-1] [INFO] [1789864397.813327294] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 50
+[ublox_dgnss_node-1] [INFO] [1789864397.813349655] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 10
+[ublox_dgnss_node-1] [INFO] [1789864397.813372938] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.813396843] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789864397.813415167] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.813434473] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.813453778] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789864397.813470800] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 153
+[ublox_dgnss_node-1] [INFO] [1789864397.813499243] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 1
+[global_path_publisher-7] [INFO] [1789864397.820455219] [global_path_publisher]: 전역 경로 로드 완료: /home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml (총 1298개 점, 648.3m)
+[global_path_publisher-7] [INFO] [1789864397.820733706] [global_path_publisher]:   로컬 범위 x[-38.5, 56.1] y[-62.0, 25.7] (정상이면 0~수백 m)
+[ublox_dgnss_node-1] [INFO] [1789864397.833262972] [ublox_dgnss]: parameter set CFG_ODO_COGLPGAIN: 76
+[ublox_dgnss_node-1] [INFO] [1789864397.833377314] [ublox_dgnss]: parameter set CFG_ODO_COGMAXPOSACC: 50
+[ublox_dgnss_node-1] [INFO] [1789864397.833394206] [ublox_dgnss]: parameter set CFG_ODO_COGMAXSPEED: 10
+[ublox_dgnss_node-1] [INFO] [1789864397.833410406] [ublox_dgnss]: parameter set CFG_ODO_OUTLPCOG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.833427788] [ublox_dgnss]: parameter set CFG_ODO_OUTLPVEL: false
+[ublox_dgnss_node-1] [INFO] [1789864397.833442225] [ublox_dgnss]: parameter set CFG_ODO_PROFILE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.833459076] [ublox_dgnss]: parameter set CFG_ODO_USE_COG: false
+[ublox_dgnss_node-1] [INFO] [1789864397.833473934] [ublox_dgnss]: parameter set CFG_ODO_USE_ODO: false
+[ublox_dgnss_node-1] [INFO] [1789864397.833488010] [ublox_dgnss]: parameter set CFG_ODO_VELLPGAIN: 153
+[ublox_dgnss_node-1] [INFO] [1789864397.833503839] [ublox_dgnss]: parameter set CFG_RATE_TIMEREF: 1
+[ublox_dgnss_node-1] [WARN] [1789864397.853402068] [ublox_dgnss]: ubx class: 0x05 id: 0x00 ack nak payload - class: 0x06 id: 0x8b
+[ublox_dgnss_node-1] [WARN] [1789864397.864080977] [ublox_dgnss]: ubx class: 0x05 id: 0x00 ack nak payload - class: 0x06 id: 0x8b
+[local_sliding_window_node-8] [INFO] [1789864397.870519052] [local_sliding_window_node]: 전역 경로 수신: 1298점, 시작-끝 21.02m → 열린 경로
+[ublox_dgnss_node-1] [INFO] [1789864397.873249412] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.873330252] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.873346002] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.873359907] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.873373543] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.873389683] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.873423155] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.873438413] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.873452910] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.873467718] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.893245523] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.893320772] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L1S_ENA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.893353924] [ublox_dgnss]: parameter set CFG_SIGNAL_QZSS_L2C_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.893380253] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.893401552] [ublox_dgnss]: parameter set CFG_SIGNAL_SBAS_L1CA_ENA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.893422161] [ublox_dgnss]: parameter set CFG_SPARTN_USE_SOURCE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.893442378] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.893462335] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_X_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.893480278] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.893499785] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Y_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913246532] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913317764] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913344795] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913363910] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913380822] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913398354] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913415165] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913432147] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913452014] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.913475988] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[vrs_ntrip_client-3] [INFO] [1789864397.916723308] [ngii_vrs_ntrip_client]: NTRIP 연결 성공: ICY 200 OK
+[ublox_dgnss_node-1] [INFO] [1789864397.933233796] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933301051] [ublox_dgnss]: parameter set CFG_TMODE_ECEF_Z_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933322621] [ublox_dgnss]: parameter set CFG_TMODE_FIXED_POS_ACC: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933339042] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933354781] [ublox_dgnss]: parameter set CFG_TMODE_HEIGHT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933370590] [ublox_dgnss]: parameter set CFG_TMODE_LAT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933386049] [ublox_dgnss]: parameter set CFG_TMODE_LAT_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933401648] [ublox_dgnss]: parameter set CFG_TMODE_LON: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933416756] [ublox_dgnss]: parameter set CFG_TMODE_LON_HP: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.933431594] [ublox_dgnss]: parameter set CFG_TMODE_MODE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.953235357] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.953287955] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.953303844] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.953318732] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953336284] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953357394] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953373704] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953389373] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953406134] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.953421412] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: true
+[cluster_plot_node-13] [INFO] [1789864397.957698444] [lidar_clustering]: LiDAR DBSCAN + Hungarian + Follow the Gap started. (scan=/scan_front, yaw_offset=180°, aim=path)
+[cluster_plot_node-13] [INFO] [1789864397.957971612] [lidar_clustering]: Vehicle coordinate: +X forward, +Y left, -Y right.
+[cluster_plot_node-13] [INFO] [1789864397.958167856] [lidar_clustering]: 회피 조향 슬루레이트 제한 꺼짐 (avoid_steer_rate_deg:=90.0 으로 켠다)
+[ublox_dgnss_node-1] [INFO] [1789864397.973216780] [ublox_dgnss]: parameter set CFG_TMODE_POS_TYPE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.973251895] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_ACC_LIMIT: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.973277503] [ublox_dgnss]: parameter set CFG_TMODE_SVIN_MIN_DUR: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.973298322] [ublox_dgnss]: parameter set CFG_UART1INPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973313800] [ublox_dgnss]: parameter set CFG_UART1INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973335941] [ublox_dgnss]: parameter set CFG_UART1INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973368292] [ublox_dgnss]: parameter set CFG_UART1INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973385814] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973401002] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.973415499] [ublox_dgnss]: parameter set CFG_UART1OUTPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993223711] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.993261421] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993282370] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993317765] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993354283] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864397.993384389] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993411620] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864397.993434622] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789864397.993456784] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864397.993478804] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013227235] [ublox_dgnss]: parameter set CFG_UART2INPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864398.013316641] [ublox_dgnss]: parameter set CFG_UART2INPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013354321] [ublox_dgnss]: parameter set CFG_UART2INPROT_SPARTN: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013381982] [ublox_dgnss]: parameter set CFG_UART2INPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013408021] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_NMEA: false
+[ublox_dgnss_node-1] [INFO] [1789864398.013429581] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013460638] [ublox_dgnss]: parameter set CFG_UART2OUTPROT_UBX: false
+[ublox_dgnss_node-1] [INFO] [1789864398.013481597] [ublox_dgnss]: parameter set CFG_UART2_BAUDRATE: 0
+[ublox_dgnss_node-1] [INFO] [1789864398.013508447] [ublox_dgnss]: parameter set CFG_USBINPROT_NMEA: true
+[ublox_dgnss_node-1] [INFO] [1789864398.013533894] [ublox_dgnss]: parameter set CFG_USBINPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.033232272] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864398.033321438] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.033350722] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864398.053240635] [ublox_dgnss]: parameter set CFG_USBINPROT_UBX: true
+[ublox_dgnss_node-1] [INFO] [1789864398.053325473] [ublox_dgnss]: parameter set CFG_USBOUTPROT_RTCM3X: true
+[ublox_dgnss_node-1] [INFO] [1789864398.053351752] [ublox_dgnss]: parameter set CFG_USBOUTPROT_UBX: true
+[heading_init_node-5] [WARN] [1789864398.073932197] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=0 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864398.745537432] [lidar_clustering]: ID=1, X=6.83 m, Y=2.28 m, Width=0.28 m, Depth=0.18 m, Distance=7.20 m
+[cluster_plot_node-13] [INFO] [1789864398.745764874] [lidar_clustering]: ID=4, X=3.66 m, Y=1.86 m, Width=0.04 m, Depth=0.02 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864398.745952352] [lidar_clustering]: ID=5, X=2.94 m, Y=2.59 m, Width=0.33 m, Depth=0.14 m, Distance=3.92 m
+[cluster_plot_node-13] [INFO] [1789864398.746153606] [lidar_clustering]: ID=6, X=2.39 m, Y=2.41 m, Width=0.10 m, Depth=0.18 m, Distance=3.39 m
+[cluster_plot_node-13] [INFO] [1789864398.746339091] [lidar_clustering]: ID=7, X=1.07 m, Y=1.61 m, Width=0.14 m, Depth=0.66 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864398.746519816] [lidar_clustering]: ID=8, X=1.02 m, Y=2.40 m, Width=0.01 m, Depth=0.05 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864398.746696354] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.12 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864398.746876589] [lidar_clustering]: ID=10, X=0.38 m, Y=1.59 m, Width=0.04 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864398.747060791] [lidar_clustering]: ID=11, X=1.16 m, Y=-2.32 m, Width=0.03 m, Depth=0.09 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864398.747240043] [lidar_clustering]: ID=12, X=1.44 m, Y=-2.29 m, Width=1.05 m, Depth=0.78 m, Distance=2.70 m
+[cluster_plot_node-13] [INFO] [1789864398.747422422] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.72 m, Width=0.02 m, Depth=0.07 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864398.747601695] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.70 m, Width=0.01 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864398.747783212] [lidar_clustering]: ID=15, X=3.09 m, Y=-2.63 m, Width=0.18 m, Depth=0.53 m, Distance=4.06 m
+[cluster_plot_node-13] [INFO] [1789864398.748032515] [lidar_clustering]: ID=16, X=2.45 m, Y=-0.81 m, Width=0.05 m, Depth=0.01 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864398.748287528] [lidar_clustering]: ID=17, X=1.76 m, Y=-0.28 m, Width=0.48 m, Depth=0.28 m, Distance=1.78 m
+[cluster_plot_node-13] [INFO] [1789864398.748537082] [lidar_clustering]: ID=18, X=1.26 m, Y=-0.15 m, Width=0.08 m, Depth=0.06 m, Distance=1.27 m
+[cluster_plot_node-13] [INFO] [1789864398.748776967] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.10 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864398.748971348] [lidar_clustering]: ID=20, X=1.19 m, Y=0.24 m, Width=0.08 m, Depth=0.04 m, Distance=1.21 m
+[cluster_plot_node-13] [INFO] [1789864398.749179966] [lidar_clustering]: ID=21, X=0.79 m, Y=-2.06 m, Width=0.01 m, Depth=0.03 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864398.749424660] [lidar_clustering]: ID=22, X=2.41 m, Y=-2.47 m, Width=0.06 m, Depth=0.07 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864398.749707345] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864399.650780586] [lidar_clustering]: ID=1, X=6.92 m, Y=2.41 m, Width=0.21 m, Depth=0.03 m, Distance=7.33 m
+[cluster_plot_node-13] [INFO] [1789864399.651006275] [lidar_clustering]: ID=2, X=5.58 m, Y=2.17 m, Width=0.06 m, Depth=0.02 m, Distance=5.99 m
+[cluster_plot_node-13] [INFO] [1789864399.651207448] [lidar_clustering]: ID=3, X=5.60 m, Y=2.57 m, Width=0.25 m, Depth=0.18 m, Distance=6.17 m
+[cluster_plot_node-13] [INFO] [1789864399.651413832] [lidar_clustering]: ID=4, X=4.83 m, Y=2.08 m, Width=0.32 m, Depth=0.07 m, Distance=5.26 m
+[cluster_plot_node-13] [INFO] [1789864399.651610777] [lidar_clustering]: ID=5, X=3.43 m, Y=2.02 m, Width=0.05 m, Depth=0.03 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864399.651799698] [lidar_clustering]: ID=6, X=2.43 m, Y=2.44 m, Width=0.30 m, Depth=0.15 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864399.651988619] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.16 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864399.652174995] [lidar_clustering]: ID=8, X=1.03 m, Y=2.39 m, Width=0.02 m, Depth=0.05 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864399.652368584] [lidar_clustering]: ID=9, X=1.18 m, Y=2.99 m, Width=0.02 m, Depth=0.12 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864399.652556503] [lidar_clustering]: ID=10, X=0.39 m, Y=1.59 m, Width=0.03 m, Depth=0.22 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864399.652773176] [lidar_clustering]: ID=11, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864399.652966835] [lidar_clustering]: ID=12, X=1.23 m, Y=-2.71 m, Width=0.05 m, Depth=0.26 m, Distance=2.98 m
+[cluster_plot_node-13] [INFO] [1789864399.653178949] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.73 m, Width=0.02 m, Depth=0.07 m, Distance=2.05 m
+[cluster_plot_node-13] [INFO] [1789864399.653370214] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864399.653560127] [lidar_clustering]: ID=15, X=2.98 m, Y=-2.65 m, Width=0.27 m, Depth=0.41 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864399.653745611] [lidar_clustering]: ID=16, X=2.45 m, Y=-0.82 m, Width=0.06 m, Depth=0.02 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864399.653957074] [lidar_clustering]: ID=17, X=1.77 m, Y=-0.28 m, Width=0.57 m, Depth=0.28 m, Distance=1.79 m
+[cluster_plot_node-13] [INFO] [1789864399.654166874] [lidar_clustering]: ID=18, X=1.38 m, Y=0.54 m, Width=0.02 m, Depth=0.01 m, Distance=1.48 m
+[cluster_plot_node-13] [INFO] [1789864399.654427107] [lidar_clustering]: ID=19, X=0.37 m, Y=-1.15 m, Width=0.10 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864399.654704121] [lidar_clustering]: ID=20, X=1.25 m, Y=-0.15 m, Width=0.08 m, Depth=0.06 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864399.654964775] [lidar_clustering]: ID=21, X=0.79 m, Y=-2.05 m, Width=0.01 m, Depth=0.03 m, Distance=2.20 m
+[cluster_plot_node-13] [INFO] [1789864399.655221252] [lidar_clustering]: ID=22, X=1.45 m, Y=-2.27 m, Width=0.87 m, Depth=1.07 m, Distance=2.70 m
+[cluster_plot_node-13] [INFO] [1789864399.655480583] [lidar_clustering]: ID=23, X=3.00 m, Y=2.53 m, Width=0.37 m, Depth=0.32 m, Distance=3.93 m
+[cluster_plot_node-13] [INFO] [1789864399.655733673] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864399.655985691] [lidar_clustering]: points=465, clusters=19, tracks=23
+[serial_bridge-12] [INFO] [1789864399.706403802] [serial_bridge_node]: 시리얼 포트 연결 성공: /dev/arduino @ 57600bps
+[serial_bridge-12] [WARN] [1789864399.721242826] [serial_bridge_node]: ★ 경사 보상 켜짐 — handsfree/imu 피치로 PWM 을 보정한다 (이득 1.00, 상한 95). 영점 +3.81° · 부호 -1. ⚠ 부호가 틀리면 내리막에서 가속한다 — tools/imu_grade.py 로 확인했는지 볼 것.
+[serial_bridge-12] [WARN] [1789864399.721531592] [serial_bridge_node]: ★ 내리막 속도 거버너 켜짐: 측정속도가 명령보다 0.20m/s 넘게 빠르면 역 PWM 을 낸다 (초과 1m/s 당 300, 상한 60, 선행 0.30s). ⚠ 플러깅이라 전류가 크다 — 상한을 함부로 올리지 말 것.
+[serial_bridge-12] [WARN] [1789864399.721771227] [serial_bridge_node]: ★ ROS 쪽 FF 사용: PWM = 42.6·v + 46.0 (펌웨어 FF 우회). 엔코더 복구 후에는 ff_mode:=firmware 로 되돌릴 것.
+[serial_bridge-12] [INFO] [1789864399.728105499] [serial_bridge_node]: Serial read thread started
+[heading_init_node-5] [WARN] [1789864400.104005693] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864400.551599915] [lidar_clustering]: ID=1, X=6.82 m, Y=2.66 m, Width=0.13 m, Depth=0.08 m, Distance=7.32 m
+[cluster_plot_node-13] [INFO] [1789864400.551822979] [lidar_clustering]: ID=2, X=6.87 m, Y=2.21 m, Width=0.49 m, Depth=0.27 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864400.552002212] [lidar_clustering]: ID=3, X=5.60 m, Y=2.57 m, Width=0.26 m, Depth=0.16 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864400.552178409] [lidar_clustering]: ID=4, X=5.66 m, Y=2.10 m, Width=0.08 m, Depth=0.03 m, Distance=6.04 m
+[cluster_plot_node-13] [INFO] [1789864400.552363533] [lidar_clustering]: ID=5, X=3.71 m, Y=2.48 m, Width=0.08 m, Depth=0.06 m, Distance=4.46 m
+[cluster_plot_node-13] [INFO] [1789864400.552539760] [lidar_clustering]: ID=6, X=2.42 m, Y=2.41 m, Width=0.09 m, Depth=0.10 m, Distance=3.42 m
+[cluster_plot_node-13] [INFO] [1789864400.552714725] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.15 m, Depth=0.66 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864400.552889730] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.02 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864400.553063543] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864400.553241042] [lidar_clustering]: ID=10, X=0.38 m, Y=1.59 m, Width=0.03 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864400.553417740] [lidar_clustering]: ID=11, X=1.10 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.41 m
+[cluster_plot_node-13] [INFO] [1789864400.553591613] [lidar_clustering]: ID=12, X=2.64 m, Y=-2.58 m, Width=0.10 m, Depth=0.04 m, Distance=3.69 m
+[cluster_plot_node-13] [INFO] [1789864400.553764915] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.73 m, Width=0.02 m, Depth=0.08 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864400.553941683] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864400.554114935] [lidar_clustering]: ID=15, X=3.06 m, Y=-2.65 m, Width=0.09 m, Depth=0.18 m, Distance=4.05 m
+[cluster_plot_node-13] [INFO] [1789864400.554291152] [lidar_clustering]: ID=16, X=2.45 m, Y=-0.84 m, Width=0.03 m, Depth=0.01 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864400.554465536] [lidar_clustering]: ID=17, X=1.75 m, Y=-0.30 m, Width=0.51 m, Depth=0.29 m, Distance=1.77 m
+[cluster_plot_node-13] [INFO] [1789864400.554639780] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.12 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864400.554812671] [lidar_clustering]: ID=20, X=1.25 m, Y=-0.15 m, Width=0.08 m, Depth=0.06 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864400.555005539] [lidar_clustering]: ID=21, X=0.78 m, Y=-2.07 m, Width=0.01 m, Depth=0.02 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864400.555180403] [lidar_clustering]: ID=22, X=1.22 m, Y=-2.71 m, Width=0.05 m, Depth=0.28 m, Distance=2.97 m
+[cluster_plot_node-13] [INFO] [1789864400.555361730] [lidar_clustering]: ID=23, X=2.96 m, Y=2.58 m, Width=0.37 m, Depth=0.13 m, Distance=3.92 m
+[cluster_plot_node-13] [INFO] [1789864400.555536675] [lidar_clustering]: ID=24, X=1.52 m, Y=-2.30 m, Width=1.05 m, Depth=0.78 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864400.555734182] [lidar_clustering]: ID=25, X=3.55 m, Y=1.95 m, Width=0.43 m, Depth=0.29 m, Distance=4.05 m
+[cluster_plot_node-13] [INFO] [1789864400.555907514] [lidar_clustering]: ID=26, X=1.12 m, Y=0.84 m, Width=0.02 m, Depth=0.01 m, Distance=1.41 m
+[cluster_plot_node-13] [INFO] [1789864400.556090934] [lidar_clustering]: ID=27, X=5.31 m, Y=2.21 m, Width=0.32 m, Depth=0.07 m, Distance=5.76 m
+[cluster_plot_node-13] [INFO] [1789864400.556273233] [lidar_clustering]: ID=28, X=5.88 m, Y=3.86 m, Width=0.08 m, Depth=0.05 m, Distance=7.04 m
+[cluster_plot_node-13] [INFO] [1789864400.556451313] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[direct_localization_node-6] [INFO] [1789864400.772432536] [direct_localization]: pose: x=39.09 y=23.74 yaw=61.2° v=-0.01m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864401.454246166] [lidar_clustering]: ID=2, X=6.85 m, Y=2.27 m, Width=0.47 m, Depth=0.21 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864401.454478898] [lidar_clustering]: ID=3, X=5.49 m, Y=3.64 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864401.454675163] [lidar_clustering]: ID=4, X=5.40 m, Y=2.31 m, Width=0.07 m, Depth=0.03 m, Distance=5.88 m
+[cluster_plot_node-13] [INFO] [1789864401.454873832] [lidar_clustering]: ID=5, X=3.78 m, Y=2.65 m, Width=0.07 m, Depth=0.07 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864401.455062332] [lidar_clustering]: ID=6, X=2.40 m, Y=2.40 m, Width=0.11 m, Depth=0.23 m, Distance=3.39 m
+[cluster_plot_node-13] [INFO] [1789864401.455246444] [lidar_clustering]: ID=7, X=1.10 m, Y=1.61 m, Width=0.15 m, Depth=0.67 m, Distance=1.95 m
+[cluster_plot_node-13] [INFO] [1789864401.455440003] [lidar_clustering]: ID=8, X=1.02 m, Y=2.40 m, Width=0.02 m, Depth=0.05 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864401.455626700] [lidar_clustering]: ID=9, X=1.17 m, Y=3.00 m, Width=0.03 m, Depth=0.11 m, Distance=3.22 m
+[cluster_plot_node-13] [INFO] [1789864401.455810772] [lidar_clustering]: ID=10, X=0.36 m, Y=1.60 m, Width=0.01 m, Depth=0.09 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864401.455994643] [lidar_clustering]: ID=11, X=1.09 m, Y=-2.14 m, Width=0.03 m, Depth=0.09 m, Distance=2.40 m
+[cluster_plot_node-13] [INFO] [1789864401.456178204] [lidar_clustering]: ID=12, X=2.58 m, Y=-1.61 m, Width=0.04 m, Depth=0.02 m, Distance=3.04 m
+[cluster_plot_node-13] [INFO] [1789864401.456365752] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.73 m, Width=0.01 m, Depth=0.07 m, Distance=2.05 m
+[cluster_plot_node-13] [INFO] [1789864401.456549012] [lidar_clustering]: ID=14, X=0.77 m, Y=-0.71 m, Width=0.02 m, Depth=0.23 m, Distance=1.05 m
+[cluster_plot_node-13] [INFO] [1789864401.456731291] [lidar_clustering]: ID=15, X=2.98 m, Y=-2.63 m, Width=0.16 m, Depth=0.44 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864401.456913980] [lidar_clustering]: ID=16, X=1.80 m, Y=-1.17 m, Width=0.02 m, Depth=0.02 m, Distance=2.15 m
+[cluster_plot_node-13] [INFO] [1789864401.457096038] [lidar_clustering]: ID=17, X=1.69 m, Y=-0.48 m, Width=0.73 m, Depth=0.20 m, Distance=1.75 m
+[cluster_plot_node-13] [INFO] [1789864401.457277255] [lidar_clustering]: ID=18, X=1.56 m, Y=0.65 m, Width=0.02 m, Depth=0.01 m, Distance=1.69 m
+[cluster_plot_node-13] [INFO] [1789864401.457463230] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.11 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864401.457647342] [lidar_clustering]: ID=20, X=1.25 m, Y=-0.15 m, Width=0.08 m, Depth=0.05 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864401.457832476] [lidar_clustering]: ID=21, X=0.78 m, Y=-2.06 m, Width=0.01 m, Depth=0.03 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864401.458025815] [lidar_clustering]: ID=22, X=1.22 m, Y=-2.72 m, Width=0.04 m, Depth=0.24 m, Distance=2.98 m
+[cluster_plot_node-13] [INFO] [1789864401.458211880] [lidar_clustering]: ID=23, X=2.95 m, Y=2.69 m, Width=0.13 m, Depth=0.10 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864401.458401853] [lidar_clustering]: ID=24, X=1.49 m, Y=-2.34 m, Width=1.05 m, Depth=0.78 m, Distance=2.78 m
+[cluster_plot_node-13] [INFO] [1789864401.458584672] [lidar_clustering]: ID=25, X=3.49 m, Y=2.10 m, Width=0.26 m, Depth=0.16 m, Distance=4.07 m
+[cluster_plot_node-13] [INFO] [1789864401.458768604] [lidar_clustering]: ID=26, X=1.13 m, Y=0.90 m, Width=0.03 m, Depth=0.03 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864401.458981419] [lidar_clustering]: ID=27, X=4.55 m, Y=2.74 m, Width=0.06 m, Depth=0.04 m, Distance=5.31 m
+[cluster_plot_node-13] [INFO] [1789864401.459163948] [lidar_clustering]: ID=28, X=6.06 m, Y=3.91 m, Width=0.06 m, Depth=0.04 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864401.459352919] [lidar_clustering]: ID=29, X=3.70 m, Y=1.85 m, Width=0.05 m, Depth=0.03 m, Distance=4.14 m
+[cluster_plot_node-13] [INFO] [1789864401.459548532] [lidar_clustering]: ID=30, X=3.51 m, Y=-0.62 m, Width=0.05 m, Depth=0.01 m, Distance=3.56 m
+[cluster_plot_node-13] [INFO] [1789864401.459746650] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.99 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864401.459932455] [lidar_clustering]: points=476, clusters=26, tracks=29
+[heading_init_node-5] [WARN] [1789864402.193742417] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864402.357369504] [lidar_clustering]: ID=1, X=5.79 m, Y=2.13 m, Width=0.06 m, Depth=0.02 m, Distance=6.17 m
+[cluster_plot_node-13] [INFO] [1789864402.357587839] [lidar_clustering]: ID=2, X=6.87 m, Y=2.23 m, Width=0.42 m, Depth=0.19 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864402.357783923] [lidar_clustering]: ID=3, X=6.00 m, Y=3.91 m, Width=0.08 m, Depth=0.06 m, Distance=7.16 m
+[cluster_plot_node-13] [INFO] [1789864402.357974537] [lidar_clustering]: ID=4, X=5.28 m, Y=2.38 m, Width=0.07 m, Depth=0.03 m, Distance=5.79 m
+[cluster_plot_node-13] [INFO] [1789864402.358157737] [lidar_clustering]: ID=5, X=3.77 m, Y=2.65 m, Width=0.07 m, Depth=0.07 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864402.358344164] [lidar_clustering]: ID=6, X=2.43 m, Y=2.43 m, Width=0.29 m, Depth=0.16 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864402.358526813] [lidar_clustering]: ID=7, X=1.07 m, Y=1.61 m, Width=0.16 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864402.358709843] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.05 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864402.358891109] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864402.359071755] [lidar_clustering]: ID=10, X=0.35 m, Y=1.60 m, Width=0.01 m, Depth=0.08 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864402.359259563] [lidar_clustering]: ID=11, X=1.13 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864402.359460386] [lidar_clustering]: ID=12, X=2.56 m, Y=-1.59 m, Width=0.04 m, Depth=0.02 m, Distance=3.01 m
+[cluster_plot_node-13] [INFO] [1789864402.359648175] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.73 m, Width=0.02 m, Depth=0.07 m, Distance=2.05 m
+[cluster_plot_node-13] [INFO] [1789864402.359836324] [lidar_clustering]: ID=14, X=0.79 m, Y=-0.71 m, Width=0.04 m, Depth=0.24 m, Distance=1.06 m
+[cluster_plot_node-13] [INFO] [1789864402.360018573] [lidar_clustering]: ID=15, X=2.95 m, Y=-2.65 m, Width=0.28 m, Depth=0.36 m, Distance=3.97 m
+[cluster_plot_node-13] [INFO] [1789864402.360200140] [lidar_clustering]: ID=16, X=2.63 m, Y=-2.18 m, Width=0.10 m, Depth=0.04 m, Distance=3.42 m
+[cluster_plot_node-13] [INFO] [1789864402.360383069] [lidar_clustering]: ID=17, X=1.67 m, Y=-0.42 m, Width=0.51 m, Depth=0.13 m, Distance=1.72 m
+[cluster_plot_node-13] [INFO] [1789864402.360564496] [lidar_clustering]: ID=18, X=1.56 m, Y=0.65 m, Width=0.02 m, Depth=0.01 m, Distance=1.69 m
+[cluster_plot_node-13] [INFO] [1789864402.360751484] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.10 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864402.360932981] [lidar_clustering]: ID=20, X=1.26 m, Y=-0.15 m, Width=0.07 m, Depth=0.04 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864402.361113726] [lidar_clustering]: ID=21, X=0.82 m, Y=-2.11 m, Width=0.02 m, Depth=0.05 m, Distance=2.27 m
+[cluster_plot_node-13] [INFO] [1789864402.361316934] [lidar_clustering]: ID=22, X=1.57 m, Y=-2.21 m, Width=0.75 m, Depth=0.49 m, Distance=2.71 m
+[cluster_plot_node-13] [INFO] [1789864402.361558342] [lidar_clustering]: ID=23, X=2.94 m, Y=2.71 m, Width=0.09 m, Depth=0.12 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864402.361755508] [lidar_clustering]: ID=24, X=1.65 m, Y=-0.99 m, Width=0.02 m, Depth=0.01 m, Distance=1.92 m
+[cluster_plot_node-13] [INFO] [1789864402.361940021] [lidar_clustering]: ID=25, X=3.48 m, Y=2.09 m, Width=0.22 m, Depth=0.12 m, Distance=4.06 m
+[cluster_plot_node-13] [INFO] [1789864402.362126036] [lidar_clustering]: ID=26, X=1.13 m, Y=0.89 m, Width=0.04 m, Depth=0.03 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864402.362318644] [lidar_clustering]: ID=28, X=5.52 m, Y=3.48 m, Width=0.06 m, Depth=0.04 m, Distance=6.53 m
+[cluster_plot_node-13] [INFO] [1789864402.362502976] [lidar_clustering]: ID=29, X=3.68 m, Y=1.85 m, Width=0.05 m, Depth=0.03 m, Distance=4.12 m
+[cluster_plot_node-13] [INFO] [1789864402.362707105] [lidar_clustering]: ID=30, X=2.68 m, Y=-1.01 m, Width=0.03 m, Depth=0.02 m, Distance=2.86 m
+[cluster_plot_node-13] [INFO] [1789864402.362897408] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[ublox_dgnss_node-1] [ERROR] [1789864402.486090193] [ublox_dgnss]: Parameter fetch TIMEOUT after 5 seconds! 10 parameters stuck in PARAM_VALGET:
+[ublox_dgnss_node-1] [ERROR] [1789864402.486137692] [ublox_dgnss]:   Missing response: CFG_SEC_JAMDET_SENSITIVITY_HI
+[ublox_dgnss_node-1] [ERROR] [1789864402.486143893] [ublox_dgnss]:   Missing response: CFG_SEC_SPOOFDET_SIM_SIG_DIS
+[ublox_dgnss_node-1] [ERROR] [1789864402.486147700] [ublox_dgnss]:   Missing response: CFG_SIGNAL_BDS_B1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486151137] [ublox_dgnss]:   Missing response: CFG_SIGNAL_BDS_B2_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486154914] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GAL_E1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486158450] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GAL_E5B_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486161806] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GLO_L1_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486165042] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GLO_L2_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486168529] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GPS_L1CA_ENA
+[ublox_dgnss_node-1] [ERROR] [1789864402.486176363] [ublox_dgnss]:   Missing response: CFG_SIGNAL_GPS_L2C_ENA
+[ublox_dgnss_node-1] [WARN] [1789864402.486179760] [ublox_dgnss]: Proceeding with partial parameter initialization (degraded mode)
+[vrs_ntrip_client-3] [INFO] [1789864402.661020008] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 32프레임 발행, GGA 실측(37.28911,127.10744)
+[local_pure_pursuit_node-9] [WARN] [1789864402.759970398] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[cluster_plot_node-13] [INFO] [1789864403.253419206] [lidar_clustering]: ID=1, X=5.65 m, Y=2.53 m, Width=0.08 m, Depth=0.03 m, Distance=6.19 m
+[cluster_plot_node-13] [INFO] [1789864403.253645546] [lidar_clustering]: ID=2, X=6.87 m, Y=2.23 m, Width=0.45 m, Depth=0.21 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864403.253832814] [lidar_clustering]: ID=3, X=6.08 m, Y=3.92 m, Width=0.09 m, Depth=0.05 m, Distance=7.23 m
+[cluster_plot_node-13] [INFO] [1789864403.254015443] [lidar_clustering]: ID=4, X=5.38 m, Y=2.34 m, Width=0.07 m, Depth=0.03 m, Distance=5.87 m
+[cluster_plot_node-13] [INFO] [1789864403.254195027] [lidar_clustering]: ID=5, X=3.79 m, Y=2.65 m, Width=0.05 m, Depth=0.13 m, Distance=4.63 m
+[cluster_plot_node-13] [INFO] [1789864403.254384970] [lidar_clustering]: ID=6, X=2.43 m, Y=2.45 m, Width=0.29 m, Depth=0.14 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864403.254566076] [lidar_clustering]: ID=7, X=1.09 m, Y=1.61 m, Width=0.16 m, Depth=0.70 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864403.254753724] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.03 m, Depth=0.08 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864403.254939449] [lidar_clustering]: ID=9, X=1.17 m, Y=3.00 m, Width=0.04 m, Depth=0.10 m, Distance=3.22 m
+[cluster_plot_node-13] [INFO] [1789864403.255127438] [lidar_clustering]: ID=10, X=0.37 m, Y=1.59 m, Width=0.04 m, Depth=0.22 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864403.255318242] [lidar_clustering]: ID=11, X=1.13 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.42 m
+[cluster_plot_node-13] [INFO] [1789864403.255507193] [lidar_clustering]: ID=12, X=3.46 m, Y=-0.89 m, Width=0.14 m, Depth=0.11 m, Distance=3.58 m
+[cluster_plot_node-13] [INFO] [1789864403.255693700] [lidar_clustering]: ID=13, X=1.08 m, Y=-1.72 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864403.255874586] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864403.256055111] [lidar_clustering]: ID=15, X=3.12 m, Y=-2.65 m, Width=0.06 m, Depth=0.15 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864403.256233913] [lidar_clustering]: ID=16, X=2.98 m, Y=-2.67 m, Width=0.24 m, Depth=0.43 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864403.256419227] [lidar_clustering]: ID=17, X=1.64 m, Y=-0.28 m, Width=0.28 m, Depth=0.08 m, Distance=1.67 m
+[cluster_plot_node-13] [INFO] [1789864403.256598239] [lidar_clustering]: ID=18, X=1.55 m, Y=0.64 m, Width=0.02 m, Depth=0.01 m, Distance=1.68 m
+[cluster_plot_node-13] [INFO] [1789864403.256776200] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.13 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864403.256952647] [lidar_clustering]: ID=20, X=1.24 m, Y=-0.16 m, Width=0.09 m, Depth=0.13 m, Distance=1.25 m
+[cluster_plot_node-13] [INFO] [1789864403.257130067] [lidar_clustering]: ID=21, X=0.79 m, Y=-2.07 m, Width=0.02 m, Depth=0.04 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864403.257310442] [lidar_clustering]: ID=22, X=1.41 m, Y=-2.29 m, Width=1.02 m, Depth=1.07 m, Distance=2.69 m
+[cluster_plot_node-13] [INFO] [1789864403.257511806] [lidar_clustering]: ID=23, X=2.94 m, Y=2.70 m, Width=0.07 m, Depth=0.16 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864403.257694064] [lidar_clustering]: ID=24, X=1.33 m, Y=-0.48 m, Width=0.06 m, Depth=0.07 m, Distance=1.42 m
+[cluster_plot_node-13] [INFO] [1789864403.257873016] [lidar_clustering]: ID=25, X=3.52 m, Y=2.16 m, Width=0.05 m, Depth=0.03 m, Distance=4.13 m
+[cluster_plot_node-13] [INFO] [1789864403.258049885] [lidar_clustering]: ID=26, X=1.12 m, Y=0.90 m, Width=0.02 m, Depth=0.01 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864403.258228166] [lidar_clustering]: ID=28, X=5.50 m, Y=3.67 m, Width=0.06 m, Depth=0.04 m, Distance=6.61 m
+[cluster_plot_node-13] [INFO] [1789864403.258410144] [lidar_clustering]: ID=29, X=3.67 m, Y=1.84 m, Width=0.08 m, Depth=0.07 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864403.258588134] [lidar_clustering]: ID=30, X=2.37 m, Y=-0.92 m, Width=0.23 m, Depth=0.16 m, Distance=2.55 m
+[cluster_plot_node-13] [INFO] [1789864403.258765133] [lidar_clustering]: ID=31, X=1.24 m, Y=-2.68 m, Width=0.05 m, Depth=0.28 m, Distance=2.96 m
+[cluster_plot_node-13] [INFO] [1789864403.258944105] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864403.259122016] [lidar_clustering]: points=454, clusters=24, tracks=30
+[direct_localization_node-6] [INFO] [1789864403.772596349] [direct_localization]: pose: x=39.10 y=23.74 yaw=61.5° v=0.00m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864404.157189415] [lidar_clustering]: ID=1, X=6.84 m, Y=2.25 m, Width=0.41 m, Depth=0.16 m, Distance=7.20 m
+[cluster_plot_node-13] [INFO] [1789864404.157535437] [lidar_clustering]: ID=2, X=6.04 m, Y=2.18 m, Width=0.09 m, Depth=0.03 m, Distance=6.42 m
+[cluster_plot_node-13] [INFO] [1789864404.157730069] [lidar_clustering]: ID=3, X=6.04 m, Y=3.93 m, Width=0.06 m, Depth=0.04 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864404.157930661] [lidar_clustering]: ID=4, X=5.28 m, Y=2.38 m, Width=0.07 m, Depth=0.03 m, Distance=5.79 m
+[cluster_plot_node-13] [INFO] [1789864404.158111517] [lidar_clustering]: ID=5, X=3.77 m, Y=2.64 m, Width=0.08 m, Depth=0.08 m, Distance=4.60 m
+[cluster_plot_node-13] [INFO] [1789864404.158293595] [lidar_clustering]: ID=6, X=2.41 m, Y=2.40 m, Width=0.14 m, Depth=0.08 m, Distance=3.41 m
+[cluster_plot_node-13] [INFO] [1789864404.158469432] [lidar_clustering]: ID=7, X=1.07 m, Y=1.61 m, Width=0.15 m, Depth=0.63 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864404.158641852] [lidar_clustering]: ID=8, X=1.02 m, Y=2.40 m, Width=0.01 m, Depth=0.05 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864404.158813681] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.12 m, Distance=3.22 m
+[cluster_plot_node-13] [INFO] [1789864404.158984889] [lidar_clustering]: ID=10, X=0.37 m, Y=1.59 m, Width=0.03 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864404.159173699] [lidar_clustering]: ID=11, X=1.08 m, Y=-2.15 m, Width=0.03 m, Depth=0.26 m, Distance=2.40 m
+[cluster_plot_node-13] [INFO] [1789864404.159357370] [lidar_clustering]: ID=12, X=3.47 m, Y=-0.89 m, Width=0.13 m, Depth=0.11 m, Distance=3.58 m
+[cluster_plot_node-13] [INFO] [1789864404.159532786] [lidar_clustering]: ID=13, X=1.12 m, Y=-1.73 m, Width=0.02 m, Depth=0.02 m, Distance=2.06 m
+[cluster_plot_node-13] [INFO] [1789864404.159704485] [lidar_clustering]: ID=14, X=0.77 m, Y=-0.71 m, Width=0.02 m, Depth=0.24 m, Distance=1.05 m
+[cluster_plot_node-13] [INFO] [1789864404.159876434] [lidar_clustering]: ID=15, X=3.03 m, Y=-2.65 m, Width=0.22 m, Depth=0.58 m, Distance=4.03 m
+[cluster_plot_node-13] [INFO] [1789864404.160048624] [lidar_clustering]: ID=16, X=2.80 m, Y=-2.56 m, Width=0.09 m, Depth=0.04 m, Distance=3.79 m
+[cluster_plot_node-13] [INFO] [1789864404.160225493] [lidar_clustering]: ID=17, X=1.65 m, Y=-0.28 m, Width=0.27 m, Depth=0.08 m, Distance=1.67 m
+[cluster_plot_node-13] [INFO] [1789864404.160406188] [lidar_clustering]: ID=18, X=1.54 m, Y=0.64 m, Width=0.02 m, Depth=0.01 m, Distance=1.67 m
+[cluster_plot_node-13] [INFO] [1789864404.160584219] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.13 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864404.160759494] [lidar_clustering]: ID=20, X=1.26 m, Y=-0.15 m, Width=0.08 m, Depth=0.04 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864404.160934319] [lidar_clustering]: ID=21, X=0.79 m, Y=-2.06 m, Width=0.02 m, Depth=0.03 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864404.161117178] [lidar_clustering]: ID=22, X=1.63 m, Y=-2.20 m, Width=0.42 m, Depth=0.30 m, Distance=2.73 m
+[cluster_plot_node-13] [INFO] [1789864404.161311008] [lidar_clustering]: ID=23, X=2.95 m, Y=2.68 m, Width=0.09 m, Depth=0.19 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864404.161499137] [lidar_clustering]: ID=24, X=1.26 m, Y=-1.23 m, Width=0.02 m, Depth=0.02 m, Distance=1.76 m
+[cluster_plot_node-13] [INFO] [1789864404.161679492] [lidar_clustering]: ID=25, X=3.79 m, Y=2.07 m, Width=0.05 m, Depth=0.03 m, Distance=4.31 m
+[cluster_plot_node-13] [INFO] [1789864404.161858094] [lidar_clustering]: ID=26, X=1.13 m, Y=0.89 m, Width=0.03 m, Depth=0.03 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864404.162035894] [lidar_clustering]: ID=27, X=5.61 m, Y=2.54 m, Width=0.08 m, Depth=0.04 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864404.162217111] [lidar_clustering]: ID=28, X=5.51 m, Y=3.66 m, Width=0.06 m, Depth=0.04 m, Distance=6.61 m
+[cluster_plot_node-13] [INFO] [1789864404.162400291] [lidar_clustering]: ID=29, X=3.52 m, Y=2.21 m, Width=0.05 m, Depth=0.03 m, Distance=4.15 m
+[cluster_plot_node-13] [INFO] [1789864404.162577861] [lidar_clustering]: ID=30, X=2.39 m, Y=-1.10 m, Width=0.57 m, Depth=0.22 m, Distance=2.64 m
+[cluster_plot_node-13] [INFO] [1789864404.162754358] [lidar_clustering]: ID=31, X=1.22 m, Y=-2.72 m, Width=0.06 m, Depth=0.27 m, Distance=2.98 m
+[cluster_plot_node-13] [INFO] [1789864404.162933501] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[heading_init_node-5] [WARN] [1789864404.193887519] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864405.059607302] [lidar_clustering]: ID=1, X=6.89 m, Y=2.27 m, Width=0.44 m, Depth=0.24 m, Distance=7.25 m
+[cluster_plot_node-13] [INFO] [1789864405.059827942] [lidar_clustering]: ID=2, X=5.58 m, Y=2.53 m, Width=0.06 m, Depth=0.03 m, Distance=6.13 m
+[cluster_plot_node-13] [INFO] [1789864405.060012024] [lidar_clustering]: ID=3, X=6.01 m, Y=3.90 m, Width=0.06 m, Depth=0.04 m, Distance=7.16 m
+[cluster_plot_node-13] [INFO] [1789864405.060188171] [lidar_clustering]: ID=4, X=4.35 m, Y=2.84 m, Width=0.04 m, Depth=0.03 m, Distance=5.20 m
+[cluster_plot_node-13] [INFO] [1789864405.060387922] [lidar_clustering]: ID=5, X=3.77 m, Y=2.64 m, Width=0.09 m, Depth=0.09 m, Distance=4.60 m
+[cluster_plot_node-13] [INFO] [1789864405.060561604] [lidar_clustering]: ID=6, X=2.41 m, Y=2.40 m, Width=0.10 m, Depth=0.07 m, Distance=3.41 m
+[cluster_plot_node-13] [INFO] [1789864405.060732111] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.15 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864405.060902257] [lidar_clustering]: ID=8, X=1.02 m, Y=2.38 m, Width=0.02 m, Depth=0.07 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864405.061071100] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.10 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864405.061239573] [lidar_clustering]: ID=10, X=0.38 m, Y=1.59 m, Width=0.02 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864405.061413386] [lidar_clustering]: ID=11, X=2.33 m, Y=-1.70 m, Width=0.07 m, Depth=0.14 m, Distance=2.88 m
+[cluster_plot_node-13] [INFO] [1789864405.061582490] [lidar_clustering]: ID=12, X=3.47 m, Y=-0.89 m, Width=0.12 m, Depth=0.11 m, Distance=3.58 m
+[cluster_plot_node-13] [INFO] [1789864405.061751213] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864405.061923824] [lidar_clustering]: ID=14, X=0.82 m, Y=-0.71 m, Width=0.03 m, Depth=0.23 m, Distance=1.08 m
+[cluster_plot_node-13] [INFO] [1789864405.062092177] [lidar_clustering]: ID=16, X=2.46 m, Y=-0.82 m, Width=0.03 m, Depth=0.01 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864405.062260870] [lidar_clustering]: ID=17, X=1.64 m, Y=-0.28 m, Width=0.28 m, Depth=0.06 m, Distance=1.66 m
+[cluster_plot_node-13] [INFO] [1789864405.062433160] [lidar_clustering]: ID=18, X=1.52 m, Y=0.64 m, Width=0.02 m, Depth=0.01 m, Distance=1.65 m
+[cluster_plot_node-13] [INFO] [1789864405.062602063] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.11 m, Depth=0.16 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864405.062774283] [lidar_clustering]: ID=20, X=1.25 m, Y=-0.15 m, Width=0.08 m, Depth=0.04 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864405.062945190] [lidar_clustering]: ID=21, X=1.12 m, Y=-2.52 m, Width=0.05 m, Depth=0.18 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864405.063114605] [lidar_clustering]: ID=22, X=2.86 m, Y=-2.76 m, Width=0.04 m, Depth=0.04 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864405.063290802] [lidar_clustering]: ID=23, X=2.95 m, Y=2.68 m, Width=0.11 m, Depth=0.17 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864405.063461098] [lidar_clustering]: ID=24, X=1.00 m, Y=-1.40 m, Width=0.06 m, Depth=0.02 m, Distance=1.72 m
+[cluster_plot_node-13] [INFO] [1789864405.063629732] [lidar_clustering]: ID=25, X=3.69 m, Y=1.85 m, Width=0.05 m, Depth=0.03 m, Distance=4.13 m
+[cluster_plot_node-13] [INFO] [1789864405.063798906] [lidar_clustering]: ID=26, X=1.13 m, Y=0.90 m, Width=0.05 m, Depth=0.03 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864405.063967930] [lidar_clustering]: ID=27, X=5.30 m, Y=2.40 m, Width=0.07 m, Depth=0.03 m, Distance=5.82 m
+[cluster_plot_node-13] [INFO] [1789864405.064139128] [lidar_clustering]: ID=28, X=5.47 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.58 m
+[cluster_plot_node-13] [INFO] [1789864405.064312600] [lidar_clustering]: ID=29, X=3.48 m, Y=2.06 m, Width=0.38 m, Depth=0.15 m, Distance=4.05 m
+[cluster_plot_node-13] [INFO] [1789864405.064481613] [lidar_clustering]: ID=30, X=2.43 m, Y=-1.35 m, Width=0.55 m, Depth=0.22 m, Distance=2.78 m
+[cluster_plot_node-13] [INFO] [1789864405.064650397] [lidar_clustering]: ID=31, X=1.52 m, Y=-2.30 m, Width=1.03 m, Depth=0.68 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864405.064821244] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864405.064990859] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864405.065160534] [lidar_clustering]: points=454, clusters=24, tracks=31
+[cluster_plot_node-13] [INFO] [1789864405.870005630] [lidar_clustering]: ID=1, X=6.89 m, Y=2.21 m, Width=0.39 m, Depth=0.23 m, Distance=7.24 m
+[cluster_plot_node-13] [INFO] [1789864405.870226430] [lidar_clustering]: ID=2, X=5.67 m, Y=2.11 m, Width=0.08 m, Depth=0.03 m, Distance=6.05 m
+[cluster_plot_node-13] [INFO] [1789864405.870415972] [lidar_clustering]: ID=3, X=6.09 m, Y=3.94 m, Width=0.09 m, Depth=0.06 m, Distance=7.25 m
+[cluster_plot_node-13] [INFO] [1789864405.870594674] [lidar_clustering]: ID=5, X=3.79 m, Y=2.64 m, Width=0.07 m, Depth=0.13 m, Distance=4.62 m
+[cluster_plot_node-13] [INFO] [1789864405.870770160] [lidar_clustering]: ID=6, X=2.43 m, Y=2.46 m, Width=0.29 m, Depth=0.15 m, Distance=3.46 m
+[cluster_plot_node-13] [INFO] [1789864405.870970041] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.15 m, Depth=0.72 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864405.871147641] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.02 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864405.871329919] [lidar_clustering]: ID=9, X=1.17 m, Y=2.98 m, Width=0.04 m, Depth=0.09 m, Distance=3.20 m
+[cluster_plot_node-13] [INFO] [1789864405.871509573] [lidar_clustering]: ID=10, X=0.39 m, Y=1.59 m, Width=0.05 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864405.871686611] [lidar_clustering]: ID=11, X=2.45 m, Y=-1.34 m, Width=0.14 m, Depth=0.05 m, Distance=2.79 m
+[cluster_plot_node-13] [INFO] [1789864405.871861707] [lidar_clustering]: ID=12, X=3.47 m, Y=-0.89 m, Width=0.12 m, Depth=0.12 m, Distance=3.58 m
+[cluster_plot_node-13] [INFO] [1789864405.872037403] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.01 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864405.872214311] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864405.872399716] [lidar_clustering]: ID=15, X=3.01 m, Y=-2.63 m, Width=0.13 m, Depth=0.44 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864405.872580151] [lidar_clustering]: ID=17, X=1.64 m, Y=-0.28 m, Width=0.27 m, Depth=0.07 m, Distance=1.67 m
+[cluster_plot_node-13] [INFO] [1789864405.872760105] [lidar_clustering]: ID=18, X=1.52 m, Y=0.64 m, Width=0.02 m, Depth=0.01 m, Distance=1.65 m
+[cluster_plot_node-13] [INFO] [1789864405.872938306] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.12 m, Depth=0.16 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864405.873117518] [lidar_clustering]: ID=20, X=1.26 m, Y=-0.15 m, Width=0.08 m, Depth=0.04 m, Distance=1.27 m
+[cluster_plot_node-13] [INFO] [1789864405.873299026] [lidar_clustering]: ID=22, X=2.80 m, Y=-2.58 m, Width=0.07 m, Depth=0.04 m, Distance=3.81 m
+[cluster_plot_node-13] [INFO] [1789864405.873477727] [lidar_clustering]: ID=23, X=2.95 m, Y=2.70 m, Width=0.06 m, Depth=0.20 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864405.873655147] [lidar_clustering]: ID=24, X=1.28 m, Y=-0.56 m, Width=0.02 m, Depth=0.03 m, Distance=1.39 m
+[cluster_plot_node-13] [INFO] [1789864405.873833638] [lidar_clustering]: ID=25, X=3.70 m, Y=1.83 m, Width=0.05 m, Depth=0.03 m, Distance=4.12 m
+[cluster_plot_node-13] [INFO] [1789864405.874012971] [lidar_clustering]: ID=26, X=1.14 m, Y=0.88 m, Width=0.02 m, Depth=0.01 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864405.874191763] [lidar_clustering]: ID=27, X=5.32 m, Y=2.38 m, Width=0.07 m, Depth=0.03 m, Distance=5.82 m
+[cluster_plot_node-13] [INFO] [1789864405.874372839] [lidar_clustering]: ID=28, X=5.51 m, Y=2.97 m, Width=0.06 m, Depth=0.03 m, Distance=6.26 m
+[cluster_plot_node-13] [INFO] [1789864405.874550930] [lidar_clustering]: ID=29, X=3.52 m, Y=2.06 m, Width=0.39 m, Depth=0.23 m, Distance=4.08 m
+[cluster_plot_node-13] [INFO] [1789864405.874735753] [lidar_clustering]: ID=30, X=2.44 m, Y=-0.86 m, Width=0.03 m, Depth=0.01 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864405.874913393] [lidar_clustering]: ID=31, X=1.51 m, Y=-2.30 m, Width=1.04 m, Depth=0.67 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864405.875090382] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864405.875273231] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [ERROR] [1789864406.051356658] [lidar_clustering]: ⚠ BLOCKED 가 8.1s 지속 — 회피를 포기하고 감속을 푼다(GPS 경로로 빠져나간다).
+[cluster_plot_node-13]    장애물 접촉은 감점이지만 1분 이상 정지는 탈락이다.
+[cluster_plot_node-13] [WARN] [1789864406.051661234] [lidar_clustering]: 막힘 탈출 중 — 전방 감속 없음 (8s)
+[heading_init_node-5] [WARN] [1789864406.193910895] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[direct_localization_node-6] [INFO] [1789864406.772222615] [direct_localization]: pose: x=39.10 y=23.74 yaw=61.7° v=0.01m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864406.772350722] [lidar_clustering]: ID=1, X=6.86 m, Y=2.25 m, Width=0.45 m, Depth=0.21 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864406.772546897] [lidar_clustering]: ID=2, X=5.57 m, Y=2.64 m, Width=0.06 m, Depth=0.03 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864406.772718105] [lidar_clustering]: ID=3, X=5.47 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.58 m
+[cluster_plot_node-13] [INFO] [1789864406.772886598] [lidar_clustering]: ID=4, X=4.28 m, Y=2.91 m, Width=0.06 m, Depth=0.04 m, Distance=5.17 m
+[cluster_plot_node-13] [INFO] [1789864406.773063306] [lidar_clustering]: ID=5, X=3.78 m, Y=2.65 m, Width=0.09 m, Depth=0.10 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864406.773233722] [lidar_clustering]: ID=6, X=2.40 m, Y=2.43 m, Width=0.30 m, Depth=0.33 m, Distance=3.41 m
+[cluster_plot_node-13] [INFO] [1789864406.773409589] [lidar_clustering]: ID=7, X=1.09 m, Y=1.61 m, Width=0.15 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864406.773581448] [lidar_clustering]: ID=8, X=1.02 m, Y=2.38 m, Width=0.03 m, Depth=0.07 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864406.773752566] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864406.773921429] [lidar_clustering]: ID=10, X=0.40 m, Y=1.60 m, Width=0.03 m, Depth=0.22 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864406.774094470] [lidar_clustering]: ID=11, X=2.36 m, Y=-1.09 m, Width=0.46 m, Depth=0.17 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864406.774270267] [lidar_clustering]: ID=12, X=3.51 m, Y=-0.87 m, Width=0.09 m, Depth=0.02 m, Distance=3.62 m
+[cluster_plot_node-13] [INFO] [1789864406.774448899] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.07 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864406.774623693] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.01 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864406.774797235] [lidar_clustering]: ID=15, X=2.97 m, Y=-2.65 m, Width=0.26 m, Depth=0.44 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864406.774969425] [lidar_clustering]: ID=17, X=1.65 m, Y=-0.28 m, Width=0.30 m, Depth=0.09 m, Distance=1.67 m
+[cluster_plot_node-13] [INFO] [1789864406.775145763] [lidar_clustering]: ID=18, X=1.50 m, Y=0.63 m, Width=0.02 m, Depth=0.01 m, Distance=1.63 m
+[cluster_plot_node-13] [INFO] [1789864406.775326097] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.13 m, Depth=0.16 m, Distance=1.21 m
+[cluster_plot_node-13] [INFO] [1789864406.775504519] [lidar_clustering]: ID=20, X=1.25 m, Y=-0.16 m, Width=0.08 m, Depth=0.05 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864406.775732232] [lidar_clustering]: ID=21, X=1.20 m, Y=-2.66 m, Width=0.05 m, Depth=0.19 m, Distance=2.92 m
+[cluster_plot_node-13] [INFO] [1789864406.775941129] [lidar_clustering]: ID=22, X=2.79 m, Y=-2.58 m, Width=0.09 m, Depth=0.04 m, Distance=3.80 m
+[cluster_plot_node-13] [INFO] [1789864406.776116415] [lidar_clustering]: ID=23, X=2.93 m, Y=2.69 m, Width=0.13 m, Depth=0.07 m, Distance=3.97 m
+[cluster_plot_node-13] [INFO] [1789864406.776296068] [lidar_clustering]: ID=24, X=1.30 m, Y=-0.47 m, Width=0.03 m, Depth=0.04 m, Distance=1.38 m
+[cluster_plot_node-13] [INFO] [1789864406.776469450] [lidar_clustering]: ID=25, X=3.69 m, Y=1.84 m, Width=0.08 m, Depth=0.09 m, Distance=4.12 m
+[cluster_plot_node-13] [INFO] [1789864406.776641310] [lidar_clustering]: ID=26, X=1.14 m, Y=0.90 m, Width=0.05 m, Depth=0.04 m, Distance=1.45 m
+[cluster_plot_node-13] [INFO] [1789864406.776814060] [lidar_clustering]: ID=27, X=5.27 m, Y=2.40 m, Width=0.07 m, Depth=0.03 m, Distance=5.79 m
+[cluster_plot_node-13] [INFO] [1789864406.776986911] [lidar_clustering]: ID=28, X=6.04 m, Y=3.90 m, Width=0.08 m, Depth=0.05 m, Distance=7.19 m
+[cluster_plot_node-13] [INFO] [1789864406.777164581] [lidar_clustering]: ID=29, X=3.44 m, Y=2.06 m, Width=0.05 m, Depth=0.03 m, Distance=4.01 m
+[cluster_plot_node-13] [INFO] [1789864406.777343614] [lidar_clustering]: ID=30, X=2.47 m, Y=-0.81 m, Width=0.09 m, Depth=0.02 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864406.777516465] [lidar_clustering]: ID=31, X=1.52 m, Y=-2.29 m, Width=1.02 m, Depth=0.66 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864406.777694646] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.10 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864406.777868939] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864406.778043183] [lidar_clustering]: points=437, clusters=24, tracks=31
+[cluster_plot_node-13] [WARN] [1789864407.131942604] [lidar_clustering]: 막힘 탈출 중 — 전방 감속 없음 (9s)
+[vrs_ntrip_client-3] [INFO] [1789864407.661084680] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 52프레임 발행, GGA 실측(37.28911,127.10744)
+[cluster_plot_node-13] [INFO] [1789864407.669025365] [lidar_clustering]: ID=1, X=6.83 m, Y=2.07 m, Width=0.79 m, Depth=0.29 m, Distance=7.14 m
+[cluster_plot_node-13] [INFO] [1789864407.669245294] [lidar_clustering]: ID=2, X=5.66 m, Y=2.41 m, Width=0.08 m, Depth=0.03 m, Distance=6.15 m
+[cluster_plot_node-13] [INFO] [1789864407.669445145] [lidar_clustering]: ID=3, X=5.31 m, Y=2.42 m, Width=0.07 m, Depth=0.03 m, Distance=5.83 m
+[cluster_plot_node-13] [INFO] [1789864407.669628165] [lidar_clustering]: ID=5, X=3.77 m, Y=2.65 m, Width=0.04 m, Depth=0.05 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864407.669819470] [lidar_clustering]: ID=6, X=2.39 m, Y=2.41 m, Width=0.11 m, Depth=0.18 m, Distance=3.40 m
+[cluster_plot_node-13] [INFO] [1789864407.670006648] [lidar_clustering]: ID=7, X=1.07 m, Y=1.61 m, Width=0.11 m, Depth=0.64 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864407.670186522] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864407.670375833] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864407.670551760] [lidar_clustering]: ID=10, X=0.39 m, Y=1.59 m, Width=0.03 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864407.670722727] [lidar_clustering]: ID=11, X=1.72 m, Y=-0.63 m, Width=0.04 m, Depth=0.02 m, Distance=1.83 m
+[cluster_plot_node-13] [INFO] [1789864407.670891521] [lidar_clustering]: ID=12, X=3.48 m, Y=-0.89 m, Width=0.06 m, Depth=0.10 m, Distance=3.59 m
+[cluster_plot_node-13] [INFO] [1789864407.671060094] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864407.671228757] [lidar_clustering]: ID=14, X=0.69 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864407.671415153] [lidar_clustering]: ID=15, X=2.99 m, Y=-2.63 m, Width=0.14 m, Depth=0.45 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864407.671604444] [lidar_clustering]: ID=16, X=3.46 m, Y=-0.65 m, Width=0.49 m, Depth=0.06 m, Distance=3.52 m
+[cluster_plot_node-13] [INFO] [1789864407.671792844] [lidar_clustering]: ID=17, X=1.93 m, Y=-0.23 m, Width=0.05 m, Depth=0.01 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864407.672016960] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.11 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864407.672301699] [lidar_clustering]: ID=20, X=1.59 m, Y=-0.34 m, Width=0.09 m, Depth=0.04 m, Distance=1.62 m
+[cluster_plot_node-13] [INFO] [1789864407.672559859] [lidar_clustering]: ID=21, X=1.25 m, Y=-2.70 m, Width=0.04 m, Depth=0.18 m, Distance=2.97 m
+[cluster_plot_node-13] [INFO] [1789864407.672771792] [lidar_clustering]: ID=23, X=2.94 m, Y=2.69 m, Width=0.12 m, Depth=0.10 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864407.672957557] [lidar_clustering]: ID=24, X=2.20 m, Y=-1.25 m, Width=0.09 m, Depth=0.07 m, Distance=2.53 m
+[cluster_plot_node-13] [INFO] [1789864407.673166285] [lidar_clustering]: ID=25, X=3.67 m, Y=1.83 m, Width=0.05 m, Depth=0.03 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864407.673448759] [lidar_clustering]: ID=26, X=1.14 m, Y=0.88 m, Width=0.02 m, Depth=0.01 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864407.673638832] [lidar_clustering]: ID=27, X=5.49 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864407.673814679] [lidar_clustering]: ID=28, X=6.05 m, Y=3.91 m, Width=0.06 m, Depth=0.04 m, Distance=7.20 m
+[cluster_plot_node-13] [INFO] [1789864407.673987239] [lidar_clustering]: ID=29, X=3.53 m, Y=2.19 m, Width=0.05 m, Depth=0.03 m, Distance=4.16 m
+[cluster_plot_node-13] [INFO] [1789864407.674158968] [lidar_clustering]: ID=30, X=2.48 m, Y=-0.81 m, Width=0.10 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864407.674335506] [lidar_clustering]: ID=31, X=1.52 m, Y=-2.31 m, Width=1.06 m, Depth=0.70 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864407.674537801] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864407.674732944] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.99 m, best_angle=0.0 deg
+[local_pure_pursuit_node-9] [WARN] [1789864407.759974818] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[heading_init_node-5] [WARN] [1789864408.203670130] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [WARN] [1789864408.207258403] [lidar_clustering]: 막힘 탈출 중 — 전방 감속 없음 (10s)
+[cluster_plot_node-13] [INFO] [1789864408.573283400] [lidar_clustering]: ID=1, X=5.74 m, Y=2.20 m, Width=0.08 m, Depth=0.03 m, Distance=6.15 m
+[cluster_plot_node-13] [INFO] [1789864408.573519498] [lidar_clustering]: ID=2, X=5.27 m, Y=2.40 m, Width=0.07 m, Depth=0.03 m, Distance=5.79 m
+[cluster_plot_node-13] [INFO] [1789864408.573716494] [lidar_clustering]: ID=3, X=6.84 m, Y=2.15 m, Width=0.56 m, Depth=0.30 m, Distance=7.17 m
+[cluster_plot_node-13] [INFO] [1789864408.573914171] [lidar_clustering]: ID=4, X=4.37 m, Y=2.88 m, Width=0.05 m, Depth=0.03 m, Distance=5.23 m
+[cluster_plot_node-13] [INFO] [1789864408.574100938] [lidar_clustering]: ID=5, X=3.77 m, Y=2.64 m, Width=0.06 m, Depth=0.08 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864408.574288216] [lidar_clustering]: ID=6, X=2.41 m, Y=2.43 m, Width=0.30 m, Depth=0.32 m, Distance=3.43 m
+[cluster_plot_node-13] [INFO] [1789864408.574471727] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.14 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864408.574654596] [lidar_clustering]: ID=8, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864408.574844128] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.12 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864408.575026126] [lidar_clustering]: ID=10, X=0.36 m, Y=1.60 m, Width=0.01 m, Depth=0.10 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864408.575206561] [lidar_clustering]: ID=11, X=2.03 m, Y=-0.34 m, Width=0.05 m, Depth=0.03 m, Distance=2.06 m
+[cluster_plot_node-13] [INFO] [1789864408.575396454] [lidar_clustering]: ID=12, X=3.39 m, Y=-0.51 m, Width=0.08 m, Depth=0.11 m, Distance=3.43 m
+[cluster_plot_node-13] [INFO] [1789864408.575584713] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.73 m, Width=0.02 m, Depth=0.07 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864408.575766671] [lidar_clustering]: ID=14, X=0.69 m, Y=-0.71 m, Width=0.01 m, Depth=0.01 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864408.575947998] [lidar_clustering]: ID=15, X=2.85 m, Y=-2.60 m, Width=0.07 m, Depth=0.04 m, Distance=3.86 m
+[cluster_plot_node-13] [INFO] [1789864408.576129765] [lidar_clustering]: ID=16, X=4.10 m, Y=-0.82 m, Width=0.12 m, Depth=0.07 m, Distance=4.19 m
+[cluster_plot_node-13] [INFO] [1789864408.576314979] [lidar_clustering]: ID=17, X=2.26 m, Y=-0.04 m, Width=0.05 m, Depth=0.01 m, Distance=2.26 m
+[cluster_plot_node-13] [INFO] [1789864408.576503499] [lidar_clustering]: ID=18, X=1.55 m, Y=0.65 m, Width=0.02 m, Depth=0.01 m, Distance=1.68 m
+[cluster_plot_node-13] [INFO] [1789864408.576687441] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.10 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864408.576868978] [lidar_clustering]: ID=20, X=1.83 m, Y=-0.11 m, Width=0.09 m, Depth=0.03 m, Distance=1.83 m
+[cluster_plot_node-13] [INFO] [1789864408.577050154] [lidar_clustering]: ID=21, X=1.32 m, Y=-2.61 m, Width=0.04 m, Depth=0.17 m, Distance=2.92 m
+[cluster_plot_node-13] [INFO] [1789864408.577229317] [lidar_clustering]: ID=22, X=2.32 m, Y=-1.24 m, Width=0.03 m, Depth=0.02 m, Distance=2.63 m
+[cluster_plot_node-13] [INFO] [1789864408.577417517] [lidar_clustering]: ID=23, X=2.95 m, Y=2.67 m, Width=0.17 m, Depth=0.06 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864408.577608371] [lidar_clustering]: ID=24, X=3.71 m, Y=-0.34 m, Width=0.08 m, Depth=0.04 m, Distance=3.72 m
+[cluster_plot_node-13] [INFO] [1789864408.577793164] [lidar_clustering]: ID=25, X=3.65 m, Y=1.85 m, Width=0.04 m, Depth=0.02 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864408.577976495] [lidar_clustering]: ID=26, X=1.13 m, Y=0.89 m, Width=0.05 m, Depth=0.05 m, Distance=1.44 m
+[cluster_plot_node-13] [INFO] [1789864408.578162340] [lidar_clustering]: ID=27, X=5.50 m, Y=3.64 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864408.578353865] [lidar_clustering]: ID=28, X=6.04 m, Y=3.94 m, Width=0.06 m, Depth=0.04 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864408.578550460] [lidar_clustering]: ID=29, X=3.47 m, Y=2.13 m, Width=0.26 m, Depth=0.15 m, Distance=4.07 m
+[cluster_plot_node-13] [INFO] [1789864408.578738159] [lidar_clustering]: ID=30, X=2.47 m, Y=-0.83 m, Width=0.08 m, Depth=0.05 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864408.578924044] [lidar_clustering]: ID=31, X=1.53 m, Y=-2.24 m, Width=1.04 m, Depth=0.69 m, Distance=2.72 m
+[cluster_plot_node-13] [INFO] [1789864408.579110220] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864408.579303248] [lidar_clustering]: ID=33, X=3.01 m, Y=-2.66 m, Width=0.29 m, Depth=0.44 m, Distance=4.01 m
+[cluster_plot_node-13] [INFO] [1789864408.579523547] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.99 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864408.579719722] [lidar_clustering]: points=461, clusters=28, tracks=33
+[cluster_plot_node-13] [WARN] [1789864409.287587582] [lidar_clustering]: 막힘 탈출 중 — 전방 감속 없음 (11s)
+[cluster_plot_node-13] [INFO] [1789864409.475754426] [lidar_clustering]: ID=1, X=5.63 m, Y=2.52 m, Width=0.08 m, Depth=0.04 m, Distance=6.17 m
+[cluster_plot_node-13] [INFO] [1789864409.475989413] [lidar_clustering]: ID=2, X=5.30 m, Y=2.28 m, Width=0.27 m, Depth=0.08 m, Distance=5.77 m
+[cluster_plot_node-13] [INFO] [1789864409.476190817] [lidar_clustering]: ID=3, X=5.83 m, Y=2.09 m, Width=0.08 m, Depth=0.03 m, Distance=6.19 m
+[cluster_plot_node-13] [INFO] [1789864409.476401848] [lidar_clustering]: ID=5, X=3.78 m, Y=2.64 m, Width=0.05 m, Depth=0.04 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864409.476606288] [lidar_clustering]: ID=6, X=2.43 m, Y=2.44 m, Width=0.29 m, Depth=0.14 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864409.476789689] [lidar_clustering]: ID=7, X=1.08 m, Y=1.61 m, Width=0.17 m, Depth=0.66 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864409.476987286] [lidar_clustering]: ID=8, X=1.02 m, Y=2.40 m, Width=0.03 m, Depth=0.08 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864409.477174794] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.10 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864409.477359186] [lidar_clustering]: ID=10, X=0.39 m, Y=1.59 m, Width=0.03 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864409.477559378] [lidar_clustering]: ID=11, X=2.20 m, Y=-0.28 m, Width=0.07 m, Depth=0.03 m, Distance=2.22 m
+[cluster_plot_node-13] [INFO] [1789864409.477742408] [lidar_clustering]: ID=12, X=3.72 m, Y=-0.35 m, Width=0.09 m, Depth=0.00 m, Distance=3.74 m
+[cluster_plot_node-13] [INFO] [1789864409.477921741] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864409.478100883] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864409.478310082] [lidar_clustering]: ID=16, X=4.12 m, Y=-0.82 m, Width=0.13 m, Depth=0.12 m, Distance=4.20 m
+[cluster_plot_node-13] [INFO] [1789864409.478494855] [lidar_clustering]: ID=19, X=0.37 m, Y=-1.15 m, Width=0.11 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864409.478673437] [lidar_clustering]: ID=20, X=1.94 m, Y=-0.13 m, Width=0.06 m, Depth=0.02 m, Distance=1.95 m
+[cluster_plot_node-13] [INFO] [1789864409.478851467] [lidar_clustering]: ID=21, X=1.26 m, Y=-2.71 m, Width=0.05 m, Depth=0.18 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864409.479029307] [lidar_clustering]: ID=23, X=3.01 m, Y=2.53 m, Width=0.39 m, Depth=0.32 m, Distance=3.93 m
+[cluster_plot_node-13] [INFO] [1789864409.479227876] [lidar_clustering]: ID=24, X=4.19 m, Y=-0.44 m, Width=0.06 m, Depth=0.01 m, Distance=4.21 m
+[cluster_plot_node-13] [INFO] [1789864409.479415074] [lidar_clustering]: ID=25, X=3.67 m, Y=1.82 m, Width=0.05 m, Depth=0.03 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864409.479595368] [lidar_clustering]: ID=26, X=1.31 m, Y=0.89 m, Width=0.06 m, Depth=0.03 m, Distance=1.59 m
+[cluster_plot_node-13] [INFO] [1789864409.479773008] [lidar_clustering]: ID=27, X=5.46 m, Y=3.67 m, Width=0.06 m, Depth=0.04 m, Distance=6.58 m
+[cluster_plot_node-13] [INFO] [1789864409.479951470] [lidar_clustering]: ID=28, X=6.06 m, Y=3.93 m, Width=0.06 m, Depth=0.04 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864409.480129310] [lidar_clustering]: ID=29, X=3.44 m, Y=2.07 m, Width=0.05 m, Depth=0.03 m, Distance=4.02 m
+[cluster_plot_node-13] [INFO] [1789864409.480312851] [lidar_clustering]: ID=30, X=2.44 m, Y=-0.84 m, Width=0.05 m, Depth=0.04 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864409.480492003] [lidar_clustering]: ID=31, X=1.51 m, Y=-2.16 m, Width=0.71 m, Depth=0.75 m, Distance=2.63 m
+[cluster_plot_node-13] [INFO] [1789864409.480687607] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.08 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864409.480865898] [lidar_clustering]: ID=33, X=2.96 m, Y=-2.65 m, Width=0.27 m, Depth=0.45 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864409.481043027] [lidar_clustering]: ID=34, X=3.53 m, Y=-0.68 m, Width=0.63 m, Depth=0.30 m, Distance=3.59 m
+[cluster_plot_node-13] [INFO] [1789864409.481224524] [lidar_clustering]: ID=35, X=6.83 m, Y=2.65 m, Width=0.18 m, Depth=0.08 m, Distance=7.33 m
+[cluster_plot_node-13] [INFO] [1789864409.481426619] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[direct_localization_node-6] [INFO] [1789864409.772447932] [direct_localization]: pose: x=39.10 y=23.74 yaw=61.8° v=0.00m/s [헤딩 미정렬(10m직진 필요)]
+[heading_init_node-5] [WARN] [1789864410.203856188] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [WARN] [1789864410.368327272] [lidar_clustering]: 막힘 탈출 중 — 전방 감속 없음 (12s)
+[cluster_plot_node-13] [INFO] [1789864410.371124076] [lidar_clustering]: ID=1, X=5.64 m, Y=2.39 m, Width=0.38 m, Depth=0.05 m, Distance=6.13 m
+[cluster_plot_node-13] [INFO] [1789864410.371333194] [lidar_clustering]: ID=2, X=5.29 m, Y=2.37 m, Width=0.07 m, Depth=0.03 m, Distance=5.79 m
+[cluster_plot_node-13] [INFO] [1789864410.371511074] [lidar_clustering]: ID=3, X=5.69 m, Y=2.10 m, Width=0.08 m, Depth=0.03 m, Distance=6.06 m
+[cluster_plot_node-13] [INFO] [1789864410.371683835] [lidar_clustering]: ID=5, X=3.74 m, Y=2.64 m, Width=0.04 m, Depth=0.03 m, Distance=4.58 m
+[cluster_plot_node-13] [INFO] [1789864410.371861325] [lidar_clustering]: ID=6, X=2.43 m, Y=2.45 m, Width=0.30 m, Depth=0.15 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864410.372075042] [lidar_clustering]: ID=7, X=1.13 m, Y=1.60 m, Width=0.06 m, Depth=0.61 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864410.372573998] [lidar_clustering]: ID=8, X=0.40 m, Y=1.67 m, Width=0.00 m, Depth=0.02 m, Distance=1.71 m
+[cluster_plot_node-13] [INFO] [1789864410.372856372] [lidar_clustering]: ID=9, X=1.18 m, Y=2.99 m, Width=0.04 m, Depth=0.12 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864410.373085277] [lidar_clustering]: ID=10, X=0.52 m, Y=1.20 m, Width=0.19 m, Depth=0.30 m, Distance=1.31 m
+[cluster_plot_node-13] [INFO] [1789864410.373346713] [lidar_clustering]: ID=11, X=2.23 m, Y=-0.26 m, Width=0.06 m, Depth=0.03 m, Distance=2.25 m
+[cluster_plot_node-13] [INFO] [1789864410.373634287] [lidar_clustering]: ID=12, X=3.72 m, Y=-0.34 m, Width=0.05 m, Depth=0.01 m, Distance=3.74 m
+[cluster_plot_node-13] [INFO] [1789864410.373907544] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864410.374201370] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864410.374388417] [lidar_clustering]: ID=16, X=4.12 m, Y=-0.82 m, Width=0.12 m, Depth=0.07 m, Distance=4.20 m
+[cluster_plot_node-13] [INFO] [1789864410.374561939] [lidar_clustering]: ID=17, X=2.37 m, Y=0.07 m, Width=0.03 m, Depth=0.00 m, Distance=2.37 m
+[cluster_plot_node-13] [INFO] [1789864410.374736413] [lidar_clustering]: ID=19, X=0.35 m, Y=-1.14 m, Width=0.05 m, Depth=0.12 m, Distance=1.19 m
+[cluster_plot_node-13] [INFO] [1789864410.374911288] [lidar_clustering]: ID=20, X=1.96 m, Y=-0.13 m, Width=0.06 m, Depth=0.01 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864410.375083919] [lidar_clustering]: ID=21, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.19 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864410.375254556] [lidar_clustering]: ID=22, X=1.37 m, Y=-1.40 m, Width=0.01 m, Depth=0.02 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864410.375431304] [lidar_clustering]: ID=23, X=3.00 m, Y=2.53 m, Width=0.34 m, Depth=0.34 m, Distance=3.93 m
+[cluster_plot_node-13] [INFO] [1789864410.375603013] [lidar_clustering]: ID=26, X=1.47 m, Y=1.05 m, Width=0.02 m, Depth=0.01 m, Distance=1.81 m
+[cluster_plot_node-13] [INFO] [1789864410.375773900] [lidar_clustering]: ID=29, X=3.53 m, Y=2.03 m, Width=0.39 m, Depth=0.26 m, Distance=4.07 m
+[cluster_plot_node-13] [INFO] [1789864410.375944357] [lidar_clustering]: ID=30, X=2.44 m, Y=-0.84 m, Width=0.07 m, Depth=0.06 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864410.376115114] [lidar_clustering]: ID=31, X=1.55 m, Y=-2.26 m, Width=1.04 m, Depth=0.67 m, Distance=2.74 m
+[cluster_plot_node-13] [INFO] [1789864410.376288606] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.08 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864410.376463711] [lidar_clustering]: ID=33, X=2.98 m, Y=-2.65 m, Width=0.28 m, Depth=0.43 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864410.376638556] [lidar_clustering]: ID=34, X=3.48 m, Y=-0.72 m, Width=0.48 m, Depth=0.26 m, Distance=3.55 m
+[cluster_plot_node-13] [INFO] [1789864410.376811717] [lidar_clustering]: ID=35, X=6.92 m, Y=2.38 m, Width=0.10 m, Depth=0.03 m, Distance=7.32 m
+[cluster_plot_node-13] [INFO] [1789864410.376984628] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864410.377157770] [lidar_clustering]: points=434, clusters=24, tracks=28
+[cluster_plot_node-13] [INFO] [1789864410.638705534] [lidar_clustering]: ✅ 막힘 해소 — 정상 동작 복귀
+[cluster_plot_node-13] [INFO] [1789864411.274238938] [lidar_clustering]: ID=3, X=5.69 m, Y=2.11 m, Width=0.08 m, Depth=0.03 m, Distance=6.07 m
+[cluster_plot_node-13] [INFO] [1789864411.274479875] [lidar_clustering]: ID=5, X=3.76 m, Y=2.64 m, Width=0.05 m, Depth=0.04 m, Distance=4.59 m
+[cluster_plot_node-13] [INFO] [1789864411.274685567] [lidar_clustering]: ID=6, X=2.43 m, Y=2.43 m, Width=0.28 m, Depth=0.16 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864411.274905385] [lidar_clustering]: ID=7, X=1.24 m, Y=1.61 m, Width=0.04 m, Depth=0.23 m, Distance=2.03 m
+[cluster_plot_node-13] [INFO] [1789864411.275096721] [lidar_clustering]: ID=8, X=0.36 m, Y=1.60 m, Width=0.01 m, Depth=0.08 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864411.275293386] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864411.275483148] [lidar_clustering]: ID=10, X=0.72 m, Y=1.54 m, Width=0.01 m, Depth=0.04 m, Distance=1.70 m
+[cluster_plot_node-13] [INFO] [1789864411.275672901] [lidar_clustering]: ID=11, X=2.23 m, Y=-0.26 m, Width=0.07 m, Depth=0.03 m, Distance=2.24 m
+[cluster_plot_node-13] [INFO] [1789864411.275862382] [lidar_clustering]: ID=12, X=3.72 m, Y=-0.34 m, Width=0.05 m, Depth=0.00 m, Distance=3.74 m
+[cluster_plot_node-13] [INFO] [1789864411.276050832] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.73 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864411.276241236] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.01 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864411.276439163] [lidar_clustering]: ID=16, X=4.11 m, Y=-0.81 m, Width=0.11 m, Depth=0.07 m, Distance=4.19 m
+[cluster_plot_node-13] [INFO] [1789864411.276618456] [lidar_clustering]: ID=17, X=2.37 m, Y=0.07 m, Width=0.04 m, Depth=0.01 m, Distance=2.37 m
+[cluster_plot_node-13] [INFO] [1789864411.276799502] [lidar_clustering]: ID=18, X=0.51 m, Y=0.85 m, Width=0.18 m, Depth=0.25 m, Distance=0.99 m
+[cluster_plot_node-13] [INFO] [1789864411.276994274] [lidar_clustering]: ID=19, X=0.40 m, Y=-1.17 m, Width=0.09 m, Depth=0.06 m, Distance=1.23 m
+[cluster_plot_node-13] [INFO] [1789864411.277172916] [lidar_clustering]: ID=20, X=1.96 m, Y=-0.13 m, Width=0.06 m, Depth=0.02 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864411.277350706] [lidar_clustering]: ID=21, X=1.26 m, Y=-2.72 m, Width=0.05 m, Depth=0.17 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864411.277525511] [lidar_clustering]: ID=23, X=3.00 m, Y=2.53 m, Width=0.35 m, Depth=0.37 m, Distance=3.93 m
+[cluster_plot_node-13] [INFO] [1789864411.277704242] [lidar_clustering]: ID=25, X=3.67 m, Y=1.82 m, Width=0.05 m, Depth=0.03 m, Distance=4.10 m
+[cluster_plot_node-13] [INFO] [1789864411.277883806] [lidar_clustering]: ID=26, X=1.25 m, Y=0.81 m, Width=0.08 m, Depth=0.04 m, Distance=1.49 m
+[cluster_plot_node-13] [INFO] [1789864411.278060634] [lidar_clustering]: ID=29, X=3.45 m, Y=2.09 m, Width=0.05 m, Depth=0.03 m, Distance=4.03 m
+[cluster_plot_node-13] [INFO] [1789864411.278243584] [lidar_clustering]: ID=30, X=2.44 m, Y=-0.84 m, Width=0.07 m, Depth=0.03 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864411.278422566] [lidar_clustering]: ID=31, X=1.53 m, Y=-2.29 m, Width=1.05 m, Depth=0.69 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864411.278597471] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.08 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864411.278774059] [lidar_clustering]: ID=33, X=2.98 m, Y=-2.65 m, Width=0.27 m, Depth=0.45 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864411.278947241] [lidar_clustering]: ID=34, X=3.48 m, Y=-0.74 m, Width=0.49 m, Depth=0.22 m, Distance=3.56 m
+[cluster_plot_node-13] [INFO] [1789864411.279128537] [lidar_clustering]: ID=35, X=6.87 m, Y=2.69 m, Width=0.13 m, Depth=0.07 m, Distance=7.38 m
+[cluster_plot_node-13] [INFO] [1789864411.279322237] [lidar_clustering]: ID=36, X=1.02 m, Y=2.38 m, Width=0.03 m, Depth=0.07 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864411.279508573] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.86 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864412.177553731] [lidar_clustering]: ID=2, X=5.33 m, Y=2.18 m, Width=0.06 m, Depth=0.02 m, Distance=5.76 m
+[cluster_plot_node-13] [INFO] [1789864412.177776494] [lidar_clustering]: ID=3, X=5.72 m, Y=2.09 m, Width=0.06 m, Depth=0.02 m, Distance=6.09 m
+[cluster_plot_node-13] [INFO] [1789864412.177958442] [lidar_clustering]: ID=5, X=3.78 m, Y=2.64 m, Width=0.09 m, Depth=0.10 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864412.178135311] [lidar_clustering]: ID=6, X=2.41 m, Y=2.45 m, Width=0.31 m, Depth=0.32 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864412.178316677] [lidar_clustering]: ID=7, X=1.31 m, Y=1.60 m, Width=0.06 m, Depth=0.20 m, Distance=2.07 m
+[cluster_plot_node-13] [INFO] [1789864412.178490871] [lidar_clustering]: ID=8, X=0.39 m, Y=1.59 m, Width=0.03 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864412.178664864] [lidar_clustering]: ID=9, X=1.18 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864412.178836883] [lidar_clustering]: ID=10, X=1.07 m, Y=1.61 m, Width=0.15 m, Depth=0.67 m, Distance=1.93 m
+[cluster_plot_node-13] [INFO] [1789864412.179029401] [lidar_clustering]: ID=11, X=2.23 m, Y=-0.26 m, Width=0.06 m, Depth=0.03 m, Distance=2.25 m
+[cluster_plot_node-13] [INFO] [1789864412.179204506] [lidar_clustering]: ID=12, X=2.36 m, Y=0.02 m, Width=0.03 m, Depth=0.00 m, Distance=2.36 m
+[cluster_plot_node-13] [INFO] [1789864412.179385472] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.73 m, Width=0.02 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864412.179566839] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.02 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864412.179746382] [lidar_clustering]: ID=16, X=4.11 m, Y=-0.82 m, Width=0.13 m, Depth=0.08 m, Distance=4.19 m
+[cluster_plot_node-13] [INFO] [1789864412.179923792] [lidar_clustering]: ID=17, X=1.72 m, Y=0.40 m, Width=0.05 m, Depth=0.05 m, Distance=1.77 m
+[cluster_plot_node-13] [INFO] [1789864412.180101411] [lidar_clustering]: ID=18, X=0.47 m, Y=0.71 m, Width=0.10 m, Depth=0.06 m, Distance=0.85 m
+[cluster_plot_node-13] [INFO] [1789864412.180292206] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.05 m, Depth=0.11 m, Distance=1.19 m
+[cluster_plot_node-13] [INFO] [1789864412.180471509] [lidar_clustering]: ID=20, X=1.96 m, Y=-0.13 m, Width=0.06 m, Depth=0.01 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864412.180643909] [lidar_clustering]: ID=21, X=1.26 m, Y=-2.72 m, Width=0.05 m, Depth=0.17 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864412.180814556] [lidar_clustering]: ID=23, X=3.04 m, Y=2.53 m, Width=0.38 m, Depth=0.35 m, Distance=3.95 m
+[cluster_plot_node-13] [INFO] [1789864412.180985403] [lidar_clustering]: ID=26, X=1.21 m, Y=0.34 m, Width=0.04 m, Depth=0.01 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864412.181155609] [lidar_clustering]: ID=28, X=5.84 m, Y=3.84 m, Width=0.08 m, Depth=0.05 m, Distance=6.99 m
+[cluster_plot_node-13] [INFO] [1789864412.181331726] [lidar_clustering]: ID=29, X=3.51 m, Y=2.17 m, Width=0.05 m, Depth=0.03 m, Distance=4.13 m
+[cluster_plot_node-13] [INFO] [1789864412.181502373] [lidar_clustering]: ID=30, X=2.43 m, Y=-0.86 m, Width=0.09 m, Depth=0.08 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864412.181672980] [lidar_clustering]: ID=31, X=1.54 m, Y=-2.16 m, Width=0.56 m, Depth=0.75 m, Distance=2.65 m
+[cluster_plot_node-13] [INFO] [1789864412.181843927] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.08 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864412.182014915] [lidar_clustering]: ID=33, X=3.05 m, Y=-2.64 m, Width=0.26 m, Depth=0.57 m, Distance=4.04 m
+[cluster_plot_node-13] [INFO] [1789864412.182185281] [lidar_clustering]: ID=34, X=3.51 m, Y=-0.68 m, Width=0.63 m, Depth=0.32 m, Distance=3.57 m
+[cluster_plot_node-13] [INFO] [1789864412.182360316] [lidar_clustering]: ID=35, X=6.94 m, Y=2.44 m, Width=0.15 m, Depth=0.13 m, Distance=7.35 m
+[cluster_plot_node-13] [INFO] [1789864412.182530472] [lidar_clustering]: ID=36, X=1.03 m, Y=2.41 m, Width=0.02 m, Depth=0.05 m, Distance=2.62 m
+[cluster_plot_node-13] [INFO] [1789864412.182700768] [lidar_clustering]: ID=37, X=0.57 m, Y=0.23 m, Width=0.23 m, Depth=0.13 m, Distance=0.61 m
+[cluster_plot_node-13] [INFO] [1789864412.182871275] [lidar_clustering]: ID=38, X=3.72 m, Y=-0.34 m, Width=0.05 m, Depth=0.01 m, Distance=3.73 m
+[cluster_plot_node-13] [INFO] [1789864412.183044486] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.51 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864412.183216776] [lidar_clustering]: points=495, clusters=25, tracks=31
+[heading_init_node-5] [WARN] [1789864412.323838525] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[serial_bridge-12] [WARN] [1789864412.393219458] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4183mV — 배터리/전원 확인
+[vrs_ntrip_client-3] [INFO] [1789864412.661214794] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 80프레임 발행, GGA 실측(37.28911,127.10744)
+[local_pure_pursuit_node-9] [WARN] [1789864412.760121643] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[direct_localization_node-6] [INFO] [1789864412.772262467] [direct_localization]: pose: x=39.10 y=23.74 yaw=61.9° v=-0.06m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864413.072994292] [lidar_clustering]: ID=1, X=4.63 m, Y=3.11 m, Width=0.06 m, Depth=0.04 m, Distance=5.57 m
+[cluster_plot_node-13] [INFO] [1789864413.073275995] [lidar_clustering]: ID=2, X=5.57 m, Y=2.14 m, Width=0.08 m, Depth=0.03 m, Distance=5.97 m
+[cluster_plot_node-13] [INFO] [1789864413.073546688] [lidar_clustering]: ID=3, X=5.61 m, Y=2.55 m, Width=0.26 m, Depth=0.20 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864413.073828611] [lidar_clustering]: ID=5, X=3.77 m, Y=2.65 m, Width=0.05 m, Depth=0.07 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864413.074086450] [lidar_clustering]: ID=6, X=2.43 m, Y=2.45 m, Width=0.31 m, Depth=0.33 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864413.074340642] [lidar_clustering]: ID=8, X=0.37 m, Y=1.60 m, Width=0.01 m, Depth=0.15 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864413.074590987] [lidar_clustering]: ID=9, X=1.18 m, Y=2.98 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864413.074840170] [lidar_clustering]: ID=10, X=1.10 m, Y=1.61 m, Width=0.16 m, Depth=0.68 m, Distance=1.95 m
+[cluster_plot_node-13] [INFO] [1789864413.075090705] [lidar_clustering]: ID=11, X=2.35 m, Y=0.08 m, Width=0.09 m, Depth=0.02 m, Distance=2.35 m
+[cluster_plot_node-13] [INFO] [1789864413.075343494] [lidar_clustering]: ID=13, X=1.10 m, Y=-1.72 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864413.075592617] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.70 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864413.075838874] [lidar_clustering]: ID=16, X=4.13 m, Y=-0.81 m, Width=0.11 m, Depth=0.04 m, Distance=4.21 m
+[cluster_plot_node-13] [INFO] [1789864413.076083559] [lidar_clustering]: ID=18, X=0.85 m, Y=-0.37 m, Width=0.05 m, Depth=0.03 m, Distance=0.92 m
+[cluster_plot_node-13] [INFO] [1789864413.076330888] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.09 m, Depth=0.14 m, Distance=1.19 m
+[cluster_plot_node-13] [INFO] [1789864413.076575312] [lidar_clustering]: ID=20, X=2.08 m, Y=-0.24 m, Width=0.08 m, Depth=0.02 m, Distance=2.10 m
+[cluster_plot_node-13] [INFO] [1789864413.076817491] [lidar_clustering]: ID=21, X=1.26 m, Y=-2.72 m, Width=0.05 m, Depth=0.18 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864413.077067255] [lidar_clustering]: ID=23, X=3.03 m, Y=2.51 m, Width=0.34 m, Depth=0.46 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864413.077323311] [lidar_clustering]: ID=25, X=3.71 m, Y=1.85 m, Width=0.04 m, Depth=0.02 m, Distance=4.14 m
+[cluster_plot_node-13] [INFO] [1789864413.077574187] [lidar_clustering]: ID=26, X=1.32 m, Y=-0.10 m, Width=0.02 m, Depth=0.00 m, Distance=1.32 m
+[cluster_plot_node-13] [INFO] [1789864413.077824010] [lidar_clustering]: ID=28, X=6.03 m, Y=3.89 m, Width=0.08 m, Depth=0.05 m, Distance=7.18 m
+[cluster_plot_node-13] [INFO] [1789864413.078080587] [lidar_clustering]: ID=29, X=3.44 m, Y=2.03 m, Width=0.05 m, Depth=0.03 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864413.078339337] [lidar_clustering]: ID=31, X=1.47 m, Y=-2.27 m, Width=1.05 m, Depth=0.76 m, Distance=2.70 m
+[cluster_plot_node-13] [INFO] [1789864413.078593599] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864413.078845337] [lidar_clustering]: ID=33, X=2.99 m, Y=-2.65 m, Width=0.27 m, Depth=0.44 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864413.079100931] [lidar_clustering]: ID=34, X=3.51 m, Y=-0.58 m, Width=0.10 m, Depth=0.02 m, Distance=3.55 m
+[cluster_plot_node-13] [INFO] [1789864413.079356937] [lidar_clustering]: ID=35, X=6.80 m, Y=2.15 m, Width=1.09 m, Depth=0.31 m, Distance=7.13 m
+[cluster_plot_node-13] [INFO] [1789864413.079610027] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.03 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864413.079860271] [lidar_clustering]: ID=37, X=0.60 m, Y=-0.15 m, Width=0.27 m, Depth=0.05 m, Distance=0.62 m
+[cluster_plot_node-13] [INFO] [1789864413.080116648] [lidar_clustering]: ID=38, X=3.74 m, Y=-0.31 m, Width=0.12 m, Depth=0.13 m, Distance=3.76 m
+[cluster_plot_node-13] [INFO] [1789864413.080376340] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.62 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864413.976002375] [lidar_clustering]: ID=1, X=5.49 m, Y=3.67 m, Width=0.06 m, Depth=0.04 m, Distance=6.60 m
+[cluster_plot_node-13] [INFO] [1789864413.976235077] [lidar_clustering]: ID=2, X=5.30 m, Y=2.21 m, Width=0.29 m, Depth=0.04 m, Distance=5.74 m
+[cluster_plot_node-13] [INFO] [1789864413.976569669] [lidar_clustering]: ID=3, X=5.65 m, Y=2.50 m, Width=0.11 m, Depth=0.07 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864413.976820615] [lidar_clustering]: ID=5, X=3.78 m, Y=2.65 m, Width=0.07 m, Depth=0.09 m, Distance=4.62 m
+[cluster_plot_node-13] [INFO] [1789864413.977024263] [lidar_clustering]: ID=6, X=2.41 m, Y=2.42 m, Width=0.13 m, Depth=0.06 m, Distance=3.41 m
+[cluster_plot_node-13] [INFO] [1789864413.977206551] [lidar_clustering]: ID=8, X=0.35 m, Y=1.60 m, Width=0.01 m, Depth=0.08 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864413.977395171] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.12 m, Distance=3.22 m
+[cluster_plot_node-13] [INFO] [1789864413.977576438] [lidar_clustering]: ID=10, X=1.08 m, Y=1.61 m, Width=0.16 m, Depth=0.68 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864413.977756933] [lidar_clustering]: ID=11, X=2.41 m, Y=-0.21 m, Width=0.02 m, Depth=0.04 m, Distance=2.41 m
+[cluster_plot_node-13] [INFO] [1789864413.977930415] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.73 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864413.978104919] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864413.978283701] [lidar_clustering]: ID=16, X=4.15 m, Y=-0.81 m, Width=0.09 m, Depth=0.07 m, Distance=4.23 m
+[cluster_plot_node-13] [INFO] [1789864413.978457234] [lidar_clustering]: ID=18, X=0.85 m, Y=-0.36 m, Width=0.06 m, Depth=0.01 m, Distance=0.93 m
+[cluster_plot_node-13] [INFO] [1789864413.978627941] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.11 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864413.978797155] [lidar_clustering]: ID=20, X=2.09 m, Y=-0.24 m, Width=0.09 m, Depth=0.03 m, Distance=2.10 m
+[cluster_plot_node-13] [INFO] [1789864413.978967171] [lidar_clustering]: ID=21, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.21 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864413.979138278] [lidar_clustering]: ID=23, X=3.00 m, Y=2.53 m, Width=0.34 m, Depth=0.37 m, Distance=3.92 m
+[cluster_plot_node-13] [INFO] [1789864413.979311219] [lidar_clustering]: ID=25, X=3.64 m, Y=1.85 m, Width=0.06 m, Depth=0.07 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864413.979505630] [lidar_clustering]: ID=28, X=6.07 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864413.979756536] [lidar_clustering]: ID=29, X=3.53 m, Y=2.19 m, Width=0.05 m, Depth=0.03 m, Distance=4.16 m
+[cluster_plot_node-13] [INFO] [1789864413.980005839] [lidar_clustering]: ID=31, X=1.61 m, Y=-2.22 m, Width=0.48 m, Depth=0.50 m, Distance=2.74 m
+[cluster_plot_node-13] [INFO] [1789864413.980253128] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864413.980457678] [lidar_clustering]: ID=33, X=3.12 m, Y=-2.65 m, Width=0.07 m, Depth=0.28 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864413.980682005] [lidar_clustering]: ID=34, X=3.46 m, Y=-0.56 m, Width=0.18 m, Depth=0.15 m, Distance=3.50 m
+[cluster_plot_node-13] [INFO] [1789864413.980911511] [lidar_clustering]: ID=35, X=6.84 m, Y=2.17 m, Width=1.00 m, Depth=0.31 m, Distance=7.18 m
+[cluster_plot_node-13] [INFO] [1789864413.981087688] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.02 m, Depth=0.05 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864413.981258756] [lidar_clustering]: ID=37, X=0.62 m, Y=-0.11 m, Width=0.22 m, Depth=0.14 m, Distance=0.63 m
+[cluster_plot_node-13] [INFO] [1789864413.981440854] [lidar_clustering]: ID=38, X=3.66 m, Y=0.81 m, Width=0.17 m, Depth=0.08 m, Distance=3.75 m
+[cluster_plot_node-13] [INFO] [1789864413.981612503] [lidar_clustering]: ID=39, X=2.79 m, Y=-2.58 m, Width=0.08 m, Depth=0.07 m, Distance=3.80 m
+[cluster_plot_node-13] [INFO] [1789864413.981788079] [lidar_clustering]: ID=40, X=4.27 m, Y=0.89 m, Width=0.18 m, Depth=0.07 m, Distance=4.36 m
+[cluster_plot_node-13] [INFO] [1789864413.981958836] [lidar_clustering]: ID=41, X=5.69 m, Y=2.11 m, Width=0.06 m, Depth=0.02 m, Distance=6.07 m
+[cluster_plot_node-13] [INFO] [1789864413.982131236] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.61 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864413.982314576] [lidar_clustering]: points=470, clusters=27, tracks=31
+[heading_init_node-5] [WARN] [1789864414.503742619] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864414.872623850] [lidar_clustering]: ID=1, X=5.51 m, Y=3.67 m, Width=0.06 m, Depth=0.04 m, Distance=6.62 m
+[cluster_plot_node-13] [INFO] [1789864414.872849659] [lidar_clustering]: ID=2, X=5.28 m, Y=2.25 m, Width=0.27 m, Depth=0.03 m, Distance=5.74 m
+[cluster_plot_node-13] [INFO] [1789864414.873029573] [lidar_clustering]: ID=3, X=5.54 m, Y=2.64 m, Width=0.06 m, Depth=0.03 m, Distance=6.14 m
+[cluster_plot_node-13] [INFO] [1789864414.873218043] [lidar_clustering]: ID=5, X=3.78 m, Y=2.64 m, Width=0.07 m, Depth=0.09 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864414.873406924] [lidar_clustering]: ID=6, X=2.43 m, Y=2.46 m, Width=0.29 m, Depth=0.14 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864414.873610983] [lidar_clustering]: ID=8, X=0.38 m, Y=1.59 m, Width=0.04 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864414.873793481] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864414.873974988] [lidar_clustering]: ID=10, X=1.09 m, Y=1.61 m, Width=0.16 m, Depth=0.68 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864414.874150544] [lidar_clustering]: ID=11, X=2.39 m, Y=-0.27 m, Width=0.03 m, Depth=0.01 m, Distance=2.40 m
+[cluster_plot_node-13] [INFO] [1789864414.874328565] [lidar_clustering]: ID=12, X=2.37 m, Y=-0.95 m, Width=0.31 m, Depth=0.15 m, Distance=2.55 m
+[cluster_plot_node-13] [INFO] [1789864414.874506295] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864414.874678134] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.02 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864414.874854963] [lidar_clustering]: ID=16, X=3.75 m, Y=-0.31 m, Width=0.17 m, Depth=0.09 m, Distance=3.77 m
+[cluster_plot_node-13] [INFO] [1789864414.875043853] [lidar_clustering]: ID=18, X=0.94 m, Y=0.03 m, Width=0.07 m, Depth=0.10 m, Distance=0.94 m
+[cluster_plot_node-13] [INFO] [1789864414.875803213] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.10 m, Depth=0.13 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864414.876183389] [lidar_clustering]: ID=20, X=2.08 m, Y=-0.28 m, Width=0.04 m, Depth=0.02 m, Distance=2.10 m
+[cluster_plot_node-13] [INFO] [1789864414.876454984] [lidar_clustering]: ID=21, X=1.25 m, Y=-2.72 m, Width=0.06 m, Depth=0.19 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864414.876802809] [lidar_clustering]: ID=23, X=3.03 m, Y=2.52 m, Width=0.34 m, Depth=0.36 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864414.877124196] [lidar_clustering]: ID=25, X=3.65 m, Y=1.84 m, Width=0.04 m, Depth=0.02 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864414.877383648] [lidar_clustering]: ID=28, X=6.05 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864414.877597405] [lidar_clustering]: ID=29, X=3.59 m, Y=2.25 m, Width=0.05 m, Depth=0.03 m, Distance=4.24 m
+[cluster_plot_node-13] [INFO] [1789864414.877784703] [lidar_clustering]: ID=31, X=1.59 m, Y=-2.27 m, Width=0.95 m, Depth=0.79 m, Distance=2.78 m
+[cluster_plot_node-13] [INFO] [1789864414.877968023] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864414.878148027] [lidar_clustering]: ID=33, X=3.00 m, Y=-2.66 m, Width=0.27 m, Depth=0.49 m, Distance=4.01 m
+[cluster_plot_node-13] [INFO] [1789864414.878333071] [lidar_clustering]: ID=35, X=6.82 m, Y=1.90 m, Width=0.10 m, Depth=0.02 m, Distance=7.08 m
+[cluster_plot_node-13] [INFO] [1789864414.878514518] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.02 m, Depth=0.05 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864414.878696506] [lidar_clustering]: ID=37, X=0.92 m, Y=-0.14 m, Width=0.28 m, Depth=0.06 m, Distance=0.93 m
+[cluster_plot_node-13] [INFO] [1789864414.878876500] [lidar_clustering]: ID=38, X=2.76 m, Y=0.77 m, Width=0.16 m, Depth=0.21 m, Distance=2.87 m
+[cluster_plot_node-13] [INFO] [1789864414.879056835] [lidar_clustering]: ID=40, X=2.26 m, Y=0.86 m, Width=0.34 m, Depth=0.47 m, Distance=2.42 m
+[cluster_plot_node-13] [INFO] [1789864414.879234625] [lidar_clustering]: ID=41, X=5.70 m, Y=2.11 m, Width=0.08 m, Depth=0.03 m, Distance=6.08 m
+[cluster_plot_node-13] [INFO] [1789864414.879423275] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.92 m, best_angle=0.0 deg
+[direct_localization_node-6] [INFO] [1789864415.772396876] [direct_localization]: pose: x=39.10 y=23.75 yaw=62.1° v=-0.03m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864415.776301397] [lidar_clustering]: ID=1, X=5.49 m, Y=3.64 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864415.776529069] [lidar_clustering]: ID=2, X=5.28 m, Y=2.21 m, Width=0.06 m, Depth=0.02 m, Distance=5.73 m
+[cluster_plot_node-13] [INFO] [1789864415.776713903] [lidar_clustering]: ID=3, X=5.94 m, Y=2.29 m, Width=0.08 m, Depth=0.03 m, Distance=6.36 m
+[cluster_plot_node-13] [INFO] [1789864415.776891673] [lidar_clustering]: ID=5, X=3.87 m, Y=2.71 m, Width=0.06 m, Depth=0.09 m, Distance=4.72 m
+[cluster_plot_node-13] [INFO] [1789864415.777071166] [lidar_clustering]: ID=6, X=2.43 m, Y=2.46 m, Width=0.29 m, Depth=0.26 m, Distance=3.46 m
+[cluster_plot_node-13] [INFO] [1789864415.777247453] [lidar_clustering]: ID=8, X=0.35 m, Y=1.60 m, Width=0.01 m, Depth=0.09 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864415.777477310] [lidar_clustering]: ID=9, X=1.18 m, Y=2.98 m, Width=0.02 m, Depth=0.12 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864415.777709742] [lidar_clustering]: ID=10, X=0.85 m, Y=1.64 m, Width=0.14 m, Depth=0.10 m, Distance=1.85 m
+[cluster_plot_node-13] [INFO] [1789864415.777930351] [lidar_clustering]: ID=11, X=2.32 m, Y=-1.12 m, Width=0.16 m, Depth=0.04 m, Distance=2.58 m
+[cluster_plot_node-13] [INFO] [1789864415.778112089] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864415.778292143] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864415.778473300] [lidar_clustering]: ID=16, X=4.11 m, Y=-0.81 m, Width=0.15 m, Depth=0.07 m, Distance=4.19 m
+[cluster_plot_node-13] [INFO] [1789864415.778661659] [lidar_clustering]: ID=18, X=1.12 m, Y=0.66 m, Width=0.15 m, Depth=0.22 m, Distance=1.30 m
+[cluster_plot_node-13] [INFO] [1789864415.778857563] [lidar_clustering]: ID=19, X=0.37 m, Y=-1.14 m, Width=0.12 m, Depth=0.12 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864415.779031366] [lidar_clustering]: ID=20, X=2.18 m, Y=-0.17 m, Width=0.28 m, Depth=0.10 m, Distance=2.19 m
+[cluster_plot_node-13] [INFO] [1789864415.779209136] [lidar_clustering]: ID=21, X=1.26 m, Y=-2.72 m, Width=0.04 m, Depth=0.18 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864415.779392316] [lidar_clustering]: ID=23, X=3.31 m, Y=2.19 m, Width=0.25 m, Depth=0.14 m, Distance=3.97 m
+[cluster_plot_node-13] [INFO] [1789864415.779568714] [lidar_clustering]: ID=25, X=3.69 m, Y=1.89 m, Width=0.04 m, Depth=0.02 m, Distance=4.15 m
+[cluster_plot_node-13] [INFO] [1789864415.779743168] [lidar_clustering]: ID=26, X=1.70 m, Y=-0.14 m, Width=0.09 m, Depth=0.04 m, Distance=1.71 m
+[cluster_plot_node-13] [INFO] [1789864415.779918223] [lidar_clustering]: ID=28, X=6.01 m, Y=3.87 m, Width=0.06 m, Depth=0.04 m, Distance=7.15 m
+[cluster_plot_node-13] [INFO] [1789864415.780093057] [lidar_clustering]: ID=29, X=2.98 m, Y=2.70 m, Width=0.05 m, Depth=0.15 m, Distance=4.02 m
+[cluster_plot_node-13] [INFO] [1789864415.780273592] [lidar_clustering]: ID=31, X=1.64 m, Y=-2.19 m, Width=0.65 m, Depth=0.65 m, Distance=2.74 m
+[cluster_plot_node-13] [INFO] [1789864415.780450561] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864415.780625716] [lidar_clustering]: ID=33, X=3.00 m, Y=-2.65 m, Width=0.24 m, Depth=0.50 m, Distance=4.00 m
+[cluster_plot_node-13] [INFO] [1789864415.780800421] [lidar_clustering]: ID=34, X=3.47 m, Y=-0.54 m, Width=0.14 m, Depth=0.16 m, Distance=3.51 m
+[cluster_plot_node-13] [INFO] [1789864415.780975656] [lidar_clustering]: ID=35, X=6.82 m, Y=2.16 m, Width=1.05 m, Depth=0.32 m, Distance=7.15 m
+[cluster_plot_node-13] [INFO] [1789864415.781156572] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.03 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864415.781337238] [lidar_clustering]: ID=37, X=1.05 m, Y=-0.30 m, Width=0.15 m, Depth=0.10 m, Distance=1.09 m
+[cluster_plot_node-13] [INFO] [1789864415.781514717] [lidar_clustering]: ID=38, X=1.31 m, Y=1.54 m, Width=0.05 m, Depth=0.32 m, Distance=2.02 m
+[cluster_plot_node-13] [INFO] [1789864415.781690393] [lidar_clustering]: ID=40, X=0.79 m, Y=0.99 m, Width=0.23 m, Depth=0.65 m, Distance=1.26 m
+[cluster_plot_node-13] [INFO] [1789864415.781864917] [lidar_clustering]: ID=41, X=5.62 m, Y=2.53 m, Width=0.27 m, Depth=0.18 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864415.782042487] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864415.782225607] [lidar_clustering]: points=489, clusters=25, tracks=31
+[heading_init_node-5] [WARN] [1789864416.623747708] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[cluster_plot_node-13] [INFO] [1789864416.673130887] [lidar_clustering]: ID=1, X=5.25 m, Y=3.51 m, Width=0.06 m, Depth=0.04 m, Distance=6.32 m
+[cluster_plot_node-13] [INFO] [1789864416.673389297] [lidar_clustering]: ID=2, X=5.31 m, Y=2.28 m, Width=0.27 m, Depth=0.08 m, Distance=5.78 m
+[cluster_plot_node-13] [INFO] [1789864416.673567828] [lidar_clustering]: ID=3, X=5.96 m, Y=2.25 m, Width=0.08 m, Depth=0.03 m, Distance=6.38 m
+[cluster_plot_node-13] [INFO] [1789864416.673758883] [lidar_clustering]: ID=5, X=3.78 m, Y=2.64 m, Width=0.08 m, Depth=0.08 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864416.674009829] [lidar_clustering]: ID=6, X=2.42 m, Y=2.44 m, Width=0.28 m, Depth=0.16 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864416.674286623] [lidar_clustering]: ID=8, X=0.35 m, Y=1.60 m, Width=0.01 m, Depth=0.08 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864416.674475604] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864416.674653755] [lidar_clustering]: ID=11, X=2.34 m, Y=-1.26 m, Width=0.03 m, Depth=0.02 m, Distance=2.66 m
+[cluster_plot_node-13] [INFO] [1789864416.674831876] [lidar_clustering]: ID=12, X=1.97 m, Y=-0.50 m, Width=0.18 m, Depth=0.06 m, Distance=2.03 m
+[cluster_plot_node-13] [INFO] [1789864416.675025615] [lidar_clustering]: ID=13, X=1.09 m, Y=-1.72 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864416.675201612] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864416.675379573] [lidar_clustering]: ID=16, X=4.13 m, Y=-0.81 m, Width=0.08 m, Depth=0.03 m, Distance=4.21 m
+[cluster_plot_node-13] [INFO] [1789864416.675551863] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.09 m, Depth=0.13 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864416.675723892] [lidar_clustering]: ID=20, X=2.18 m, Y=-0.02 m, Width=0.03 m, Depth=0.01 m, Distance=2.18 m
+[cluster_plot_node-13] [INFO] [1789864416.675902313] [lidar_clustering]: ID=21, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.20 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864416.676077068] [lidar_clustering]: ID=23, X=3.41 m, Y=2.25 m, Width=0.08 m, Depth=0.03 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864416.676251211] [lidar_clustering]: ID=25, X=3.65 m, Y=1.84 m, Width=0.05 m, Depth=0.03 m, Distance=4.08 m
+[cluster_plot_node-13] [INFO] [1789864416.676430073] [lidar_clustering]: ID=26, X=1.83 m, Y=-0.08 m, Width=0.09 m, Depth=0.05 m, Distance=1.83 m
+[cluster_plot_node-13] [INFO] [1789864416.676607443] [lidar_clustering]: ID=28, X=6.07 m, Y=3.92 m, Width=0.09 m, Depth=0.05 m, Distance=7.23 m
+[cluster_plot_node-13] [INFO] [1789864416.676783239] [lidar_clustering]: ID=29, X=3.00 m, Y=2.55 m, Width=0.33 m, Depth=0.39 m, Distance=3.93 m
+[cluster_plot_node-13] [INFO] [1789864416.676963474] [lidar_clustering]: ID=31, X=1.64 m, Y=-2.21 m, Width=0.64 m, Depth=0.65 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864416.677139000] [lidar_clustering]: ID=32, X=1.14 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864416.677319435] [lidar_clustering]: ID=33, X=3.14 m, Y=-2.65 m, Width=0.10 m, Depth=0.33 m, Distance=4.11 m
+[cluster_plot_node-13] [INFO] [1789864416.677494350] [lidar_clustering]: ID=34, X=3.48 m, Y=-0.86 m, Width=0.16 m, Depth=0.14 m, Distance=3.58 m
+[cluster_plot_node-13] [INFO] [1789864416.677670076] [lidar_clustering]: ID=35, X=6.86 m, Y=2.31 m, Width=0.71 m, Depth=0.19 m, Distance=7.24 m
+[cluster_plot_node-13] [INFO] [1789864416.677850471] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864416.678026087] [lidar_clustering]: ID=37, X=1.22 m, Y=-0.49 m, Width=0.25 m, Depth=0.15 m, Distance=1.32 m
+[cluster_plot_node-13] [INFO] [1789864416.678202164] [lidar_clustering]: ID=38, X=1.07 m, Y=1.62 m, Width=0.14 m, Depth=0.62 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864416.678382308] [lidar_clustering]: ID=39, X=2.80 m, Y=-2.57 m, Width=0.06 m, Depth=0.06 m, Distance=3.80 m
+[cluster_plot_node-13] [INFO] [1789864416.678558365] [lidar_clustering]: ID=40, X=0.42 m, Y=1.05 m, Width=0.04 m, Depth=0.21 m, Distance=1.13 m
+[cluster_plot_node-13] [INFO] [1789864416.678733981] [lidar_clustering]: ID=41, X=5.65 m, Y=2.50 m, Width=0.08 m, Depth=0.03 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864416.678914717] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864417.575151757] [lidar_clustering]: ID=1, X=5.47 m, Y=3.61 m, Width=0.08 m, Depth=0.05 m, Distance=6.56 m
+[cluster_plot_node-13] [INFO] [1789864417.575415217] [lidar_clustering]: ID=2, X=5.31 m, Y=2.22 m, Width=0.32 m, Depth=0.08 m, Distance=5.75 m
+[cluster_plot_node-13] [INFO] [1789864417.575616961] [lidar_clustering]: ID=3, X=6.50 m, Y=2.16 m, Width=0.10 m, Depth=0.03 m, Distance=6.85 m
+[cluster_plot_node-13] [INFO] [1789864417.575801283] [lidar_clustering]: ID=5, X=3.76 m, Y=2.65 m, Width=0.07 m, Depth=0.09 m, Distance=4.60 m
+[cluster_plot_node-13] [INFO] [1789864417.575978002] [lidar_clustering]: ID=6, X=2.44 m, Y=2.45 m, Width=0.29 m, Depth=0.14 m, Distance=3.45 m
+[cluster_plot_node-13] [INFO] [1789864417.576152205] [lidar_clustering]: ID=8, X=0.37 m, Y=1.60 m, Width=0.02 m, Depth=0.16 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864417.576329073] [lidar_clustering]: ID=9, X=1.18 m, Y=2.99 m, Width=0.02 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864417.576502485] [lidar_clustering]: ID=11, X=2.39 m, Y=-1.26 m, Width=0.08 m, Depth=0.03 m, Distance=2.70 m
+[cluster_plot_node-13] [INFO] [1789864417.576695634] [lidar_clustering]: ID=12, X=2.04 m, Y=-0.58 m, Width=0.03 m, Depth=0.01 m, Distance=2.12 m
+[cluster_plot_node-13] [INFO] [1789864417.576904692] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.71 m, Width=0.05 m, Depth=0.17 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864417.577078625] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.03 m, Depth=0.02 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864417.577301179] [lidar_clustering]: ID=16, X=3.71 m, Y=-0.37 m, Width=0.11 m, Depth=0.01 m, Distance=3.73 m
+[cluster_plot_node-13] [INFO] [1789864417.577494417] [lidar_clustering]: ID=18, X=1.26 m, Y=-0.63 m, Width=0.08 m, Depth=0.04 m, Distance=1.41 m
+[cluster_plot_node-13] [INFO] [1789864417.577683619] [lidar_clustering]: ID=19, X=0.39 m, Y=-1.16 m, Width=0.01 m, Depth=0.02 m, Distance=1.23 m
+[cluster_plot_node-13] [INFO] [1789864417.577871137] [lidar_clustering]: ID=20, X=1.86 m, Y=-0.07 m, Width=0.08 m, Depth=0.04 m, Distance=1.87 m
+[cluster_plot_node-13] [INFO] [1789864417.578052594] [lidar_clustering]: ID=21, X=1.14 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864417.578228621] [lidar_clustering]: ID=23, X=3.45 m, Y=1.95 m, Width=0.21 m, Depth=0.08 m, Distance=3.96 m
+[cluster_plot_node-13] [INFO] [1789864417.578424535] [lidar_clustering]: ID=25, X=3.87 m, Y=2.15 m, Width=0.04 m, Depth=0.02 m, Distance=4.43 m
+[cluster_plot_node-13] [INFO] [1789864417.578602335] [lidar_clustering]: ID=26, X=2.40 m, Y=-0.91 m, Width=0.31 m, Depth=0.16 m, Distance=2.56 m
+[cluster_plot_node-13] [INFO] [1789864417.578776057] [lidar_clustering]: ID=28, X=6.05 m, Y=3.88 m, Width=0.08 m, Depth=0.05 m, Distance=7.18 m
+[cluster_plot_node-13] [INFO] [1789864417.578968354] [lidar_clustering]: ID=29, X=3.00 m, Y=2.52 m, Width=0.36 m, Depth=0.32 m, Distance=3.92 m
+[cluster_plot_node-13] [INFO] [1789864417.579147697] [lidar_clustering]: ID=31, X=1.61 m, Y=-2.23 m, Width=0.46 m, Depth=0.48 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864417.579324325] [lidar_clustering]: ID=32, X=1.09 m, Y=-1.73 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864417.579498729] [lidar_clustering]: ID=33, X=3.02 m, Y=-2.65 m, Width=0.24 m, Depth=0.55 m, Distance=4.02 m
+[cluster_plot_node-13] [INFO] [1789864417.579705253] [lidar_clustering]: ID=34, X=3.44 m, Y=-0.90 m, Width=0.05 m, Depth=0.01 m, Distance=3.56 m
+[cluster_plot_node-13] [INFO] [1789864417.579887010] [lidar_clustering]: ID=35, X=6.90 m, Y=2.29 m, Width=0.47 m, Depth=0.25 m, Distance=7.27 m
+[cluster_plot_node-13] [INFO] [1789864417.580062797] [lidar_clustering]: ID=36, X=1.03 m, Y=2.40 m, Width=0.03 m, Depth=0.06 m, Distance=2.62 m
+[cluster_plot_node-13] [INFO] [1789864417.580252789] [lidar_clustering]: ID=37, X=1.92 m, Y=-0.25 m, Width=0.02 m, Depth=0.00 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864417.580456407] [lidar_clustering]: ID=38, X=1.09 m, Y=1.61 m, Width=0.16 m, Depth=0.68 m, Distance=1.95 m
+[cluster_plot_node-13] [INFO] [1789864417.580649646] [lidar_clustering]: ID=39, X=2.79 m, Y=-2.58 m, Width=0.12 m, Depth=0.04 m, Distance=3.80 m
+[cluster_plot_node-13] [INFO] [1789864417.580823429] [lidar_clustering]: ID=41, X=5.61 m, Y=2.53 m, Width=0.27 m, Depth=0.18 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864417.581017399] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.98 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864417.581200509] [lidar_clustering]: points=438, clusters=25, tracks=31
+[vrs_ntrip_client-3] [INFO] [1789864417.661438732] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 100프레임 발행, GGA 실측(37.28911,127.10744)
+[local_pure_pursuit_node-9] [WARN] [1789864417.809954680] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[cluster_plot_node-13] [INFO] [1789864418.470728532] [lidar_clustering]: ID=1, X=5.52 m, Y=3.68 m, Width=0.06 m, Depth=0.04 m, Distance=6.63 m
+[cluster_plot_node-13] [INFO] [1789864418.470957036] [lidar_clustering]: ID=2, X=5.31 m, Y=2.26 m, Width=0.28 m, Depth=0.07 m, Distance=5.77 m
+[cluster_plot_node-13] [INFO] [1789864418.471136059] [lidar_clustering]: ID=3, X=5.97 m, Y=2.15 m, Width=0.08 m, Depth=0.03 m, Distance=6.34 m
+[cluster_plot_node-13] [INFO] [1789864418.471321163] [lidar_clustering]: ID=5, X=3.53 m, Y=2.05 m, Width=0.38 m, Depth=0.26 m, Distance=4.08 m
+[cluster_plot_node-13] [INFO] [1789864418.471495807] [lidar_clustering]: ID=6, X=2.41 m, Y=2.42 m, Width=0.13 m, Depth=0.06 m, Distance=3.42 m
+[cluster_plot_node-13] [INFO] [1789864418.471682313] [lidar_clustering]: ID=8, X=0.38 m, Y=1.59 m, Width=0.04 m, Depth=0.22 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864418.471911298] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864418.472136336] [lidar_clustering]: ID=11, X=1.34 m, Y=-1.14 m, Width=0.08 m, Depth=0.06 m, Distance=1.76 m
+[cluster_plot_node-13] [INFO] [1789864418.472519217] [lidar_clustering]: ID=12, X=2.03 m, Y=-0.59 m, Width=0.05 m, Depth=0.02 m, Distance=2.11 m
+[cluster_plot_node-13] [INFO] [1789864418.472778108] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.04 m, Depth=0.19 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864418.472965035] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.71 m, Width=0.02 m, Depth=0.01 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864418.473163343] [lidar_clustering]: ID=16, X=3.79 m, Y=-0.28 m, Width=0.05 m, Depth=0.01 m, Distance=3.80 m
+[cluster_plot_node-13] [INFO] [1789864418.473377171] [lidar_clustering]: ID=18, X=1.26 m, Y=-0.74 m, Width=0.05 m, Depth=0.05 m, Distance=1.46 m
+[cluster_plot_node-13] [INFO] [1789864418.473560461] [lidar_clustering]: ID=19, X=0.35 m, Y=-1.14 m, Width=0.05 m, Depth=0.11 m, Distance=1.19 m
+[cluster_plot_node-13] [INFO] [1789864418.473742639] [lidar_clustering]: ID=20, X=1.83 m, Y=-0.07 m, Width=0.09 m, Depth=0.05 m, Distance=1.83 m
+[cluster_plot_node-13] [INFO] [1789864418.473926541] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864418.474108098] [lidar_clustering]: ID=23, X=4.05 m, Y=2.57 m, Width=0.04 m, Depth=0.03 m, Distance=4.80 m
+[cluster_plot_node-13] [INFO] [1789864418.474293011] [lidar_clustering]: ID=25, X=3.78 m, Y=2.64 m, Width=0.09 m, Depth=0.16 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864418.474474418] [lidar_clustering]: ID=26, X=2.38 m, Y=-1.02 m, Width=0.53 m, Depth=0.16 m, Distance=2.59 m
+[cluster_plot_node-13] [INFO] [1789864418.474652789] [lidar_clustering]: ID=28, X=6.06 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864418.474831812] [lidar_clustering]: ID=29, X=3.00 m, Y=2.56 m, Width=0.34 m, Depth=0.28 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864418.475010193] [lidar_clustering]: ID=31, X=1.64 m, Y=-2.21 m, Width=0.35 m, Depth=0.48 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864418.475189255] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.14 m, Width=0.03 m, Depth=0.09 m, Distance=2.42 m
+[cluster_plot_node-13] [INFO] [1789864418.475373698] [lidar_clustering]: ID=33, X=2.91 m, Y=-2.72 m, Width=0.08 m, Depth=0.04 m, Distance=3.98 m
+[cluster_plot_node-13] [INFO] [1789864418.475550747] [lidar_clustering]: ID=35, X=6.86 m, Y=2.31 m, Width=0.70 m, Depth=0.26 m, Distance=7.24 m
+[cluster_plot_node-13] [INFO] [1789864418.475726473] [lidar_clustering]: ID=36, X=1.02 m, Y=2.40 m, Width=0.01 m, Depth=0.05 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864418.475901308] [lidar_clustering]: ID=37, X=2.24 m, Y=-0.20 m, Width=0.26 m, Depth=0.08 m, Distance=2.24 m
+[cluster_plot_node-13] [INFO] [1789864418.476076343] [lidar_clustering]: ID=38, X=1.09 m, Y=1.61 m, Width=0.16 m, Depth=0.69 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864418.476256026] [lidar_clustering]: ID=39, X=2.79 m, Y=-2.61 m, Width=0.04 m, Depth=0.04 m, Distance=3.83 m
+[cluster_plot_node-13] [INFO] [1789864418.476432384] [lidar_clustering]: ID=41, X=5.59 m, Y=2.58 m, Width=0.25 m, Depth=0.18 m, Distance=6.15 m
+[cluster_plot_node-13] [INFO] [1789864418.476608721] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.97 m, best_angle=0.0 deg
+[heading_init_node-5] [WARN] [1789864418.693582126] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=1 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[direct_localization_node-6] [INFO] [1789864418.772373873] [direct_localization]: pose: x=39.10 y=23.75 yaw=62.3° v=0.01m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864419.373935825] [lidar_clustering]: ID=1, X=5.46 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.57 m
+[cluster_plot_node-13] [INFO] [1789864419.374157277] [lidar_clustering]: ID=2, X=5.30 m, Y=2.27 m, Width=0.28 m, Depth=0.06 m, Distance=5.76 m
+[cluster_plot_node-13] [INFO] [1789864419.374341960] [lidar_clustering]: ID=3, X=5.33 m, Y=2.17 m, Width=0.07 m, Depth=0.03 m, Distance=5.76 m
+[cluster_plot_node-13] [INFO] [1789864419.374535619] [lidar_clustering]: ID=5, X=3.69 m, Y=1.84 m, Width=0.05 m, Depth=0.03 m, Distance=4.12 m
+[cluster_plot_node-13] [INFO] [1789864419.374708160] [lidar_clustering]: ID=6, X=2.42 m, Y=2.43 m, Width=0.12 m, Depth=0.06 m, Distance=3.43 m
+[cluster_plot_node-13] [INFO] [1789864419.374883305] [lidar_clustering]: ID=8, X=0.39 m, Y=1.59 m, Width=0.04 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864419.375064591] [lidar_clustering]: ID=9, X=1.17 m, Y=2.98 m, Width=0.04 m, Depth=0.10 m, Distance=3.20 m
+[cluster_plot_node-13] [INFO] [1789864419.375237513] [lidar_clustering]: ID=11, X=1.34 m, Y=-1.16 m, Width=0.31 m, Depth=0.10 m, Distance=1.77 m
+[cluster_plot_node-13] [INFO] [1789864419.375416325] [lidar_clustering]: ID=12, X=2.03 m, Y=-0.59 m, Width=0.03 m, Depth=0.01 m, Distance=2.12 m
+[cluster_plot_node-13] [INFO] [1789864419.375588204] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.04 m, Depth=0.19 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864419.375758991] [lidar_clustering]: ID=14, X=0.80 m, Y=-0.71 m, Width=0.04 m, Depth=0.24 m, Distance=1.07 m
+[cluster_plot_node-13] [INFO] [1789864419.375929337] [lidar_clustering]: ID=19, X=0.37 m, Y=-1.14 m, Width=0.13 m, Depth=0.12 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864419.376098662] [lidar_clustering]: ID=20, X=1.94 m, Y=-0.15 m, Width=0.10 m, Depth=0.03 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864419.376269228] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864419.376443121] [lidar_clustering]: ID=23, X=4.23 m, Y=2.84 m, Width=0.06 m, Depth=0.04 m, Distance=5.10 m
+[cluster_plot_node-13] [INFO] [1789864419.376612957] [lidar_clustering]: ID=25, X=3.78 m, Y=2.65 m, Width=0.07 m, Depth=0.08 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864419.376782281] [lidar_clustering]: ID=26, X=2.40 m, Y=-1.13 m, Width=0.65 m, Depth=0.15 m, Distance=2.65 m
+[cluster_plot_node-13] [INFO] [1789864419.376954922] [lidar_clustering]: ID=28, X=6.04 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.20 m
+[cluster_plot_node-13] [INFO] [1789864419.377124486] [lidar_clustering]: ID=29, X=3.05 m, Y=2.50 m, Width=0.39 m, Depth=0.39 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864419.377299712] [lidar_clustering]: ID=31, X=1.62 m, Y=-2.23 m, Width=0.47 m, Depth=0.65 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864419.377470299] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864419.377639403] [lidar_clustering]: ID=34, X=3.45 m, Y=-0.90 m, Width=0.10 m, Depth=0.11 m, Distance=3.56 m
+[cluster_plot_node-13] [INFO] [1789864419.377808917] [lidar_clustering]: ID=35, X=6.88 m, Y=2.35 m, Width=0.71 m, Depth=0.21 m, Distance=7.27 m
+[cluster_plot_node-13] [INFO] [1789864419.377980215] [lidar_clustering]: ID=36, X=1.03 m, Y=2.40 m, Width=0.01 m, Depth=0.06 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864419.378149179] [lidar_clustering]: ID=37, X=2.30 m, Y=-0.22 m, Width=0.08 m, Depth=0.01 m, Distance=2.31 m
+[cluster_plot_node-13] [INFO] [1789864419.378323984] [lidar_clustering]: ID=38, X=1.07 m, Y=1.61 m, Width=0.14 m, Depth=0.67 m, Distance=1.93 m
+[cluster_plot_node-13] [INFO] [1789864419.378493769] [lidar_clustering]: ID=41, X=5.64 m, Y=2.51 m, Width=0.08 m, Depth=0.03 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864419.378663073] [lidar_clustering]: ID=42, X=3.52 m, Y=2.16 m, Width=0.05 m, Depth=0.03 m, Distance=4.13 m
+[cluster_plot_node-13] [INFO] [1789864419.378832137] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=18.2 deg
+[cluster_plot_node-13] [INFO] [1789864419.379002704] [lidar_clustering]: points=464, clusters=23, tracks=28
+[heading_init_node-5] [INFO] [1789864419.623646239] [gps_heading_init]: RTK 수렴 (수평 σ=1.0cm (상한 5cm), status=1) — 헤딩 캘리브를 시작한다.
+[heading_init_node-5] [INFO] [1789864419.624001930] [gps_heading_init]: 시작점 기록: (37.2891077, 127.1074416). 직진 시작하세요.
+[heading_init_node-5] [WARN] [1789864419.628610277] [gps_heading_init]: 자동 직진 5초 전... (E-stop 준비)
+[vehicle_cmd_mux-11] [INFO] [1789864419.645426322] [vehicle_cmd_mux]: 모드: TELEOP
+[heading_init_node-5] [INFO] [1789864419.803691092] [gps_heading_init]: 직진 중... 0.0/10m
+[cluster_plot_node-13] [INFO] [1789864420.269940895] [lidar_clustering]: ID=1, X=5.53 m, Y=3.68 m, Width=0.06 m, Depth=0.04 m, Distance=6.64 m
+[cluster_plot_node-13] [INFO] [1789864420.270162877] [lidar_clustering]: ID=2, X=5.29 m, Y=2.22 m, Width=0.29 m, Depth=0.04 m, Distance=5.74 m
+[cluster_plot_node-13] [INFO] [1789864420.270350055] [lidar_clustering]: ID=3, X=6.69 m, Y=2.14 m, Width=0.19 m, Depth=0.05 m, Distance=7.02 m
+[cluster_plot_node-13] [INFO] [1789864420.270528687] [lidar_clustering]: ID=5, X=3.68 m, Y=1.83 m, Width=0.05 m, Depth=0.03 m, Distance=4.11 m
+[cluster_plot_node-13] [INFO] [1789864420.270705775] [lidar_clustering]: ID=6, X=2.39 m, Y=2.41 m, Width=0.31 m, Depth=0.32 m, Distance=3.40 m
+[cluster_plot_node-13] [INFO] [1789864420.270879498] [lidar_clustering]: ID=8, X=0.39 m, Y=1.60 m, Width=0.02 m, Depth=0.22 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864420.271056667] [lidar_clustering]: ID=9, X=1.17 m, Y=2.98 m, Width=0.03 m, Depth=0.10 m, Distance=3.20 m
+[cluster_plot_node-13] [INFO] [1789864420.271256738] [lidar_clustering]: ID=11, X=1.32 m, Y=-1.17 m, Width=0.27 m, Depth=0.16 m, Distance=1.77 m
+[cluster_plot_node-13] [INFO] [1789864420.271442543] [lidar_clustering]: ID=12, X=2.01 m, Y=-0.59 m, Width=0.03 m, Depth=0.01 m, Distance=2.09 m
+[cluster_plot_node-13] [INFO] [1789864420.271648656] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.19 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864420.271850010] [lidar_clustering]: ID=14, X=0.78 m, Y=-0.71 m, Width=0.02 m, Depth=0.24 m, Distance=1.05 m
+[cluster_plot_node-13] [INFO] [1789864420.272037809] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.11 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864420.272211762] [lidar_clustering]: ID=20, X=2.04 m, Y=-0.11 m, Width=0.04 m, Depth=0.00 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864420.272388830] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864420.272563274] [lidar_clustering]: ID=23, X=4.25 m, Y=2.86 m, Width=0.06 m, Depth=0.04 m, Distance=5.12 m
+[cluster_plot_node-13] [INFO] [1789864420.272740203] [lidar_clustering]: ID=25, X=3.77 m, Y=2.66 m, Width=0.03 m, Depth=0.06 m, Distance=4.62 m
+[cluster_plot_node-13] [INFO] [1789864420.272914136] [lidar_clustering]: ID=26, X=2.41 m, Y=-1.12 m, Width=0.64 m, Depth=0.17 m, Distance=2.66 m
+[cluster_plot_node-13] [INFO] [1789864420.273088400] [lidar_clustering]: ID=28, X=6.04 m, Y=3.89 m, Width=0.06 m, Depth=0.04 m, Distance=7.18 m
+[cluster_plot_node-13] [INFO] [1789864420.273261822] [lidar_clustering]: ID=29, X=3.01 m, Y=2.54 m, Width=0.37 m, Depth=0.32 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864420.273506546] [lidar_clustering]: ID=31, X=1.62 m, Y=-2.23 m, Width=0.46 m, Depth=0.64 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864420.273719732] [lidar_clustering]: ID=32, X=1.15 m, Y=-2.14 m, Width=0.02 m, Depth=0.04 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864420.273909675] [lidar_clustering]: ID=34, X=3.48 m, Y=-0.86 m, Width=0.15 m, Depth=0.17 m, Distance=3.59 m
+[cluster_plot_node-13] [INFO] [1789864420.274088627] [lidar_clustering]: ID=35, X=6.91 m, Y=2.35 m, Width=0.71 m, Depth=0.24 m, Distance=7.30 m
+[cluster_plot_node-13] [INFO] [1789864420.274267479] [lidar_clustering]: ID=36, X=1.03 m, Y=2.39 m, Width=0.01 m, Depth=0.02 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864420.274449006] [lidar_clustering]: ID=38, X=1.09 m, Y=1.61 m, Width=0.15 m, Depth=0.68 m, Distance=1.95 m
+[cluster_plot_node-13] [INFO] [1789864420.274625634] [lidar_clustering]: ID=41, X=5.65 m, Y=2.51 m, Width=0.11 m, Depth=0.07 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864420.274802432] [lidar_clustering]: ID=42, X=3.55 m, Y=2.22 m, Width=0.06 m, Depth=0.10 m, Distance=4.18 m
+[cluster_plot_node-13] [INFO] [1789864420.274977187] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=17.8 deg
+[heading_init_node-5] [WARN] [1789864420.628690001] [gps_heading_init]: 자동 직진 4초 전... (E-stop 준비)
+[cluster_plot_node-13] [INFO] [1789864421.173035519] [lidar_clustering]: ID=1, X=5.47 m, Y=3.66 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864421.173274242] [lidar_clustering]: ID=2, X=5.30 m, Y=2.24 m, Width=0.29 m, Depth=0.03 m, Distance=5.75 m
+[cluster_plot_node-13] [INFO] [1789864421.173466229] [lidar_clustering]: ID=5, X=3.65 m, Y=1.83 m, Width=0.05 m, Depth=0.03 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864421.173647115] [lidar_clustering]: ID=6, X=2.39 m, Y=2.43 m, Width=0.26 m, Depth=0.26 m, Distance=3.41 m
+[cluster_plot_node-13] [INFO] [1789864421.173823943] [lidar_clustering]: ID=8, X=0.39 m, Y=1.59 m, Width=0.04 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864421.174099535] [lidar_clustering]: ID=9, X=1.16 m, Y=2.98 m, Width=0.05 m, Depth=0.09 m, Distance=3.20 m
+[cluster_plot_node-13] [INFO] [1789864421.174336495] [lidar_clustering]: ID=11, X=1.31 m, Y=-1.17 m, Width=0.28 m, Depth=0.17 m, Distance=1.76 m
+[cluster_plot_node-13] [INFO] [1789864421.174532960] [lidar_clustering]: ID=12, X=2.18 m, Y=-0.53 m, Width=0.08 m, Depth=0.02 m, Distance=2.24 m
+[cluster_plot_node-13] [INFO] [1789864421.174716781] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.06 m, Depth=0.19 m, Distance=3.00 m
+[cluster_plot_node-13] [INFO] [1789864421.174898619] [lidar_clustering]: ID=14, X=0.79 m, Y=-0.71 m, Width=0.02 m, Depth=0.23 m, Distance=1.06 m
+[cluster_plot_node-13] [INFO] [1789864421.175077932] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.10 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864421.175257174] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864421.175447919] [lidar_clustering]: ID=23, X=4.29 m, Y=2.89 m, Width=0.05 m, Depth=0.03 m, Distance=5.18 m
+[cluster_plot_node-13] [INFO] [1789864421.175654552] [lidar_clustering]: ID=25, X=3.78 m, Y=2.65 m, Width=0.07 m, Depth=0.08 m, Distance=4.62 m
+[cluster_plot_node-13] [INFO] [1789864421.175839245] [lidar_clustering]: ID=26, X=2.41 m, Y=-1.11 m, Width=0.65 m, Depth=0.15 m, Distance=2.65 m
+[cluster_plot_node-13] [INFO] [1789864421.176021363] [lidar_clustering]: ID=28, X=6.04 m, Y=3.93 m, Width=0.06 m, Depth=0.04 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864421.176198653] [lidar_clustering]: ID=29, X=3.07 m, Y=2.48 m, Width=0.55 m, Depth=0.68 m, Distance=3.95 m
+[cluster_plot_node-13] [INFO] [1789864421.176384237] [lidar_clustering]: ID=31, X=1.55 m, Y=-2.22 m, Width=0.46 m, Depth=0.75 m, Distance=2.71 m
+[cluster_plot_node-13] [INFO] [1789864421.176558942] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864421.176735650] [lidar_clustering]: ID=34, X=3.43 m, Y=-0.91 m, Width=0.07 m, Depth=0.02 m, Distance=3.55 m
+[cluster_plot_node-13] [INFO] [1789864421.176909603] [lidar_clustering]: ID=35, X=6.87 m, Y=2.32 m, Width=0.76 m, Depth=0.20 m, Distance=7.25 m
+[cluster_plot_node-13] [INFO] [1789864421.177085439] [lidar_clustering]: ID=36, X=1.02 m, Y=2.40 m, Width=0.01 m, Depth=0.05 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864421.177262278] [lidar_clustering]: ID=37, X=2.51 m, Y=-0.55 m, Width=0.04 m, Depth=0.02 m, Distance=2.57 m
+[cluster_plot_node-13] [INFO] [1789864421.177448544] [lidar_clustering]: ID=38, X=1.07 m, Y=1.61 m, Width=0.14 m, Depth=0.68 m, Distance=1.93 m
+[cluster_plot_node-13] [INFO] [1789864421.177625853] [lidar_clustering]: ID=41, X=5.65 m, Y=2.51 m, Width=0.08 m, Depth=0.03 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864421.177800577] [lidar_clustering]: ID=42, X=3.48 m, Y=2.15 m, Width=0.24 m, Depth=0.13 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864421.177976143] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=6.2 deg
+[cluster_plot_node-13] [INFO] [1789864421.178152431] [lidar_clustering]: points=473, clusters=22, tracks=26
+[heading_init_node-5] [WARN] [1789864421.628803218] [gps_heading_init]: 자동 직진 3초 전... (E-stop 준비)
+[serial_bridge-12] [WARN] [1789864421.768811027] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4230mV — 배터리/전원 확인
+[direct_localization_node-6] [INFO] [1789864421.772248299] [direct_localization]: pose: x=39.10 y=23.74 yaw=62.3° v=-0.05m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864422.069708439] [lidar_clustering]: ID=1, X=5.48 m, Y=3.63 m, Width=0.08 m, Depth=0.05 m, Distance=6.57 m
+[cluster_plot_node-13] [INFO] [1789864422.069949406] [lidar_clustering]: ID=2, X=5.31 m, Y=2.26 m, Width=0.28 m, Depth=0.07 m, Distance=5.77 m
+[cluster_plot_node-13] [INFO] [1789864422.070136664] [lidar_clustering]: ID=3, X=5.80 m, Y=2.12 m, Width=0.08 m, Depth=0.03 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864422.070318231] [lidar_clustering]: ID=5, X=4.08 m, Y=2.55 m, Width=0.06 m, Depth=0.04 m, Distance=4.81 m
+[cluster_plot_node-13] [INFO] [1789864422.070494148] [lidar_clustering]: ID=6, X=2.42 m, Y=2.45 m, Width=0.29 m, Depth=0.13 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864422.070668622] [lidar_clustering]: ID=8, X=0.36 m, Y=1.60 m, Width=0.02 m, Depth=0.15 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864422.070840571] [lidar_clustering]: ID=9, X=1.17 m, Y=2.98 m, Width=0.05 m, Depth=0.10 m, Distance=3.20 m
+[cluster_plot_node-13] [INFO] [1789864422.071012220] [lidar_clustering]: ID=11, X=1.31 m, Y=-1.16 m, Width=0.27 m, Depth=0.17 m, Distance=1.75 m
+[cluster_plot_node-13] [INFO] [1789864422.071188217] [lidar_clustering]: ID=12, X=2.12 m, Y=-0.55 m, Width=0.11 m, Depth=0.19 m, Distance=2.19 m
+[cluster_plot_node-13] [INFO] [1789864422.071366137] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.20 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864422.071539108] [lidar_clustering]: ID=14, X=0.78 m, Y=-0.71 m, Width=0.02 m, Depth=0.23 m, Distance=1.05 m
+[cluster_plot_node-13] [INFO] [1789864422.071709324] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.13 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864422.071880793] [lidar_clustering]: ID=20, X=2.67 m, Y=-0.36 m, Width=0.06 m, Depth=0.01 m, Distance=2.70 m
+[cluster_plot_node-13] [INFO] [1789864422.072057871] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.06 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864422.072231193] [lidar_clustering]: ID=23, X=3.35 m, Y=2.78 m, Width=0.06 m, Depth=0.13 m, Distance=4.35 m
+[cluster_plot_node-13] [INFO] [1789864422.072410136] [lidar_clustering]: ID=25, X=3.78 m, Y=2.64 m, Width=0.09 m, Depth=0.09 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864422.072584610] [lidar_clustering]: ID=26, X=2.40 m, Y=-1.14 m, Width=0.67 m, Depth=0.18 m, Distance=2.66 m
+[cluster_plot_node-13] [INFO] [1789864422.072757020] [lidar_clustering]: ID=28, X=5.99 m, Y=3.88 m, Width=0.06 m, Depth=0.04 m, Distance=7.14 m
+[cluster_plot_node-13] [INFO] [1789864422.072930482] [lidar_clustering]: ID=29, X=3.02 m, Y=2.53 m, Width=0.35 m, Depth=0.34 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864422.073129291] [lidar_clustering]: ID=31, X=1.61 m, Y=-2.24 m, Width=0.47 m, Depth=0.49 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864422.073308494] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.08 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864422.073510940] [lidar_clustering]: ID=34, X=3.43 m, Y=-0.90 m, Width=0.06 m, Depth=0.01 m, Distance=3.55 m
+[cluster_plot_node-13] [INFO] [1789864422.073784858] [lidar_clustering]: ID=35, X=6.89 m, Y=2.33 m, Width=0.67 m, Depth=0.27 m, Distance=7.28 m
+[cluster_plot_node-13] [INFO] [1789864422.074068525] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.05 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864422.074352803] [lidar_clustering]: ID=37, X=4.07 m, Y=-0.45 m, Width=0.04 m, Depth=0.00 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864422.074610541] [lidar_clustering]: ID=38, X=1.08 m, Y=1.61 m, Width=0.16 m, Depth=0.69 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864422.074816364] [lidar_clustering]: ID=41, X=5.59 m, Y=2.58 m, Width=0.25 m, Depth=0.18 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864422.075205927] [lidar_clustering]: ID=42, X=3.49 m, Y=2.06 m, Width=0.15 m, Depth=0.08 m, Distance=4.05 m
+[cluster_plot_node-13] [INFO] [1789864422.075470949] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=9.2 deg
+[heading_init_node-5] [WARN] [1789864422.628585610] [gps_heading_init]: 자동 직진 2초 전... (E-stop 준비)
+[vrs_ntrip_client-3] [INFO] [1789864422.661003386] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 128프레임 발행, GGA 실측(37.28911,127.10744)
+[local_pure_pursuit_node-9] [WARN] [1789864422.860202416] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[cluster_plot_node-13] [INFO] [1789864422.973486913] [lidar_clustering]: ID=1, X=5.49 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.59 m
+[cluster_plot_node-13] [INFO] [1789864422.973712181] [lidar_clustering]: ID=2, X=5.32 m, Y=2.22 m, Width=0.28 m, Depth=0.07 m, Distance=5.76 m
+[cluster_plot_node-13] [INFO] [1789864422.973903506] [lidar_clustering]: ID=3, X=6.86 m, Y=2.34 m, Width=0.65 m, Depth=0.20 m, Distance=7.25 m
+[cluster_plot_node-13] [INFO] [1789864422.974147499] [lidar_clustering]: ID=5, X=4.19 m, Y=2.76 m, Width=0.04 m, Depth=0.03 m, Distance=5.02 m
+[cluster_plot_node-13] [INFO] [1789864422.974403365] [lidar_clustering]: ID=6, X=2.40 m, Y=2.44 m, Width=0.28 m, Depth=0.26 m, Distance=3.42 m
+[cluster_plot_node-13] [INFO] [1789864422.974591644] [lidar_clustering]: ID=8, X=0.38 m, Y=1.60 m, Width=0.04 m, Depth=0.21 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864422.974770226] [lidar_clustering]: ID=9, X=1.18 m, Y=3.00 m, Width=0.07 m, Depth=0.13 m, Distance=3.22 m
+[cluster_plot_node-13] [INFO] [1789864422.974944670] [lidar_clustering]: ID=11, X=1.32 m, Y=-1.17 m, Width=0.24 m, Depth=0.17 m, Distance=1.76 m
+[cluster_plot_node-13] [INFO] [1789864422.975117951] [lidar_clustering]: ID=12, X=2.06 m, Y=-0.58 m, Width=0.03 m, Depth=0.01 m, Distance=2.14 m
+[cluster_plot_node-13] [INFO] [1789864422.975294539] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.05 m, Depth=0.19 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864422.975467541] [lidar_clustering]: ID=14, X=0.79 m, Y=-0.71 m, Width=0.04 m, Depth=0.23 m, Distance=1.06 m
+[cluster_plot_node-13] [INFO] [1789864422.975638528] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.15 m, Width=0.13 m, Depth=0.15 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864422.975809836] [lidar_clustering]: ID=20, X=2.61 m, Y=-0.37 m, Width=0.06 m, Depth=0.00 m, Distance=2.63 m
+[cluster_plot_node-13] [INFO] [1789864422.975983078] [lidar_clustering]: ID=21, X=1.09 m, Y=-1.72 m, Width=0.01 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864422.976156730] [lidar_clustering]: ID=23, X=3.52 m, Y=2.06 m, Width=0.38 m, Depth=0.23 m, Distance=4.07 m
+[cluster_plot_node-13] [INFO] [1789864422.976432823] [lidar_clustering]: ID=25, X=3.78 m, Y=2.64 m, Width=0.08 m, Depth=0.08 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864422.976641530] [lidar_clustering]: ID=26, X=2.40 m, Y=-1.10 m, Width=0.62 m, Depth=0.12 m, Distance=2.64 m
+[cluster_plot_node-13] [INFO] [1789864422.976830812] [lidar_clustering]: ID=28, X=6.06 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864422.977008682] [lidar_clustering]: ID=29, X=3.03 m, Y=2.53 m, Width=0.34 m, Depth=0.56 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864422.977201560] [lidar_clustering]: ID=31, X=1.62 m, Y=-2.22 m, Width=0.47 m, Depth=0.49 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864422.977440384] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.14 m, Width=0.03 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864422.977667606] [lidar_clustering]: ID=34, X=3.42 m, Y=-0.93 m, Width=0.05 m, Depth=0.01 m, Distance=3.54 m
+[cluster_plot_node-13] [INFO] [1789864422.977863199] [lidar_clustering]: ID=35, X=6.92 m, Y=2.43 m, Width=0.34 m, Depth=0.19 m, Distance=7.34 m
+[cluster_plot_node-13] [INFO] [1789864422.978044055] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.02 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864422.978220092] [lidar_clustering]: ID=37, X=3.46 m, Y=-0.42 m, Width=0.09 m, Depth=0.02 m, Distance=3.48 m
+[cluster_plot_node-13] [INFO] [1789864422.978411217] [lidar_clustering]: ID=38, X=1.09 m, Y=1.61 m, Width=0.16 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864422.978599276] [lidar_clustering]: ID=41, X=5.60 m, Y=2.56 m, Width=0.27 m, Depth=0.19 m, Distance=6.16 m
+[cluster_plot_node-13] [INFO] [1789864422.978782226] [lidar_clustering]: ID=42, X=3.66 m, Y=1.87 m, Width=0.04 m, Depth=0.02 m, Distance=4.11 m
+[cluster_plot_node-13] [INFO] [1789864422.978956800] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=8.8 deg
+[cluster_plot_node-13] [INFO] [1789864422.979130823] [lidar_clustering]: points=466, clusters=25, tracks=28
+[heading_init_node-5] [WARN] [1789864423.628682186] [gps_heading_init]: 자동 직진 1초 전... (E-stop 준비)
+[cluster_plot_node-13] [INFO] [1789864423.870004173] [lidar_clustering]: ID=1, X=5.51 m, Y=3.66 m, Width=0.06 m, Depth=0.04 m, Distance=6.62 m
+[cluster_plot_node-13] [INFO] [1789864423.870303970] [lidar_clustering]: ID=2, X=5.29 m, Y=2.24 m, Width=0.29 m, Depth=0.04 m, Distance=5.75 m
+[cluster_plot_node-13] [INFO] [1789864423.870495927] [lidar_clustering]: ID=3, X=6.91 m, Y=2.33 m, Width=0.71 m, Depth=0.25 m, Distance=7.29 m
+[cluster_plot_node-13] [INFO] [1789864423.870676532] [lidar_clustering]: ID=5, X=4.14 m, Y=2.86 m, Width=0.06 m, Depth=0.04 m, Distance=5.03 m
+[cluster_plot_node-13] [INFO] [1789864423.870857187] [lidar_clustering]: ID=6, X=2.41 m, Y=2.41 m, Width=0.12 m, Depth=0.22 m, Distance=3.40 m
+[cluster_plot_node-13] [INFO] [1789864423.871066406] [lidar_clustering]: ID=8, X=0.35 m, Y=1.60 m, Width=0.01 m, Depth=0.08 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864423.871247021] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.04 m, Depth=0.10 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864423.871490012] [lidar_clustering]: ID=11, X=1.31 m, Y=-1.16 m, Width=0.26 m, Depth=0.16 m, Distance=1.75 m
+[cluster_plot_node-13] [INFO] [1789864423.871669436] [lidar_clustering]: ID=12, X=2.00 m, Y=-0.39 m, Width=0.03 m, Depth=0.02 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864423.871857685] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.72 m, Width=0.04 m, Depth=0.17 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864423.872243942] [lidar_clustering]: ID=14, X=0.77 m, Y=-0.71 m, Width=0.03 m, Depth=0.24 m, Distance=1.05 m
+[cluster_plot_node-13] [INFO] [1789864423.872634768] [lidar_clustering]: ID=19, X=0.37 m, Y=-1.15 m, Width=0.12 m, Depth=0.13 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864423.872854286] [lidar_clustering]: ID=20, X=2.61 m, Y=-0.38 m, Width=0.04 m, Depth=0.01 m, Distance=2.64 m
+[cluster_plot_node-13] [INFO] [1789864423.873040482] [lidar_clustering]: ID=21, X=1.08 m, Y=-1.72 m, Width=0.02 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864423.873220756] [lidar_clustering]: ID=23, X=3.53 m, Y=2.21 m, Width=0.05 m, Depth=0.03 m, Distance=4.17 m
+[cluster_plot_node-13] [INFO] [1789864423.873411440] [lidar_clustering]: ID=25, X=3.78 m, Y=2.64 m, Width=0.08 m, Depth=0.08 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864423.873592667] [lidar_clustering]: ID=26, X=2.41 m, Y=-1.11 m, Width=0.64 m, Depth=0.16 m, Distance=2.65 m
+[cluster_plot_node-13] [INFO] [1789864423.873771188] [lidar_clustering]: ID=28, X=6.07 m, Y=3.91 m, Width=0.08 m, Depth=0.05 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864423.873949489] [lidar_clustering]: ID=29, X=3.01 m, Y=2.53 m, Width=0.36 m, Depth=0.32 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864423.874125496] [lidar_clustering]: ID=31, X=1.63 m, Y=-2.23 m, Width=0.46 m, Depth=0.63 m, Distance=2.76 m
+[cluster_plot_node-13] [INFO] [1789864423.874322612] [lidar_clustering]: ID=32, X=1.13 m, Y=-2.15 m, Width=0.03 m, Depth=0.10 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864423.874504911] [lidar_clustering]: ID=34, X=3.44 m, Y=-0.57 m, Width=0.05 m, Depth=0.01 m, Distance=3.49 m
+[cluster_plot_node-13] [INFO] [1789864423.874700103] [lidar_clustering]: ID=36, X=1.02 m, Y=2.39 m, Width=0.01 m, Depth=0.06 m, Distance=2.60 m
+[cluster_plot_node-13] [INFO] [1789864423.874892070] [lidar_clustering]: ID=37, X=3.43 m, Y=-0.91 m, Width=0.05 m, Depth=0.01 m, Distance=3.55 m
+[cluster_plot_node-13] [INFO] [1789864423.875080880] [lidar_clustering]: ID=38, X=1.07 m, Y=1.61 m, Width=0.14 m, Depth=0.63 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864423.875269791] [lidar_clustering]: ID=41, X=5.65 m, Y=2.49 m, Width=0.08 m, Depth=0.03 m, Distance=6.18 m
+[cluster_plot_node-13] [INFO] [1789864423.875461557] [lidar_clustering]: ID=42, X=3.65 m, Y=1.85 m, Width=0.05 m, Depth=0.03 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864423.875652792] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=11.6 deg
+[heading_init_node-5] [INFO] [1789864424.628538746] [gps_heading_init]: 직진 기준 헤딩 고정: 62.5° (절대값은 무의미, 변화량만 사용)
+[serial_bridge-12] [INFO] [1789864424.676393607] [serial_bridge_node]: 출발 — 정지마찰 하한 90 을 1200ms 인가한다
+[cluster_plot_node-13] [INFO] [1789864424.766120390] [lidar_clustering]: ID=1, X=5.47 m, Y=3.65 m, Width=0.06 m, Depth=0.04 m, Distance=6.58 m
+[cluster_plot_node-13] [INFO] [1789864424.766496498] [lidar_clustering]: ID=2, X=5.30 m, Y=2.16 m, Width=0.07 m, Depth=0.03 m, Distance=5.72 m
+[cluster_plot_node-13] [INFO] [1789864424.766744098] [lidar_clustering]: ID=3, X=6.84 m, Y=2.30 m, Width=0.41 m, Depth=0.23 m, Distance=7.22 m
+[cluster_plot_node-13] [INFO] [1789864424.766933880] [lidar_clustering]: ID=5, X=4.26 m, Y=2.91 m, Width=0.06 m, Depth=0.04 m, Distance=5.16 m
+[cluster_plot_node-13] [INFO] [1789864424.767115227] [lidar_clustering]: ID=6, X=2.43 m, Y=2.43 m, Width=0.29 m, Depth=0.15 m, Distance=3.44 m
+[cluster_plot_node-13] [INFO] [1789864424.767298988] [lidar_clustering]: ID=8, X=0.39 m, Y=1.59 m, Width=0.04 m, Depth=0.20 m, Distance=1.64 m
+[cluster_plot_node-13] [INFO] [1789864424.767477590] [lidar_clustering]: ID=9, X=1.17 m, Y=2.99 m, Width=0.03 m, Depth=0.11 m, Distance=3.21 m
+[cluster_plot_node-13] [INFO] [1789864424.767652985] [lidar_clustering]: ID=11, X=1.30 m, Y=-1.18 m, Width=0.24 m, Depth=0.13 m, Distance=1.76 m
+[cluster_plot_node-13] [INFO] [1789864424.767829493] [lidar_clustering]: ID=12, X=2.32 m, Y=-0.18 m, Width=0.03 m, Depth=0.00 m, Distance=2.33 m
+[cluster_plot_node-13] [INFO] [1789864424.768002334] [lidar_clustering]: ID=13, X=1.26 m, Y=-2.72 m, Width=0.04 m, Depth=0.18 m, Distance=2.99 m
+[cluster_plot_node-13] [INFO] [1789864424.768202556] [lidar_clustering]: ID=14, X=0.81 m, Y=-0.71 m, Width=0.04 m, Depth=0.23 m, Distance=1.08 m
+[cluster_plot_node-13] [INFO] [1789864424.768383171] [lidar_clustering]: ID=19, X=0.36 m, Y=-1.14 m, Width=0.10 m, Depth=0.14 m, Distance=1.20 m
+[cluster_plot_node-13] [INFO] [1789864424.768610052] [lidar_clustering]: ID=20, X=1.87 m, Y=-0.44 m, Width=0.12 m, Depth=0.08 m, Distance=1.92 m
+[cluster_plot_node-13] [INFO] [1789864424.768840370] [lidar_clustering]: ID=21, X=1.13 m, Y=-2.15 m, Width=0.04 m, Depth=0.09 m, Distance=2.43 m
+[cluster_plot_node-13] [INFO] [1789864424.769056822] [lidar_clustering]: ID=23, X=3.49 m, Y=2.13 m, Width=0.25 m, Depth=0.14 m, Distance=4.09 m
+[cluster_plot_node-13] [INFO] [1789864424.769242176] [lidar_clustering]: ID=25, X=3.77 m, Y=2.65 m, Width=0.09 m, Depth=0.10 m, Distance=4.61 m
+[cluster_plot_node-13] [INFO] [1789864424.769423002] [lidar_clustering]: ID=26, X=1.40 m, Y=-1.36 m, Width=0.01 m, Depth=0.02 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864424.769597927] [lidar_clustering]: ID=28, X=6.03 m, Y=3.90 m, Width=0.06 m, Depth=0.04 m, Distance=7.18 m
+[cluster_plot_node-13] [INFO] [1789864424.769773132] [lidar_clustering]: ID=29, X=3.02 m, Y=2.53 m, Width=0.38 m, Depth=0.34 m, Distance=3.94 m
+[cluster_plot_node-13] [INFO] [1789864424.769953888] [lidar_clustering]: ID=31, X=1.62 m, Y=-2.22 m, Width=0.45 m, Depth=0.49 m, Distance=2.75 m
+[cluster_plot_node-13] [INFO] [1789864424.770141947] [lidar_clustering]: ID=32, X=1.09 m, Y=-1.72 m, Width=0.02 m, Depth=0.05 m, Distance=2.04 m
+[cluster_plot_node-13] [INFO] [1789864424.770371123] [lidar_clustering]: ID=34, X=3.49 m, Y=-0.60 m, Width=0.12 m, Depth=0.06 m, Distance=3.54 m
+[cluster_plot_node-13] [INFO] [1789864424.770596822] [lidar_clustering]: ID=35, X=6.58 m, Y=2.12 m, Width=0.10 m, Depth=0.03 m, Distance=6.91 m
+[cluster_plot_node-13] [INFO] [1789864424.770784610] [lidar_clustering]: ID=36, X=1.03 m, Y=2.40 m, Width=0.02 m, Depth=0.06 m, Distance=2.61 m
+[cluster_plot_node-13] [INFO] [1789864424.770970005] [lidar_clustering]: ID=37, X=2.73 m, Y=-1.06 m, Width=0.78 m, Depth=0.31 m, Distance=2.93 m
+[cluster_plot_node-13] [INFO] [1789864424.771150069] [lidar_clustering]: ID=38, X=1.08 m, Y=1.61 m, Width=0.15 m, Depth=0.67 m, Distance=1.94 m
+[cluster_plot_node-13] [INFO] [1789864424.771333019] [lidar_clustering]: ID=41, X=5.62 m, Y=2.55 m, Width=0.27 m, Depth=0.18 m, Distance=6.17 m
+[cluster_plot_node-13] [INFO] [1789864424.771510578] [lidar_clustering]: ID=42, X=3.70 m, Y=1.86 m, Width=0.04 m, Depth=0.02 m, Distance=4.14 m
+[cluster_plot_node-13] [INFO] [1789864424.771687527] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.98 m, best_angle=14.0 deg
+[cluster_plot_node-13] [INFO] [1789864424.771867451] [lidar_clustering]: points=478, clusters=26, tracks=28
+[direct_localization_node-6] [INFO] [1789864424.772189088] [direct_localization]: pose: x=39.11 y=23.74 yaw=62.5° v=0.00m/s [헤딩 미정렬(10m직진 필요)]
+[cluster_plot_node-13] [INFO] [1789864425.663008098] [lidar_clustering]: ID=1, X=5.32 m, Y=3.66 m, Width=0.06 m, Depth=0.04 m, Distance=6.46 m
+[cluster_plot_node-13] [INFO] [1789864425.663308496] [lidar_clustering]: ID=2, X=5.15 m, Y=2.21 m, Width=0.09 m, Depth=0.08 m, Distance=5.60 m
+[cluster_plot_node-13] [INFO] [1789864425.663584619] [lidar_clustering]: ID=3, X=6.65 m, Y=2.32 m, Width=0.30 m, Depth=0.07 m, Distance=7.04 m
+[cluster_plot_node-13] [INFO] [1789864425.663853688] [lidar_clustering]: ID=6, X=2.25 m, Y=2.47 m, Width=0.30 m, Depth=0.15 m, Distance=3.34 m
+[cluster_plot_node-13] [INFO] [1789864425.664109313] [lidar_clustering]: ID=8, X=0.33 m, Y=1.59 m, Width=0.01 m, Depth=0.03 m, Distance=1.62 m
+[cluster_plot_node-13] [INFO] [1789864425.664366981] [lidar_clustering]: ID=9, X=1.09 m, Y=3.81 m, Width=0.03 m, Depth=0.24 m, Distance=3.96 m
+[cluster_plot_node-13] [INFO] [1789864425.664621213] [lidar_clustering]: ID=11, X=1.16 m, Y=-1.13 m, Width=0.32 m, Depth=0.11 m, Distance=1.62 m
+[cluster_plot_node-13] [INFO] [1789864425.664871999] [lidar_clustering]: ID=12, X=2.20 m, Y=-0.18 m, Width=0.03 m, Depth=0.00 m, Distance=2.21 m
+[cluster_plot_node-13] [INFO] [1789864425.665125009] [lidar_clustering]: ID=13, X=1.25 m, Y=-2.54 m, Width=0.55 m, Depth=0.70 m, Distance=2.83 m
+[cluster_plot_node-13] [INFO] [1789864425.665382357] [lidar_clustering]: ID=14, X=0.68 m, Y=-0.70 m, Width=0.03 m, Depth=0.24 m, Distance=0.98 m
+[cluster_plot_node-13] [INFO] [1789864425.665630658] [lidar_clustering]: ID=19, X=0.34 m, Y=-1.17 m, Width=0.10 m, Depth=0.07 m, Distance=1.21 m
+[cluster_plot_node-13] [INFO] [1789864425.665876615] [lidar_clustering]: ID=20, X=1.74 m, Y=-0.43 m, Width=0.15 m, Depth=0.04 m, Distance=1.80 m
+[cluster_plot_node-13] [INFO] [1789864425.666121439] [lidar_clustering]: ID=21, X=0.95 m, Y=-2.15 m, Width=0.05 m, Depth=0.29 m, Distance=2.35 m
+[cluster_plot_node-13] [INFO] [1789864425.666417829] [lidar_clustering]: ID=23, X=3.37 m, Y=2.13 m, Width=0.29 m, Depth=0.14 m, Distance=3.99 m
+[cluster_plot_node-13] [INFO] [1789864425.666641395] [lidar_clustering]: ID=25, X=3.59 m, Y=2.66 m, Width=0.11 m, Depth=0.12 m, Distance=4.47 m
+[cluster_plot_node-13] [INFO] [1789864425.666828753] [lidar_clustering]: ID=26, X=1.48 m, Y=-1.66 m, Width=0.02 m, Depth=0.02 m, Distance=2.22 m
+[cluster_plot_node-13] [INFO] [1789864425.667010420] [lidar_clustering]: ID=28, X=6.05 m, Y=3.92 m, Width=0.08 m, Depth=0.05 m, Distance=7.21 m
+[cluster_plot_node-13] [INFO] [1789864425.667187869] [lidar_clustering]: ID=29, X=2.73 m, Y=2.66 m, Width=0.62 m, Depth=0.57 m, Distance=3.81 m
+[cluster_plot_node-13] [INFO] [1789864425.667370569] [lidar_clustering]: ID=31, X=1.75 m, Y=-2.38 m, Width=0.03 m, Depth=0.03 m, Distance=2.95 m
+[cluster_plot_node-13] [INFO] [1789864425.667549611] [lidar_clustering]: ID=32, X=0.93 m, Y=-1.72 m, Width=0.01 m, Depth=0.02 m, Distance=1.96 m
+[cluster_plot_node-13] [INFO] [1789864425.667726359] [lidar_clustering]: ID=34, X=3.34 m, Y=-0.60 m, Width=0.11 m, Depth=0.06 m, Distance=3.39 m
+[cluster_plot_node-13] [INFO] [1789864425.667899882] [lidar_clustering]: ID=35, X=5.86 m, Y=2.14 m, Width=0.06 m, Depth=0.02 m, Distance=6.24 m
+[cluster_plot_node-13] [INFO] [1789864425.668072372] [lidar_clustering]: ID=36, X=1.03 m, Y=2.98 m, Width=0.05 m, Depth=0.08 m, Distance=3.15 m
+[cluster_plot_node-13] [INFO] [1789864425.668245984] [lidar_clustering]: ID=37, X=2.28 m, Y=-1.16 m, Width=0.86 m, Depth=0.28 m, Distance=2.56 m
+[cluster_plot_node-13] [INFO] [1789864425.668421580] [lidar_clustering]: ID=38, X=0.90 m, Y=1.63 m, Width=0.13 m, Depth=0.69 m, Distance=1.86 m
+[cluster_plot_node-13] [INFO] [1789864425.668592057] [lidar_clustering]: ID=41, X=5.46 m, Y=2.52 m, Width=0.09 m, Depth=0.07 m, Distance=6.01 m
+[cluster_plot_node-13] [INFO] [1789864425.668764387] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.87 m, best_angle=15.0 deg
+[serial_bridge-12] [INFO] [1789864425.826377276] [serial_bridge_node]: 거버너 — 측정 0.58+0.24(선행) > 명령 0.50 (+0.31) → PWM 67 → 34
+[cluster_plot_node-13] [INFO] [1789864426.571548564] [lidar_clustering]: ID=1, X=5.17 m, Y=3.13 m, Width=0.06 m, Depth=0.02 m, Distance=6.05 m
+[cluster_plot_node-13] [INFO] [1789864426.571971039] [lidar_clustering]: ID=2, X=4.50 m, Y=2.37 m, Width=0.30 m, Depth=0.04 m, Distance=5.09 m
+[cluster_plot_node-13] [INFO] [1789864426.572247392] [lidar_clustering]: ID=3, X=6.20 m, Y=2.66 m, Width=0.09 m, Depth=0.19 m, Distance=6.75 m
+[cluster_plot_node-13] [INFO] [1789864426.572445630] [lidar_clustering]: ID=5, X=4.75 m, Y=3.87 m, Width=0.07 m, Depth=0.06 m, Distance=6.13 m
+[cluster_plot_node-13] [INFO] [1789864426.572723296] [lidar_clustering]: ID=6, X=1.61 m, Y=2.58 m, Width=0.40 m, Depth=0.26 m, Distance=3.04 m
+[cluster_plot_node-13] [INFO] [1789864426.572941190] [lidar_clustering]: ID=9, X=0.41 m, Y=3.85 m, Width=0.05 m, Depth=0.15 m, Distance=3.87 m
+[cluster_plot_node-13] [INFO] [1789864426.573133467] [lidar_clustering]: ID=11, X=0.58 m, Y=-1.01 m, Width=0.08 m, Depth=0.08 m, Distance=1.16 m
+[cluster_plot_node-13] [INFO] [1789864426.573322849] [lidar_clustering]: ID=12, X=1.63 m, Y=-0.13 m, Width=0.04 m, Depth=0.01 m, Distance=1.63 m
+[cluster_plot_node-13] [INFO] [1789864426.573505408] [lidar_clustering]: ID=13, X=1.29 m, Y=-2.21 m, Width=0.04 m, Depth=0.07 m, Distance=2.56 m
+[cluster_plot_node-13] [INFO] [1789864426.573689861] [lidar_clustering]: ID=14, X=0.42 m, Y=-1.56 m, Width=0.01 m, Depth=0.07 m, Distance=1.61 m
+[cluster_plot_node-13] [INFO] [1789864426.573869875] [lidar_clustering]: ID=19, X=1.75 m, Y=-1.48 m, Width=0.30 m, Depth=0.13 m, Distance=2.29 m
+[cluster_plot_node-13] [INFO] [1789864426.574049528] [lidar_clustering]: ID=20, X=1.22 m, Y=-0.37 m, Width=0.08 m, Depth=0.07 m, Distance=1.28 m
+[cluster_plot_node-13] [INFO] [1789864426.574230154] [lidar_clustering]: ID=21, X=0.47 m, Y=-2.75 m, Width=0.02 m, Depth=0.06 m, Distance=2.79 m
+[cluster_plot_node-13] [INFO] [1789864426.574413735] [lidar_clustering]: ID=23, X=2.92 m, Y=2.04 m, Width=0.33 m, Depth=0.14 m, Distance=3.56 m
+[cluster_plot_node-13] [INFO] [1789864426.574593328] [lidar_clustering]: ID=25, X=2.99 m, Y=2.74 m, Width=0.11 m, Depth=0.14 m, Distance=4.05 m
+[cluster_plot_node-13] [INFO] [1789864426.574770898] [lidar_clustering]: ID=26, X=2.05 m, Y=-1.72 m, Width=0.04 m, Depth=0.05 m, Distance=2.68 m
+[cluster_plot_node-13] [INFO] [1789864426.574949890] [lidar_clustering]: ID=28, X=6.16 m, Y=2.06 m, Width=0.17 m, Depth=0.06 m, Distance=6.50 m
+[cluster_plot_node-13] [INFO] [1789864426.575128702] [lidar_clustering]: ID=29, X=2.38 m, Y=2.52 m, Width=1.14 m, Depth=0.86 m, Distance=3.46 m
+[cluster_plot_node-13] [INFO] [1789864426.575348621] [lidar_clustering]: ID=31, X=2.31 m, Y=-2.75 m, Width=0.63 m, Depth=0.44 m, Distance=3.59 m
+[cluster_plot_node-13] [INFO] [1789864426.575574059] [lidar_clustering]: ID=32, X=0.81 m, Y=-2.17 m, Width=0.13 m, Depth=0.32 m, Distance=2.32 m
+[cluster_plot_node-13] [INFO] [1789864426.575769893] [lidar_clustering]: ID=34, X=3.41 m, Y=-0.76 m, Width=0.15 m, Depth=0.07 m, Distance=3.49 m
+[cluster_plot_node-13] [INFO] [1789864426.575979312] [lidar_clustering]: ID=35, X=4.94 m, Y=2.22 m, Width=0.07 m, Depth=0.03 m, Distance=5.42 m
+[cluster_plot_node-13] [INFO] [1789864426.576164746] [lidar_clustering]: ID=36, X=1.15 m, Y=2.38 m, Width=0.24 m, Depth=0.10 m, Distance=2.65 m
+[cluster_plot_node-13] [INFO] [1789864426.576348968] [lidar_clustering]: ID=37, X=2.83 m, Y=0.02 m, Width=0.09 m, Depth=0.17 m, Distance=2.83 m
+[cluster_plot_node-13] [INFO] [1789864426.576537478] [lidar_clustering]: ID=38, X=0.47 m, Y=1.63 m, Width=0.03 m, Depth=0.36 m, Distance=1.70 m
+[cluster_plot_node-13] [INFO] [1789864426.576724215] [lidar_clustering]: ID=41, X=4.78 m, Y=2.74 m, Width=0.23 m, Depth=0.17 m, Distance=5.51 m
+[cluster_plot_node-13] [INFO] [1789864426.576904319] [lidar_clustering]: ID=42, X=3.38 m, Y=2.36 m, Width=0.03 m, Depth=0.02 m, Distance=4.13 m
+[cluster_plot_node-13] [INFO] [1789864426.577083813] [lidar_clustering]: ID=43, X=7.27 m, Y=-0.33 m, Width=0.10 m, Depth=0.00 m, Distance=7.28 m
+[cluster_plot_node-13] [INFO] [1789864426.577263096] [lidar_clustering]: ID=44, X=1.79 m, Y=3.03 m, Width=0.08 m, Depth=0.11 m, Distance=3.52 m
+[cluster_plot_node-13] [INFO] [1789864426.577444633] [lidar_clustering]: ID=45, X=0.32 m, Y=-0.68 m, Width=0.00 m, Depth=0.01 m, Distance=0.76 m
+[cluster_plot_node-13] [INFO] [1789864426.577626671] [lidar_clustering]: ID=46, X=1.68 m, Y=-0.94 m, Width=0.45 m, Depth=0.14 m, Distance=1.93 m
+[cluster_plot_node-13] [INFO] [1789864426.577815912] [lidar_clustering]: ID=47, X=6.50 m, Y=4.11 m, Width=0.07 m, Depth=0.11 m, Distance=7.69 m
+[cluster_plot_node-13] [INFO] [1789864426.577999944] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.71 m, best_angle=0.0 deg
+[cluster_plot_node-13] [INFO] [1789864426.578181721] [lidar_clustering]: points=497, clusters=23, tracks=32
+[serial_bridge-12] [WARN] [1789864426.634681515] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4262mV — 배터리/전원 확인
+[heading_init_node-5] [INFO] [1789864427.103578944] [gps_heading_init]: 직진 중... 1.1/10m
