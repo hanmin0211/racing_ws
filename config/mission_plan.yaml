@@ -202,14 +202,14 @@ missions:
   #     이 구간에서 라이다가 옆으로 돌아 나가면 미션 실패다. 반드시 서야 한다.
   #     → inhibits 로 lidar_avoid 를 명시적으로 막는다.
   - name: sudden_stop
-    enabled: false
+    enabled: true
     arm_topic: /sudden_stop/arm
     done_topic: /sudden_stop/done
     inhibits: [lidar_avoid]
     trigger:
       type: course_s
-      s_enter: 0.0
-      s_exit:  0.0
+      s_enter: 470.0
+      s_exit: 515.0
     timeout_s: 25.0
     expected_s: 12.0
     critical: false
@@ -229,13 +229,14 @@ missions:
   #   → S코스 구간 s 를 재서 좁힐 것:
   #     python3 tools/mission_s.py --waypoints <용인파일> --live --name s_course
   - name: lidar_avoid
-    enabled: false
+    enabled: true
     arm_topic: /lidar/arm
     exclusive: false
     trigger:
       type: course_s
-      s_enter: 0.0          # ← S코스 진입 s
-      s_exit:  0.0          # ← S코스 탈출 s
+      s_enter: 12.0          # ← S코스 진입 s
+      s_exit: 648.0
+      allow_full_course: true          # ← S코스 탈출 s
     critical: false
 
 # ─────────────────────────────────────────────────────────────────────
