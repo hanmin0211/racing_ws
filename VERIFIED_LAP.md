@@ -153,3 +153,79 @@ VMIN 4106 mV (리셋선 3483 — 뚫지 않았다)
 | `❌ 헤딩 캘리브 무효: 주행 중 측위 점프 ... = 2.0m/s (상한 2.0m/s)` | 개루프 캘리브가 **가속한다**(실측 1.01→1.69 m/s). 진짜 점프가 아니다 | `calib_jump_speed:=3.0`. 2026-08-24 사고는 19m/s 라 3.0 으로도 잡힌다 |
 | `앞바퀴가 우로 N° 꺾여 있다` + `STALL: steer=1` | 정지 상태 아스팔트 조향이 못 이긴다 | 손으로 앞바퀴를 중앙에. 차를 몇 cm 굴리면 스스로 찾는다 |
 | `FollowGap: mode=BLOCKED, front=0.3~0.9m` | 라이다가 지면/차체를 때린다 | `python3 tools/lidar_mount_check.py` 로 마운트 확인 |
+
+---
+
+# ★ 2차 주행 — 돌발정지 포함 (2026-09-20)
+
+1차 완주(a6d737f) 확보 후 미션에 도전하는 설정이다.
+
+```bash
+cd /home/han/racing_ws && source install/setup.bash && ros2 launch gps_localization bringup.launch.py control:=true sequencer:=true sudden_stop:=true sudden_stop_dwell:=5.0 obstacle_stop_dist:=1.0 lidar:=true rviz:=true auto_calib:=true waypoints:=/home/han/racing_ws/config/yongin_2026-09-05/wp_yongin_drive_0.5.yaml max_speed:=1.6 curvature_gain:=6.0 calib_distance:=10.0 auto_calib_speed:=0.5 calib_jump_speed:=3.0 ff_mode:=ros ff_static:=46.0 ff_gain:=42.6 ff_min_pwm:=0.0 ff_breakaway_pwm:=90.0 ff_breakaway_ms:=1200.0 grade_ff_gain:=1.0 grade_ff_max:=95.0 gov_pwm:=60.0 gov_min_grade:=0.06 gov_gain:=300.0 gov_lead_s:=0.3 gov_deadband:=0.20 2>&1 | tee /tmp/run2.log
+```
+
+## 1차 대비 바뀐 것 4개뿐
+
+| 인자 | 1차 | 2차 | 왜 |
+|---|---|---|---|
+| `sequencer` | false | **true** | 미션 arm/disarm |
+| `sudden_stop` | (없음) | **true** | 돌발정지 노드 |
+| `sudden_stop_dwell` | — | **5.0** | 규정 최소 3초 + 여유 2초 |
+| `obstacle_stop_dist` | 0.8 | **1.0** | 관성 여유 (아래 계산) |
+
+## 구간 배치 (config/mission_plan.yaml)
+
+```
+sudden_stop   s=470~515   운전자가 지도에서 짚은 483~499 + 앞뒤 여유
+lidar_avoid   s= 12~648   allow_full_course:true
+S자 구간      s=166~250   ← 돌발 구간과 안 겹친다. 회피 정상
+```
+
+| 구간 | 회피 조향 | 감속·정지 | 3초 홀드 |
+|---|---|---|---|
+| s=0~12 (캘리브) | — | ✅ | ❌ |
+| s=12~470 | ✅ | ✅ | ❌ |
+| **s=470~515 (돌발)** | ❌ 규정상 차단 | ✅ | ✅ |
+| s=515~648 | ✅ | ✅ | ❌ |
+
+## ⚠ obstacle_stop_dist 는 '멈출 거리' 가 아니다
+
+런치 주석: **"동력을 끊을 거리지 멈출 거리가 아니다"**.
+`ff_brake_pwm:=0` (능동제동 꺼짐)이라 끊은 뒤 관성으로 더 간다.
+모델 `a = −(0.861·v + 0.37)` 로 계산한 관성 거리:
+
+```
+차단 시 0.5 m/s → 0.20 m      1.5 m/s → 0.99 m
+        1.0 m/s → 0.56 m      2.0 m/s → 1.46 m
+```
+
+4m 부터 감속 램프가 걸리므로 실제로는 훨씬 느리게 도달하지만,
+개루프라 명령보다 빠르다. 그래서 0.8 → **1.0** 으로 0.2m 벌었다.
+
+⚠ **1.2 이상으로 올리지 말 것.** sudden_stop_node 의 `trigger_dist`
+가 1.2 이고 "obstacle_stop_dist(0.8)보다 조금 크게 잡아 하드정지를
+인지한다" 는 전제다. 뒤집히면 dwell 타이머가 안 돌아 미션이 조용히 실패한다.
+
+⚠ **능동제동(`ff_brake_pwm`)은 켜지 않았다.** 급제동이 전원을 끌어당기는데
+오늘 VMIN 4230mV 다. 그 자리에서 멈추면 1분 넘어 탈락이다.
+
+## 검증한 것
+
+```
+✅ 런치 배선   require_arm=True · dwell=5.0 · require_arm_for_steer=True
+✅ 코스 대조   계획 648.3m · 실제 648.27m
+❌ 겹침 경고   sudden_stop↔lidar_avoid — **의도한 것**
+```
+
+겹침 ❌ 는 규정(항목 7 "회피기동은 미션 성공으로 인정하지 않음")이 요구하는
+동작이다. 검사기는 과거 사고(돌발이 회피를 꺼 의자를 못 피함) 때문에 경고한다.
+→ **s=470~515 안에 더미가 아닌 장애물이 있으면 못 피한다. 다만 정지는 한다.**
+
+## 더미 처리
+
+```
+완전정지 → 5초 유지 → 더미를 3m(clear_dist) 밖으로 치우면 재출발
+10초(clear_timeout) 안 치우면 스스로 우회(PASSING) — 규정상 허용
+```
+
+⚠ `sequencer:=true` 는 오늘 실차로 한 번도 안 돌려봤다. 1차 완주는 false 였다.
