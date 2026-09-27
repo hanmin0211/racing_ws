@@ -181,7 +181,7 @@ flowchart TD
 
 ## 5. 결과 시각화
 
-| 경로 추종 횡오차 (영남대 코스) | 경사 보상 적용 본선 주행 (용인 648 m) |
+| 경로 추종 횡오차 (교내 시험 트랙) | 경사 보상 적용 본선 주행 (용인 648 m) |
 |---|---|
 | ![trajectory](docs/images/Fig3_trajectory.png) | ![grade on](docs/images/Fig_grade_on.png) |
 
