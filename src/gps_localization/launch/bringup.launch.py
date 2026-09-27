@@ -26,7 +26,7 @@ bringup.launch.py
                  정지지점은 ~/stop_points.yaml 에서 읽는다
                  (STOP_POINTS_FILE 환경변수로 다른 파일 지정 가능)
 
-비밀번호: ngii_rtk가 env NGII_PW(기본 'ngii')를 사용.
+계정: ngii_rtk가 env NGII_ID / NGII_PW 를 사용 (저장소에 계정을 남기지 않는다).
 """
 
 import os

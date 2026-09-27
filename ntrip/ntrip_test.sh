@@ -14,7 +14,7 @@
 set -u
 : "${NGII_PW:?환경변수 NGII_PW에 NGII 비밀번호를 넣어 실행하세요. 예: NGII_PW='****' ./ntrip_test.sh}"
 
-ID=<NGII_ID>
+ID="${NGII_ID:?환경변수 NGII_ID에 NTRIP 아이디를 넣어 실행하세요}"
 CASTER=RTS2.ngii.go.kr
 PORT=2101
 MOUNT=VRS-RTCM32          # 접속경로 창에서 확인한 마운트포인트(원활)

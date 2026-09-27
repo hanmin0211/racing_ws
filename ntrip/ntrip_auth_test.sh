@@ -10,11 +10,11 @@
 #
 # 사용법 (비번은 환경변수로만):
 #   NGII_PW='접속비밀번호' ./ntrip_auth_test.sh
-#   NGII_ID='<NGII_ID>' NGII_PW='...' ./ntrip_auth_test.sh   # 아이디도 지정 가능
+#   NGII_ID='발급받은_아이디' NGII_PW='...' ./ntrip_auth_test.sh   # 아이디도 지정 가능
 # =============================================================================
 set -u
 : "${NGII_PW:?환경변수 NGII_PW에 NTRIP 접속 비밀번호를 넣어 실행하세요}"
-ID="${NGII_ID:-<NGII_ID>}"
+ID="${NGII_ID:?환경변수 NGII_ID에 NTRIP 아이디를 넣어 실행하세요}"
 CASTER=RTS2.ngii.go.kr
 PORT=2101
 MOUNT="${NGII_MOUNT:-VRS-RTCM32}"

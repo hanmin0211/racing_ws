@@ -25,6 +25,7 @@ ublox_dgnss 패키지에 기본 포함된 ntrip_client_node 는 GGA(NMEA)를 캐
 """
 
 import base64
+import os
 import math
 import socket
 import threading
@@ -65,8 +66,8 @@ class VrsNtripClient(Node):
     self.declare_parameter('host', 'RTS2.ngii.go.kr')
     self.declare_parameter('port', 2101)
     self.declare_parameter('mountpoint', 'VRS-RTCM32')
-    self.declare_parameter('username', '<NGII_ID>')
-    self.declare_parameter('password', 'ngii')
+    self.declare_parameter('username', os.environ.get('NGII_ID', ''))
+    self.declare_parameter('password', os.environ.get('NGII_PW', ''))
     self.declare_parameter('lat', 36.9706)     # 트랙 근방 고정 위치(충주)
     self.declare_parameter('lon', 127.8748)
     self.declare_parameter('height', 100.0)

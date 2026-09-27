@@ -15,8 +15,10 @@ F9P + NGII VRS RTK 전체 파이프라인 (USB 하나로 완결).
   3. vrs_ntrip_client        : NGII VRS 접속(GGA 전송) → RTCM을
                                /ntrip_client/rtcm 으로 발행.
 
-비밀번호는 환경변수로 주는 걸 권장:
-  NGII_PW='ngii' ros2 launch ngii_ntrip ngii_rtk.launch.py
+계정은 환경변수로만 준다 (저장소에 계정을 남기지 않기 위해):
+  export NGII_ID='발급받은_아이디'   # ~/.bashrc 에 넣어 두면 편하다
+  export NGII_PW='비밀번호'
+  ros2 launch ngii_ntrip ngii_rtk.launch.py
 
 트랙 위치가 충주와 많이 다르면 lat/lon 인자로 지정:
   ros2 launch ngii_ntrip ngii_rtk.launch.py lat:=37.1 lon:=127.9
@@ -63,8 +65,11 @@ def generate_launch_description():
       DeclareLaunchArgument('lon', default_value='127.8748'),
       DeclareLaunchArgument('height', default_value='100.0'),
       DeclareLaunchArgument(
+          'username',
+          default_value=EnvironmentVariable('NGII_ID', default_value='')),
+      DeclareLaunchArgument(
           'password',
-          default_value=EnvironmentVariable('NGII_PW', default_value='ngii')),
+          default_value=EnvironmentVariable('NGII_PW', default_value='')),
 
       Node(
           package='ublox_dgnss_node',
@@ -88,7 +93,7 @@ def generate_launch_description():
               'host': 'RTS2.ngii.go.kr',
               'port': 2101,
               'mountpoint': 'VRS-RTCM32',
-              'username': '<NGII_ID>',
+              'username': LaunchConfiguration('username'),
               'password': password,
               'lat': lat,
               'lon': lon,
