@@ -1,0 +1,1 @@
+t,x,y,yaw_deg,v,mode,avoid_steer_deg,obstacle_m,cmd_v,cmd_steer_deg,steer_actual_deg,vcc_mv,target_v,enc_v,curvature,drive_pwm,yaw_offset_deg
