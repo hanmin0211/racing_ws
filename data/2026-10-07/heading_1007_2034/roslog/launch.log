@@ -1,0 +1,35 @@
+1791372883.4251211 [INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-10-07-20-34-43-424546-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-26923
+1791372883.4252021 [INFO] [launch]: Default logging verbosity is set to INFO
+1791372883.4684508 [INFO] [launch.user]: 
+════════════════════════════════════════════════════════════
+  ⚠⚠  회피 꺼짐 (lidar:=false)  —  장애물을 그대로 들이받는다
+       장애물·S코스·돌발정지 구간을 달릴 거면 lidar:=true
+════════════════════════════════════════════════════════════
+1791372883.4743679 [INFO] [ublox_dgnss_node-1]: process started with pid [26925]
+1791372883.4744620 [INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [26927]
+1791372883.4745004 [INFO] [vrs_ntrip_client-3]: process started with pid [26929]
+1791372883.4745388 [INFO] [hfi_a9_ros2-4]: process started with pid [26931]
+1791372883.4745712 [INFO] [heading_init_node-5]: process started with pid [26933]
+1791372883.4745986 [INFO] [direct_localization_node-6]: process started with pid [26935]
+1791372883.4746251 [INFO] [global_path_publisher-7]: process started with pid [26937]
+1791372883.4746501 [INFO] [local_sliding_window_node-8]: process started with pid [26939]
+1791372883.4746757 [INFO] [local_pure_pursuit_node-9]: process started with pid [26941]
+1791372883.4747000 [INFO] [longitudinal_controller-10]: process started with pid [26943]
+1791372883.4747283 [INFO] [vehicle_cmd_mux-11]: process started with pid [26945]
+1791372883.4747527 [INFO] [serial_bridge-12]: process started with pid [26947]
+1791372883.4747777 [INFO] [rviz2-13]: process started with pid [26949]
+1791372988.3734417 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1791372988.3819082 [ERROR] [ublox_dgnss_node-1]: process has died [pid 26925, exit code -11, cmd '/opt/ros/humble/lib/ublox_dgnss_node/ublox_dgnss_node --ros-args -r __node:=ublox_dgnss --params-file /tmp/launch_params_e1alomi0'].
+1791372988.4858987 [INFO] [ublox_nav_sat_fix_hp-2]: process has finished cleanly [pid 26927]
+1791372988.5287697 [INFO] [rviz2-13]: process has finished cleanly [pid 26949]
+1791372988.5340235 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT) again, ignoring...
+1791372988.5355330 [INFO] [vehicle_cmd_mux-11]: process has finished cleanly [pid 26945]
+1791372988.5372062 [INFO] [local_pure_pursuit_node-9]: process has finished cleanly [pid 26941]
+1791372988.5391982 [ERROR] [longitudinal_controller-10]: process has died [pid 26943, exit code -2, cmd '/home/han/racing_ws/install/velocity_controller/lib/velocity_controller/longitudinal_controller --ros-args -r __node:=longitudinal_controller --params-file /tmp/launch_params_f73830v1'].
+1791372988.5392666 [ERROR] [local_sliding_window_node-8]: process has died [pid 26939, exit code -2, cmd '/home/han/racing_ws/install/waypoint_follower/lib/waypoint_follower/local_sliding_window_node --ros-args -r __node:=local_sliding_window_node'].
+1791372988.5404847 [ERROR] [global_path_publisher-7]: process has died [pid 26937, exit code -2, cmd '/home/han/racing_ws/install/waypoint_follower/lib/waypoint_follower/global_path_publisher --ros-args -r __node:=global_path_publisher --params-file /tmp/launch_params_mhcc45gv'].
+1791372988.5413995 [ERROR] [direct_localization_node-6]: process has died [pid 26935, exit code -2, cmd '/home/han/racing_ws/install/gps_localization/lib/gps_localization/direct_localization_node --ros-args -r __node:=direct_localization --params-file /tmp/launch_params_ap51x6_t'].
+1791372988.5417345 [ERROR] [heading_init_node-5]: process has died [pid 26933, exit code -2, cmd '/home/han/racing_ws/install/gps_heading_init/lib/gps_heading_init/heading_init_node --ros-args -r __node:=gps_heading_init --params-file /tmp/launch_params_zkw6cgit'].
+1791372988.5421429 [ERROR] [vrs_ntrip_client-3]: process has died [pid 26929, exit code -2, cmd '/home/han/racing_ws/install/ngii_ntrip/lib/ngii_ntrip/vrs_ntrip_client --ros-args -r __node:=ngii_vrs_ntrip_client --params-file /tmp/launch_params_be7bh8d1'].
+1791372988.5426722 [ERROR] [serial_bridge-12]: process has died [pid 26947, exit code -2, cmd '/home/han/racing_ws/install/velocity_controller/lib/velocity_controller/serial_bridge --ros-args -r __node:=serial_bridge_node --params-file /tmp/launch_params_wdnhn339'].
+1791372988.5427258 [ERROR] [hfi_a9_ros2-4]: process has died [pid 26931, exit code -2, cmd '/home/han/racing_ws/install/handsfree_ros2_imu/lib/handsfree_ros2_imu/hfi_a9_ros2 --ros-args -r __node:=imu --params-file /tmp/launch_params_n4v6z2_d'].
