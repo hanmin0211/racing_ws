@@ -1,10 +1,14 @@
-# 로컬 좌표계 원점 — 이 파일이 유일한 정본.
-# set_origin_from_fix.py 가 현장 RTK fix 로 자동 생성했다.
-# 생성 시각: 2026-09-05 11:51:02
-# 세팅 지점 위경도 ≈ 37.2889751, 127.1075264
+# 로컬 좌표계 원점 — 충주 캠퍼스 (학교 시험용)
+#
+# 값의 출처: 2026-08-23 주행 로그(logs/drive_20260823_015757.csv)의 위경도와
+# 로컬좌표에서 역산한 값이고, waypoint_follower/site_origin.py 의 충주 FALLBACK
+# 과도 같다. config/chungju_school/*.yaml 의 원점 스탬프와 **정확히 일치**하므로
+# 좌표 환산 없이 그대로 쓰인다.
+#
+# ⚠ 대회(용인) 전에 반드시 되돌릴 것:  bash tools/use_site.sh yongin
 
-site: "용인 (2026-09-05)"
+site: "충주 캠퍼스 (학교 시험)"
 
 utm_epsg: 32652
-origin_x: 332200.0
-origin_y: 4128600.0
+origin_x: 399848.522
+origin_y: 4092209.171

@@ -30,7 +30,8 @@ import rclpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import (DurabilityPolicy, QoSProfile,
+                       qos_profile_sensor_data)
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Float64, Int32, String
 
@@ -57,12 +58,27 @@ class Recorder(Node):
     self.steer_act = float('nan')
     self.vcc = 0
     self.scan_n = 0
+    # ★ 2026-10-07 추가 — 논문용 실측 수집.
+    #   종방향: 목표속도(제어기 출력)·엔코더속도·곡률·PWM.
+    #     ⚠ 기존 v 는 odom twist 라 0.2s 지연한다(odom-twist-lags).
+    #       cmd_v 는 **먹스 출력**이지 종방향 제어기의 목표가 아니다.
+    #       추종 성능을 보려면 /target_speed 와 /current_speed_enc 가 있어야 한다.
+    #   헤딩: yaw_offset (래치 토픽) — 캘리브 결과가 CSV 에 없으면
+    #       나중에 콘솔 로그를 뒤져야 한다.
+    self.tgt_v = float('nan')      # /target_speed
+    self.enc_v = float('nan')      # /current_speed_enc
+    self.curv = float('nan')       # /curvature
+    self.pwm = 0                   # /drive_pwm
+    self.yaw_off = float('nan')    # /heading/yaw_offset (래치)
 
     self.f = open(a.out, 'w', newline='')
     self.w = csv.writer(self.f)
     self.w.writerow(['t', 'x', 'y', 'yaw_deg', 'v',
                      'mode', 'avoid_steer_deg', 'obstacle_m',
-                     'cmd_v', 'cmd_steer_deg', 'steer_actual_deg', 'vcc_mv'])
+                     'cmd_v', 'cmd_steer_deg', 'steer_actual_deg', 'vcc_mv',
+                     # ↓ 2026-10-07 추가. 기존 컬럼 순서는 건드리지 않는다
+                     # (옛 기록을 읽는 분석 코드가 깨지지 않게 **뒤에만** 붙인다)
+                     'target_v', 'enc_v', 'curvature', 'drive_pwm', 'yaw_offset_deg'])
     # 라이다 점은 별도 파일 — 행이 훨씬 많다
     self.sf = open(os.path.splitext(a.out)[0] + '_scan.csv', 'w', newline='')
     self.sw = csv.writer(self.sf)
@@ -80,6 +96,20 @@ class Recorder(Node):
     self.create_subscription(Int32, '/vcc_mv',
                              lambda m: setattr(self, 'vcc', m.data), 10)
     self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 10)
+    self.create_subscription(Float64, '/target_speed',
+                             lambda m: setattr(self, 'tgt_v', m.data), 10)
+    self.create_subscription(Float64, '/current_speed_enc',
+                             lambda m: setattr(self, 'enc_v', m.data), 10)
+    self.create_subscription(Float64, '/curvature',
+                             lambda m: setattr(self, 'curv', m.data), 10)
+    self.create_subscription(Int32, '/drive_pwm',
+                             lambda m: setattr(self, 'pwm', m.data), 10)
+    # ⚠ yaw_offset 은 TRANSIENT_LOCAL(래치)이다. 기본 QoS 로 구독하면
+    #   기록기가 늦게 떠도 값을 못 받는다 — 캘리브는 한 번만 발행한다.
+    _lat = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+    self.create_subscription(Float64, '/heading/yaw_offset',
+                             lambda m: setattr(self, 'yaw_off',
+                                               math.degrees(m.data)), _lat)
     self.create_subscription(LaserScan, a.scan_topic, self.scan_cb,
                              qos_profile_sensor_data)
     self.create_timer(1.0 / a.rate, self.tick)
@@ -133,7 +163,12 @@ class Recorder(Node):
                      '' if math.isnan(self.obs) else f'{self.obs:.2f}',
                      f'{self.cmd_v:.2f}', f'{self.cmd_steer:.1f}',
                      '' if math.isnan(self.steer_act) else f'{self.steer_act:.1f}',
-                     self.vcc])
+                     self.vcc,
+                     '' if math.isnan(self.tgt_v) else f'{self.tgt_v:.2f}',
+                     '' if math.isnan(self.enc_v) else f'{self.enc_v:.3f}',
+                     '' if math.isnan(self.curv) else f'{self.curv:.4f}',
+                     self.pwm,
+                     '' if math.isnan(self.yaw_off) else f'{self.yaw_off:.2f}'])
     self.rows += 1
     if self.rows % 100 == 0:
       self.f.flush()
