@@ -32,7 +32,7 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import (DurabilityPolicy, QoSProfile,
                        qos_profile_sensor_data)
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import Imu, LaserScan
 from std_msgs.msg import Float64, Int32, String
 
 
@@ -70,6 +70,21 @@ class Recorder(Node):
     self.curv = float('nan')       # /curvature
     self.pwm = 0                   # /drive_pwm
     self.yaw_off = float('nan')    # /heading/yaw_offset (래치)
+    # ★ 2026-10-07 추가 — 경사(피치). PID 가상시험 모델이 평지 가정이라
+    #   실측 속도와 모양이 안 맞았다(상관 r=0.03). 경사를 넣으려면 기록이 필요하다.
+    #   serial_bridge 와 **같은 식·같은 보정파일**로 계산한다 — 어긋나면 안 된다.
+    #   ⚠ 원시값이다(저역통과 안 함). 가감속이 섞인다: 1 m/s² ≈ 5.8° ≈ 10%.
+    #     분석할 때 enc_v 미분으로 atan(a/g) 를 빼거나 저역통과할 것.
+    self.pitch = float('nan')
+    self._p_off, self._p_sign = 0.0, 1.0
+    try:
+      import yaml
+      _y = yaml.safe_load(open('/home/han/racing_ws/config/imu_pitch_offset.yaml'))
+      self._p_off = float(_y.get('pitch_offset_rad', 0.0))
+      self._p_sign = float(_y.get('sign', 1.0))
+      print(f'  IMU 피치 보정 offset={self._p_off:.4f}rad sign={self._p_sign:+.0f}')
+    except Exception as e:  # noqa: BLE001
+      print(f'  ⚠ imu_pitch_offset.yaml 을 못 읽었다({e}) — 보정 없이 원시 피치를 쓴다')
 
     self.f = open(a.out, 'w', newline='')
     self.w = csv.writer(self.f)
@@ -78,7 +93,8 @@ class Recorder(Node):
                      'cmd_v', 'cmd_steer_deg', 'steer_actual_deg', 'vcc_mv',
                      # ↓ 2026-10-07 추가. 기존 컬럼 순서는 건드리지 않는다
                      # (옛 기록을 읽는 분석 코드가 깨지지 않게 **뒤에만** 붙인다)
-                     'target_v', 'enc_v', 'curvature', 'drive_pwm', 'yaw_offset_deg'])
+                     'target_v', 'enc_v', 'curvature', 'drive_pwm', 'yaw_offset_deg',
+                     'pitch_deg', 'grade_pct'])
     # 라이다 점은 별도 파일 — 행이 훨씬 많다
     self.sf = open(os.path.splitext(a.out)[0] + '_scan.csv', 'w', newline='')
     self.sw = csv.writer(self.sf)
@@ -107,6 +123,8 @@ class Recorder(Node):
     # ⚠ yaw_offset 은 TRANSIENT_LOCAL(래치)이다. 기본 QoS 로 구독하면
     #   기록기가 늦게 떠도 값을 못 받는다 — 캘리브는 한 번만 발행한다.
     _lat = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+    self.create_subscription(Imu, a.imu_topic, self.imu_cb,
+                             qos_profile_sensor_data)
     self.create_subscription(Float64, '/heading/yaw_offset',
                              lambda m: setattr(self, 'yaw_off',
                                                math.degrees(m.data)), _lat)
@@ -120,6 +138,12 @@ class Recorder(Node):
     p = m.pose.pose
     self.pose = (p.position.x, p.position.y, yaw_from_quat(p.orientation))
     self.v = m.twist.twist.linear.x
+
+  def imu_cb(self, m):
+    # serial_bridge_node._imu_cb 와 **같은 식** (저역통과만 뺐다)
+    q = m.orientation
+    sinp = max(-1.0, min(1.0, 2.0 * (q.w * q.y - q.z * q.x)))
+    self.pitch = self._p_sign * (math.asin(sinp) - self._p_off)
 
   def cmd_cb(self, m):
     self.cmd_v = m.linear.x
@@ -168,7 +192,9 @@ class Recorder(Node):
                      '' if math.isnan(self.enc_v) else f'{self.enc_v:.3f}',
                      '' if math.isnan(self.curv) else f'{self.curv:.4f}',
                      self.pwm,
-                     '' if math.isnan(self.yaw_off) else f'{self.yaw_off:.2f}'])
+                     '' if math.isnan(self.yaw_off) else f'{self.yaw_off:.2f}',
+                     '' if math.isnan(self.pitch) else f'{math.degrees(self.pitch):.2f}',
+                     '' if math.isnan(self.pitch) else f'{100*math.sin(self.pitch):.2f}'])
     self.rows += 1
     if self.rows % 100 == 0:
       self.f.flush()
@@ -182,6 +208,8 @@ def main():
   ap.add_argument('--out', default=f'/tmp/drive_{time.strftime("%H%M")}.csv')
   ap.add_argument('--rate', type=float, default=20.0)
   ap.add_argument('--scan-topic', default='/scan_front')
+  ap.add_argument('--imu-topic', default='handsfree/imu',
+                  help='피치 계산용 IMU 토픽 (serial_bridge 의 imu_topic 과 같게)')
   ap.add_argument('--scan-every', type=int, default=3,
                   help='이 프레임마다 한 번 스캔을 저장 (기본 3)')
   ap.add_argument('--yaw-offset', type=float, default=173.0,
