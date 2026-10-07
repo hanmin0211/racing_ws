@@ -15,6 +15,23 @@
     heading_1007_2034:  전체 기울기 +3.41°/분 → 직선만 −1.46°/분 (방향 없음)
   → **헤딩 정확도는 직선 구간 통계로 말할 것.**
 
+★ ⚠⚠ 2026-10-07 정정 — 커브 오차가 '전부 측정 지연' 은 아니다
+  처음엔 "커브 잔차 = 0.5초 현(chord) 지연" 이라 했는데 반만 맞았다.
+  heading_1007_2034 에서 두 물리 효과로 회귀하면
+      잔차 = −0.39° − 0.79·(L·κ) + 0.37·κ      [도]
+        현 지연   −0.79  (이론 −0.50 — 부호 맞음, 크기 1.6배)
+        레버암    +0.37 m (안테나가 회전중심 앞 0.37m — 커브에서 안테나 이동방향
+                          ≠ 차체 방향. 오차가 아니라 실제 기하학적 차이)
+      설명력 R² = 0.18 — **둘 합쳐도 커브 잔차의 18% 만 설명한다.**
+  나머지 82% 는 미규명. 후보: GPS-IMU 시간 어긋남(요레이트에 비례),
+  IMU 내부필터 지연, 차량 횡미끄럼. 요레이트와의 상관으로 다음에 가를 것.
+  → 논문에서 커브 오차를 '측정 지연' 으로 단정하지 말 것.
+    헤딩 정확도는 직선 구간으로 말하고, 커브는 '일부 규명' 으로 쓸 것.
+
+★ 실효 표본수 — n 을 그대로 쓰지 말 것
+  20Hz 연속 표본은 독립이 아니다. 잔차 자기상관 1/e 시간 0.3초 →
+  heading_1007_2034 의 명목 962 는 실효 약 68 이다.
+
 ★ 캘리브 전/후
   drive.csv 의 yaw_offset_deg 가 처음 생기는 시각 = 캘리브 완료. 그 전 잔차는
   보정 전이라 ≈ yaw_offset 이고, 그 뒤는 ≈ 0 이어야 한다.
@@ -129,7 +146,7 @@ def main():
     cell.set_edgecolor('#ddd')
     if i == 0: cell.set_facecolor('#eceff1'); cell.set_text_props(weight='bold')
     elif rws and i <= len(rws) and rws[i-1][0] == '직선': cell.set_facecolor('#dbeafe'); cell.set_text_props(weight='bold')
-  ax.set_title('⑤ 헤딩 정확도는 직선으로 말한다 — 커브는 측정 지연', fontsize=12, weight='bold', loc='left')
+  ax.set_title('⑤ 헤딩 정확도는 직선으로 말한다 (커브 오차는 일부만 규명)', fontsize=12, weight='bold', loc='left')
 
   name = os.path.basename(os.path.dirname(os.path.abspath(a.csv)))
   fig.suptitle(f'GPS 이동방향으로 저가형 IMU 방위각 보정 — {name}', fontsize=15, weight='bold')
