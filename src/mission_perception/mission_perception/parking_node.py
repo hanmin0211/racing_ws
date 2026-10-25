@@ -28,6 +28,15 @@
   mux 는 teleop 이 0.5s 끊기면 자율로 돌아간다. 그래서 이 노드는 주차가 끝난
   뒤에도 0 명령을 계속 발행한다. 발행을 멈추면 0.5s 뒤 차가 다시 출발한다.
 
+★ 제어권 반납 (2026-10-25, FMA-001)
+  위 데드맨은 손 트리거 기준이다. 시퀀서가 주차를 켰다가 **끄면**(완료·실패·
+  타임아웃) 0 을 영원히 내는 게 오히려 탈락이다 — mux 가 teleop 을 자율보다
+  우선하므로 차가 그 자리에 선다(1분 정지 = 탈락).
+  그래서 `/parking/start` 가 **True→False 로 떨어지면** 차를 세운 뒤
+  (release_hold_s 이상 + 정지 확인, 최대 release_max_s) teleop 발행을 멈춘다.
+  False 가 계속 오는 것(시퀀서는 arm 전부터 10Hz 로 보낸다)만으로는 아무 일도
+  없다 — 반드시 True 를 받은 뒤의 하강엣지여야 한다.
+
 ★ 시작 트리거
   뜨자마자 발행하면 자율을 덮어쓴다. 기본은 대기이고 /parking/start (Bool True)
   나 /goal_reached (완주 신호) 를 받아야 계획·발행을 시작한다.
@@ -104,6 +113,11 @@ class ParkingNode(Node):
     self.declare_parameter('exit_enabled', True)
     self.declare_parameter('exit_r_fwd', 3.0)
 
+    # ★ 제어권 반납 (FMA-001) — disarm 뒤 최소 이만큼 0 을 내고, 정지가 확인되면
+    #   놓는다. 정지가 안 잡혀도(odom 끊김 등) max 가 지나면 놓는다.
+    self.declare_parameter('release_hold_s', 1.0)
+    self.declare_parameter('release_max_s', 3.0)
+
     g = lambda n: self.get_parameter(n).value  # noqa: E731
     self.pose_dir = str(g('pose_dir'))
     self.slot = int(g('slot'))
@@ -131,6 +145,8 @@ class ParkingNode(Node):
     self.plan_spacing = float(g('plan_spacing'))
     self.exit_enabled = bool(g('exit_enabled'))
     self.exit_r_fwd = float(g('exit_r_fwd'))
+    self.release_hold = float(g('release_hold_s'))
+    self.release_max = float(g('release_max_s'))
 
     self.pose = None            # (x, y, yaw)
     self.linear_speed = 0.0
@@ -139,7 +155,10 @@ class ParkingNode(Node):
     self.state = 'WAIT'
     # 시작 트리거 상승엣지 래치 — start_cb 주석 참고.
     self._started = False
-    self.exit_goal = None       # (x, y, yaw) — 탈출 목표 자세
+    # /parking/start 의 마지막 수준 — 하강엣지 판단용 (arm_cb 주석 참고).
+    self._arm_level = False
+    self._release_since = None
+    self.exit_goal = None      # (x, y, yaw) — 탈출 목표 자세
     self.exit_started = False
     self.other_goals = []       # 다른 자리 (계획 시 침범 금지)
     self.goals = {}
@@ -152,10 +171,10 @@ class ParkingNode(Node):
 
     self.create_subscription(Odometry, str(g('odom_topic')), self.odom_cb, 10)
     self.create_subscription(Int32, '/parking/select', self.select_cb, 10)
-    self.create_subscription(Bool, '/parking/start', self.start_cb, 10)
+    self.create_subscription(Bool, '/parking/start', self.arm_cb, 10)
     self.create_subscription(Bool, '/parking/reset', self.reset_cb, 10)
     if bool(g('trigger_on_goal_reached')):
-      self.create_subscription(Bool, '/goal_reached', self.start_cb, 10)
+      self.create_subscription(Bool, '/goal_reached', self.goal_cb, 10)
       self.get_logger().info(
           '완주 신호(/goal_reached) 도 시작 트리거로 사용한다.')
 
@@ -184,6 +203,48 @@ class ParkingNode(Node):
       return
     self.slot = int(msg.data)
     self.get_logger().info(f'자리 {self.slot} 선택')
+
+  def arm_cb(self, msg: Bool):
+    """`/parking/start`. True = 시작 트리거, True→False = 제어권 반납.
+
+    ★ 왜 수준이 아니라 하강엣지인가
+      시퀀서는 arm 하기 전부터 False 를 10Hz 로 보낸다. False 수준에 반응하면
+      `/goal_reached` 로 시작한 주차를 시퀀서가 곧바로 꺼버린다.
+    """
+    prev = self._arm_level
+    self._arm_level = bool(msg.data)
+    if self._arm_level:
+      self.start_cb(msg)
+    elif prev:
+      self.release('disarm (/parking/start True→False)')
+
+  def goal_cb(self, msg: Bool):
+    """`/goal_reached` — 시작 트리거로만 쓴다. 반납과는 무관하다."""
+    if bool(msg.data):
+      self.start_cb(msg)
+
+  def release(self, reason):
+    """제어권 반납 시작. **멱등** — 이미 반납 중이거나 끝났으면 아무것도 안 한다.
+
+    RELEASED 뒤에 True→False 가 다시 와도 0 명령을 재개하면 안 되고,
+    RELEASING 중 엣지가 반복돼도 release_max_s 상한이 늘어나면 안 된다.
+    """
+    if self.state in ('RELEASING', 'RELEASED', 'WAIT'):
+      return
+    if self.follower is None:
+      # 한 번도 명령을 낸 적이 없다(시작 실패) — 0 을 내면 자율을 덮어쓴다.
+      self.state = 'RELEASED'
+      self.get_logger().info(f'제어권 반납 — {reason} (발행한 적 없음)')
+      return
+    self.get_logger().warn(
+        f'■ 제어권 반납 — {reason}. 상태 {self.state} 에서 정지 후 '
+        'teleop 발행을 멈춘다 → mux 가 자율로 복귀한다.')
+    self.state = 'RELEASING'
+    self._release_since = self._now()
+
+  def _owns_control(self):
+    """지금 /teleop/cmd_vel 을 쥐고 있는가 (종료 시 0 을 낼지 판단)."""
+    return self.follower is not None and self.state not in ('WAIT', 'RELEASED')
 
   def start_cb(self, msg: Bool):
     """시작 트리거. **상승엣지 한 번만** 받는다.
@@ -215,8 +276,8 @@ class ParkingNode(Node):
     """재시도 허용 — 다음 시작 트리거를 다시 받게 한다."""
     if not bool(msg.data):
       return
-    if self.state in ('DRIVE', 'CUSP'):
-      self.get_logger().warn('주차 진행 중 — reset 무시')
+    if self.state in ('DRIVE', 'CUSP', 'RELEASING'):
+      self.get_logger().warn(f'주차 진행 중({self.state}) — reset 무시')
       return
     self._started = False
     self.state = 'WAIT'
@@ -336,13 +397,18 @@ class ParkingNode(Node):
 
   # ---------------- 계획 ----------------
   def begin(self):
+    # ★ 시작 실패는 전부 follower 없는 ABORT 다 — tick 이 done=False 를 내서
+    #   시퀀서가 타임아웃(50s)까지 기다리지 않고 다음 미션으로 간다.
+    #   재시도는 /parking/reset 으로만 (start_cb 래치).
     if self.slot not in self.goals:
       self.get_logger().error(
           f'자리 {self.slot} 의 pose 파일이 없다 — 시작할 수 없다.')
+      self.state = 'ABORT'
       return
     if self.pose is None:
       self.get_logger().error(
           '측위(/odometry/filtered) 미수신 — 시작할 수 없다.')
+      self.state = 'ABORT'
       return
     goal, th_g = self.goals[self.slot]
     # 다른 자리를 keep-out 로 넣으면 인접 슬롯(0.9m 간격) 상자가 겹쳐 매번 계획
@@ -383,9 +449,23 @@ class ParkingNode(Node):
   def tick(self):
     self.state_pub.publish(String(data=self.state))
 
-    if self.state == 'WAIT':
+    if self.state == 'RELEASING':
+      # 세우고 놓는다. 최소 release_hold 동안 0, 그 뒤 정지가 확인되면 놓는다.
+      self._publish_cmd(0.0, 0.0)
+      held = self._now() - self._release_since
+      stopped = abs(self.linear_speed) < self.stopped_v
+      if (held >= self.release_hold and stopped) or held >= self.release_max:
+        self.state = 'RELEASED'
+        self.get_logger().info(
+            f'✅ teleop 발행 중단 ({held:.1f}s, v={self.linear_speed:+.2f}) '
+            '— 0.5s 뒤 mux 가 자율로 돌아간다.')
+      return
+    if self.state in ('WAIT', 'RELEASED'):
       return
     if self.follower is None:
+      if self.state == 'ABORT':
+        # 시작 실패 — 명령은 안 내고 실패만 알린다.
+        self.done_pub.publish(Bool(data=False))
       return
 
     # ★ 차고에 넣은 것으로 끝이 아니다 — 규정은 전진으로 진입확인선 통과까지다.
@@ -457,7 +537,9 @@ def main(args=None):
     pass
   finally:
     try:
-      node._publish_cmd(0.0, 0.0)
+      # 쥐고 있을 때만 세운다 — 놓은 뒤에 내면 mux 가 0.5s 자율을 덮어쓴다.
+      if node._owns_control():
+        node._publish_cmd(0.0, 0.0)
     except Exception:  # noqa: BLE001
       pass
     node.destroy_node()

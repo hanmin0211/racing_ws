@@ -76,6 +76,14 @@ class LongitudinalController(Node):
     self.declare_parameter('obstacle_stop_dist', 0.8)
     # ---- 안전 ----
     self.declare_parameter('curvature_timeout', 0.5)  # 경로 끊김 감지
+    # ★ 정지선 값 유효기간 (2026-10-25, FMA-003)
+    #   정지 노드가 HOLD(0) 를 내다 죽으면 그 0 을 영원히 들고 있었다. 곡률은
+    #   계속 오므로 /target_speed 도 계속 나가고, mux 입력 타임아웃으로는 못
+    #   잡는다 = 정지 고착 = 탈락. 발행자 셋 다 arm 중엔 10Hz 로 매 tick
+    #   재발행하므로 1.0s(=10개 누락)면 정상 HOLD 는 안 풀린다.
+    #   ⚠ 신호대기 중 신호 노드가 1s 넘게 멎으면 출발한다 — 감점이 탈락보다 낫다.
+    #   0 이하 = 만료 없음(예전 동작).
+    self.declare_parameter('stop_line_timeout', 1.0)
     # ── 경사 구간 속도 (웨이포인트 기반) ────────────────────────────
     # 시퀀서가 course_s 로 arm 을 내면 그 구간에서 **기준속도만** 바꾼다.
     # 곡률·정지선·장애물 감속은 그대로 아래에 걸린다(min 으로 합쳐지므로).
@@ -113,6 +121,7 @@ class LongitudinalController(Node):
     self.obs_trigger = float(g('obstacle_trigger'))
     self.obs_stop = float(g('obstacle_stop_dist'))
     self.curv_timeout = float(g('curvature_timeout'))
+    self.stop_line_timeout = float(g('stop_line_timeout'))
     rate = float(g('rate'))
     self.dt = 1.0 / rate
 
@@ -120,6 +129,9 @@ class LongitudinalController(Node):
     self.kappa = 0.0
     self.current_speed = 0.0
     self.stop_line_dist = 999.0
+    # 정지선 수신 시각 — **monotonic**. 벽시계(NTP/GPS 보정)가 뒤로 가도
+    # 만료가 늦어지지 않게. 다른 필드의 time.time() 과 섞어 쓰지 말 것.
+    self._stop_t = None
     self.obstacle_dist = 999.0
     self.mission = 'DRIVE'
     self.profiled_speed = 0.0        # 슬루레이트 적용된 목표
@@ -179,6 +191,25 @@ class LongitudinalController(Node):
 
   def stop_cb(self, msg):
     self.stop_line_dist = float(msg.data)
+    self._stop_t = time.monotonic()
+
+  def _expire_stop_line(self, now):
+    """마지막 정지선 값이 stop_line_timeout 넘게 묵었으면 '제약 없음(999)' 으로.
+
+    정상 disarm 은 999 를 한 번 쏘고 놓으므로 여기선 조용히 지나간다.
+    경고는 만료될 때 한 번만 낸다(값을 999 로 바꾸므로 다음 tick 엔 안 걸린다).
+    """
+    if self.stop_line_timeout <= 0.0 or self._stop_t is None:
+      return
+    if self.stop_line_dist == 999.0:
+      return
+    age = now - self._stop_t
+    if age > self.stop_line_timeout:
+      self.get_logger().warn(
+          f'⚠ /stop_line_distance {age:.1f}s 무수신 (마지막 '
+          f'{self.stop_line_dist:.2f}m) — 정지 노드가 죽은 것으로 보고 '
+          '제약을 푼다. (정지 고착 = 탈락)')
+      self.stop_line_dist = 999.0
 
   def obs_cb(self, msg):
     self.obstacle_dist = float(msg.data)
@@ -280,6 +311,7 @@ class LongitudinalController(Node):
       self.publish(0.0, profiled=False)
       return
 
+    self._expire_stop_line(time.monotonic())
     raw = self.decide_target()
 
     # 가/감속 프로파일 (슬루레이트) — 급가속/급제동 방지
