@@ -14,6 +14,9 @@
   D  B 에 정밀지도 특징 8개 추가 (깨끗한 측위로만 학습)
   D4 B4 에 정밀지도 특징 8개 추가. 지도 특징도 측위 자세로 계산하므로 같은 잡음을 받는다.
      B→D, B4→D4 의 차이 = 정밀지도를 넣은 효과.
+  E  B 에 과거 2 s 앞쪽 장애물 거리(0.25 s 간격 8칸) 추가 — 시간 맥락
+  F  E 에 과거 2 s 측정 속도(지금 포함 9칸) 추가. 측정 속도는 명령을 늦게 따라가므로
+     정지 순간을 맞히는 데 일부 유리하다 — E 와 나눠 본다.
 
 ★ 시험 조건 — B·B2·B3 를 같은 시험 주행에서
   깨끗 / 백색 σ / FLOAT형 σ (0.5 m 는 어느 모델도 학습에 안 본 크기)
@@ -63,11 +66,13 @@ def load(target):
   lidar = [c for c in cols if c.startswith('lidar')]
   loc = [c for c in cols if c.startswith('loc') and c[3:].isdigit()]
   hdm = [c for c in cols if c.startswith('map') and c[3:].isdigit()]
+  hf = [c for c in cols if c.startswith('hist_f')]
+  hv = [c for c in cols if c.startswith('hist_v')]
   assert len(lidar) == 36 and len(loc) == 12 and len(hdm) == 8, (len(lidar), len(loc), len(hdm))
-  assert all(f'map_g{n}_0' in cols for n in GM), 'dataset.csv 가 옛 판이다 — make_dataset.py 를 다시 돌릴 것'
+  assert len(hf) == 8 and len(hv) == 9, 'dataset.csv 가 옛 판이다 — make_dataset.py 를 다시 돌릴 것'
   runs = [r for r in sorted({r['run'] for r in rows})
           if sum(x['run'] == r for x in rows) >= MIN_RUN]
-  return rows, runs, lidar, loc, hdm
+  return rows, runs, lidar, loc, hdm, hf, hv
 
 
 def mat(rows, cols, sigma=None):
@@ -111,7 +116,7 @@ def main():
   args = ap.parse_args()
   lab = 'steer' if args.target == 'steer' else 'v'
   dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-  rows, runs, lidar, loc, hdm = load(args.target)
+  rows, runs, lidar, loc, hdm, hf, hv = load(args.target)
   print(f'장치 {dev} · 샘플 {sum(r["run"] in runs for r in rows)} · 주행 {len(runs)}개 · 시드 {len(SEEDS)}개')
   # 시험 조건마다 입력 열을 깨끗판(lidar+loc+map) 기준으로 잡고, 모델이 안 쓰는 map 열은 뒤에서 뺀다
   tag = lambda kind, n: (lidar + [c.replace('loc', f'loc_{kind}{n}_', 1) for c in loc]
@@ -129,8 +134,13 @@ def main():
   train_sets['B4'] = train_sets['B3']
   train_sets['D'] = train_sets['B']
   train_sets['D4'] = train_sets['B3']
+  train_sets['E'] = train_sets['B']
+  train_sets['F'] = train_sets['B']
   n_nomap = len(lidar) + len(loc)
-  pick = lambda name, cols: cols if name.startswith('D') else cols[:n_nomap]
+  # 조건별 열(lidar+loc판+map판)에서 모델이 쓰는 것만 고른다. 과거 기록은 측위와 무관해 잡음판이 없다.
+  extra = {'E': hf, 'F': hf + hv}
+  pick = lambda name, cols: (cols if name.startswith('D')
+                             else cols[:n_nomap] + extra.get(name, []))
   simple = {'평균값 예측': None, 'A lidar': lidar, 'C loc': loc}
   res = {k: {c: [[] for _ in SEEDS] for c, _, _ in conds} for k in train_sets}
   res_s = {k: [[] for _ in SEEDS] for k in simple}
@@ -170,6 +180,7 @@ def main():
   print(f'{"(" + sub + ", 깨끗)":<16}' + ''.join(f'{fmt(res_av[k]):>14}' for k in train_sets))
   print('\nB  깨끗한 측위로만 학습 · B2 백색 잡음 섞어 학습 · B3 FLOAT형 잡음 섞어 학습')
   print('B4 B3 + 측위 오차 σ 입력 · D = B + 정밀지도 · D4 = B4 + 정밀지도')
+  print('E  B + 과거 2 s 앞 장애물 거리 · F = E + 과거 2 s 측정 속도')
   print('* 어느 모델도 학습 때 안 본 오차 크기')
   print('σ오보: 실제 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고 (σ 를 입력받는 B4·D4 만 영향을 받는다)')
 

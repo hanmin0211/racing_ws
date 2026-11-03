@@ -12,6 +12,10 @@
           v     = cmd_v. 주행 구간(처음 출발 ~ 마지막 주행) 안의 정지 순간도 넣는다.
           조향 실험은 train.py 가 v > 0.1 만 골라 예전과 같은 샘플을 쓴다.
   blocked 장애물 때문에 멈춘 순간(mode BLOCKED) 표시 — 속도 실험 분석용
+  hist    시간 맥락 — 과거 0.25 s 간격 8칸(2 s):
+          hist_f{k}  k×0.25 s 전 스캔의 앞쪽(±20°) 최소 거리 (지금 스캔은 lidar 열에 있다)
+          hist_v{k}  k×0.25 s 전 측정 속도 v (k=0 은 지금). 명령(cmd_v)이 아니라 측정값 —
+                     직전 명령을 넣으면 모델이 베끼기만 해도 점수가 난다.
   ⚠ 2026-09-17 정지는 장애물·돌발정지 시험 때문이다. 정밀지도 정지선에서 5 m 안에서
     멈춘 적이 없다(실측) — 이 데이터로는 지도 정지선이 속도에 주는 효과를 못 본다.
   lidar   차량 기준 36 구간(10°씩) 최소거리, 빈 구간은 6 m (기록기가 6 m 에서 잘랐다)
@@ -33,6 +37,7 @@
   python3 research/vla_pilot/make_dataset.py            # → research/vla_pilot/dataset.csv
 """
 
+import bisect
 import csv
 import glob
 import math
@@ -56,6 +61,8 @@ TAU = 10.0
 STEER_MAX = 18.0
 LANE_KINDS = {'501', '502', '503', '505', '506', '515'}
 NMAP = 8
+HIST = [0.25 * k for k in range(1, 9)]
+FRONT = slice(16, 20)   # lidar 구간 16~19 = 차량 기준 −20°~+20°
 
 
 def wrap(a):
@@ -204,7 +211,9 @@ def main():
           + [f'loc_g{n}_{i}' for n in GM for i in range(2 + 2 * len(PREVIEW))]
           + [f'map{i}' for i in range(NMAP)]
           + [f'map_n{n}_{i}' for n in NOISE for i in range(NMAP)]
-          + [f'map_g{n}_{i}' for n in GM for i in range(NMAP)])
+          + [f'map_g{n}_{i}' for n in GM for i in range(NMAP)]
+          + [f'hist_f{k}' for k in range(1, len(HIST) + 1)]
+          + [f'hist_v{k}' for k in range(len(HIST) + 1)])
   out_path = os.path.join(HERE, 'dataset.csv')
   n_total = 0
   with open(out_path, 'w', newline='', encoding='utf-8') as fo:
@@ -241,11 +250,25 @@ def main():
           noisy += f
           poses.append((x + e[0], y + e[1]))
         by_t[r['t']] = (r, loc, noisy, poses, first <= i <= last)
+      # 스캔 t 와 같은 문자열이 없으면 가장 가까운 행 (실측 차이 ≤ 0.02 s)
+      near_key = lambda t: t if t in by_t else min(by_t, key=lambda k: abs(float(k) - float(t)))
+      bins = {}
+      for t, sp in scans.items():   # 과거 칸을 위해 모든 스캔의 구간값을 먼저 만든다
+        r = by_t[near_key(t)][0]
+        bins[t] = lidar_bins(sp, float(r['x']), float(r['y']), math.radians(float(r['yaw_deg'])))
+      scan_t = sorted(bins, key=float)
+      scan_tf = [float(t) for t in scan_t]
+      row_t = [float(r['t']) for r in rows]
+      row_v = [float(r['v'] or 0) for r in rows]
+      v_at = lambda t: row_v[max(0, bisect.bisect_right(row_t, t) - 1)]
+
+      def f_at(t):
+        i = bisect.bisect_right(scan_tf, t) - 1
+        return min(bins[scan_t[i]][FRONT]) if i >= 0 else RMAX
+
       keep = 0
-      for t, sp in scans.items():
-        # 스캔 t 와 같은 문자열이 없으면 가장 가까운 행 (실측 차이 ≤ 0.02 s)
-        key = t if t in by_t else min(by_t, key=lambda k: abs(float(k) - float(t)))
-        r, loc, noisy, poses, driving = by_t[key]
+      for t in scans:
+        r, loc, noisy, poses, driving = by_t[near_key(t)]
         if not r['cmd_steer_deg'] or not r['cmd_v'] or not driving:
           continue
         steer, v = float(r['cmd_steer_deg']), float(r['cmd_v'])
@@ -253,12 +276,14 @@ def main():
           continue
         mode = r['mode']
         avoid = int(mode.startswith('AVOID') and '조향OFF' not in mode)
+        tf = float(t)
         w.writerow([os.path.basename(run), t, steer, v, avoid, int(mode.startswith('BLOCKED'))]
-                   + [round(b, 3) for b in lidar_bins(sp, float(r['x']), float(r['y']),
-                                                      math.radians(float(r['yaw_deg'])))]
+                   + [round(b, 3) for b in bins[t]]
                    + [round(f, 4) for f in loc + noisy]
                    + [round(f, 3) for q in poses
-                      for f in hd.feats(q[0], q[1], math.radians(float(r['yaw_deg'])))])
+                      for f in hd.feats(q[0], q[1], math.radians(float(r['yaw_deg'])))]
+                   + [round(f_at(tf - h - 1e-6), 3) for h in HIST]
+                   + [round(v_at(tf - h), 3) for h in [0.0] + HIST])
         keep += 1
       n_total += keep
       print(f'{os.path.basename(run)}: 스캔 {len(scans)} → 샘플 {keep}')
