@@ -282,8 +282,9 @@ def main():
                    + [round(f, 4) for f in loc + noisy]
                    + [round(f, 3) for q in poses
                       for f in hd.feats(q[0], q[1], math.radians(float(r['yaw_deg'])))]
-                   + [round(f_at(tf - h - 1e-6), 3) for h in HIST]
-                   + [round(v_at(tf - h), 3) for h in [0.0] + HIST])
+                   # +1e-6: 39.41−1.75 가 37.6599… 로 떨어져 정확히 37.66 인 스캔·행을 놓치지 않게
+                   + [round(f_at(tf - h + 1e-6), 3) for h in HIST]
+                   + [round(v_at(tf - h + 1e-6), 3) for h in [0.0] + HIST])
         keep += 1
       n_total += keep
       print(f'{os.path.basename(run)}: 스캔 {len(scans)} → 샘플 {keep}')
