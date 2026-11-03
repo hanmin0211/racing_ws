@@ -8,6 +8,8 @@
   B  lidar+loc  둘 다
   + B 를 깨끗한 측위로 학습한 뒤, 시험 때 측위에 σ=0.1/0.3/1.0 m 잡음을 넣으면
     얼마나 나빠지는지 (측위 품질 → 학습 정책 성능 곡선)
+  B2 같은 입력이지만 학습 때 잡음판도 섞는다 → 측위가 나빠도 버티는지.
+     잡음판은 시험과 같은 σ 3종이라, 학습에 없던 오차 크기에서의 성능은 아직 모른다.
 
 ★ 평가: 주행 단위로 하나씩 빼서 시험(leave-one-run-out). 같은 주행의 이웃
   샘플이 학습·시험에 섞이면 점수가 부풀려진다.
@@ -80,7 +82,9 @@ def main():
   rows, runs, lidar, loc = load()
   print(f'장치 {dev} · 샘플 {sum(r["run"] in runs for r in rows)} · 주행 {len(runs)}개')
   sets = {'A lidar': lidar, 'C loc': loc, 'B lidar+loc': lidar + loc}
-  res = {k: [] for k in ['평균값 예측'] + list(sets) + [f'B 잡음σ{n}m' for n in NOISE]}
+  noisy = lambda n: lidar + [c.replace('loc', f'loc_n{n}_', 1) for c in loc]
+  res = {k: [] for k in ['평균값 예측'] + list(sets) + [f'B 잡음σ{n}m' for n in NOISE]
+         + ['B2 잡음학습'] + [f'B2 잡음σ{n}m' for n in NOISE]}
   res_av = {k: [] for k in res}
   for test in runs:
     tr = [r for r in rows if r['run'] in runs and r['run'] != test]
@@ -97,9 +101,16 @@ def main():
       res_av[name].append(mae(p, yte, av))
       if name == 'B lidar+loc':
         for n in NOISE:  # 같은 모델, 시험 측위만 잡음판으로
-          pn = f(mat(te, lidar + [c.replace('loc', f'loc_n{n}_', 1) for c in loc]))
+          pn = f(mat(te, noisy(n)))
           res[f'B 잡음σ{n}m'].append(mae(pn, yte))
           res_av[f'B 잡음σ{n}m'].append(mae(pn, yte, av))
+    # B2: 학습 때 깨끗한 측위 + 잡음판 3종을 섞는다 (같은 정답 4번) → 측위가 나빠도 버티나
+    f = fit(torch.cat([mat(tr, lidar + loc)] + [mat(tr, noisy(n)) for n in NOISE]),
+            ytr.repeat(1 + len(NOISE)), dev)
+    for key, cols in [('B2 잡음학습', lidar + loc)] + [(f'B2 잡음σ{n}m', noisy(n)) for n in NOISE]:
+      p = f(mat(te, cols))
+      res[key].append(mae(p, yte))
+      res_av[key].append(mae(p, yte, av))
   print(f'\n조향 오차 MAE [deg] — 주행 {len(runs)}개 각각을 시험으로 뺀 평균')
   print(f'{"모델":<16}{"전체":>8}{"회피 구간":>10}')
   for k in res:
