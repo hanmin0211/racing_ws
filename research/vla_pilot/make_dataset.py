@@ -12,7 +12,10 @@
   lidar   차량 기준 36 구간(10°씩) 최소거리, 빈 구간은 6 m (기록기가 6 m 에서 잘랐다)
   loc     경로 대비 횡오프셋·방향오차 + 1~5 m 앞 경로점(차량 기준) 10개 = 12개
   loc_nX  같은 것을 위치에 σ=X m 잡음을 넣은 자세로 계산 (측위 품질 실험용).
-          라이다는 실제 자세로 되돌리므로 잡음과 무관하다.
+          샘플마다 독립인 백색 잡음이다.
+  loc_gX  RTK FLOAT 처럼 '한쪽으로 몇 초씩 밀리는' 오차. 1차 Gauss-Markov
+          (시간상수 TAU 초, 정상상태 σ=X m). 0.5 m 는 학습에 안 쓰는 시험 전용.
+  두 잡음 모두 위치만 흔든다(방향은 그대로). 라이다는 실제 자세로 되돌리므로 무관하다.
 
 ★ 경로 투영은 직전 s 근처만 찾는다. 루프가 나갔다 돌아오는 구조라 전역
   최근접을 쓰면 반대편 차로로 튄다.
@@ -39,6 +42,8 @@ RUNS = sorted(f for f in glob.glob(os.path.join(WS, 'data/2026-09-17/drive_*.csv
 NBIN, RMAX = 36, 6.0
 PREVIEW = (1.0, 2.0, 3.0, 4.0, 5.0)
 NOISE = (0.1, 0.3, 1.0)
+GM = (0.1, 0.3, 0.5, 1.0)
+TAU = 10.0
 STEER_MAX = 18.0
 
 
@@ -126,7 +131,8 @@ def main():
   head = (['run', 't', 'steer', 'v', 'avoid_active']
           + [f'lidar{i}' for i in range(NBIN)]
           + [f'loc{i}' for i in range(2 + 2 * len(PREVIEW))]
-          + [f'loc_n{n}_{i}' for n in NOISE for i in range(2 + 2 * len(PREVIEW))])
+          + [f'loc_n{n}_{i}' for n in NOISE for i in range(2 + 2 * len(PREVIEW))]
+          + [f'loc_g{n}_{i}' for n in GM for i in range(2 + 2 * len(PREVIEW))])
   out_path = os.path.join(HERE, 'dataset.csv')
   n_total = 0
   with open(out_path, 'w', newline='', encoding='utf-8') as fo:
@@ -138,13 +144,25 @@ def main():
       for t, x, y in list(csv.reader(open(run.replace('.csv', '_scan.csv'), encoding='utf-8')))[1:]:
         scans.setdefault(t, []).append((float(x), float(y)))
       # 20 Hz 전 행에서 s 를 이어 추적 → 스캔 시각에서만 샘플을 낸다
-      s_prev, s_noisy, by_t = None, {n: None for n in NOISE}, {}
+      s_prev, s_noisy, by_t = None, {}, {}
+      gm = {n: [rng.gauss(0, n), rng.gauss(0, n)] for n in GM}  # 정상상태에서 시작
+      t_prev = None
       for r in rows:
         x, y, yaw = float(r['x']), float(r['y']), math.radians(float(r['yaw_deg']))
+        t = float(r['t'])
+        a = math.exp(-max(0.0, min(0.5, t - t_prev)) / TAU) if t_prev is not None else 1.0
+        t_prev = t
         s_prev, loc = loc_feats(tr, x, y, yaw, s_prev)
         noisy = []
         for n in NOISE:
-          s_noisy[n], f = loc_feats(tr, x + rng.gauss(0, n), y + rng.gauss(0, n), yaw, s_noisy[n])
+          s_noisy['n', n], f = loc_feats(tr, x + rng.gauss(0, n), y + rng.gauss(0, n), yaw,
+                                         s_noisy.get(('n', n)))
+          noisy += f
+        for n in GM:
+          e = gm[n]
+          e[0] = a * e[0] + math.sqrt(1 - a * a) * rng.gauss(0, n)
+          e[1] = a * e[1] + math.sqrt(1 - a * a) * rng.gauss(0, n)
+          s_noisy['g', n], f = loc_feats(tr, x + e[0], y + e[1], yaw, s_noisy.get(('g', n)))
           noisy += f
         by_t[r['t']] = (r, loc, noisy)
       keep = 0
