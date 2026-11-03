@@ -11,6 +11,9 @@
   B3 lidar+loc  학습 때 FLOAT형 잡음판(Gauss-Markov σ 0.1/0.3/1.0 m)도 섞는다
   B4 B3 와 같되 입력에 '측위 오차 σ' 숫자 하나를 더 준다 (실차의 RTK 공분산 σ 자리).
      B3 와 B4 의 차이 = σ 를 알려 준 효과. 깨끗한 측위는 σ=0.02 m (RTK FIXED 수준).
+  D  B 에 정밀지도 특징 8개 추가 (깨끗한 측위로만 학습)
+  D4 B4 에 정밀지도 특징 8개 추가. 지도 특징도 측위 자세로 계산하므로 같은 잡음을 받는다.
+     B→D, B4→D4 의 차이 = 정밀지도를 넣은 효과.
 
 ★ 시험 조건 — B·B2·B3 를 같은 시험 주행에서
   깨끗 / 백색 σ / FLOAT형 σ (0.5 m 는 어느 모델도 학습에 안 본 크기)
@@ -42,7 +45,7 @@ WHITE = ('0.1', '0.3', '1.0')
 GM = ('0.1', '0.3', '0.5', '1.0')
 GM_TRAIN = ('0.1', '0.3', '1.0')   # 0.5 는 시험 전용
 SIG_CLEAN = 0.02                   # 깨끗한 측위에 붙이는 σ [m]
-USES_SIGMA = {'B4'}
+USES_SIGMA = {'B4', 'D4'}
 
 
 def load():
@@ -50,11 +53,12 @@ def load():
   cols = rows[0].keys()
   lidar = [c for c in cols if c.startswith('lidar')]
   loc = [c for c in cols if c.startswith('loc') and c[3:].isdigit()]
-  assert len(lidar) == 36 and len(loc) == 12, (len(lidar), len(loc))
-  assert all(f'loc_g{n}_0' in cols for n in GM), 'dataset.csv 가 옛 판이다 — make_dataset.py 를 다시 돌릴 것'
+  hdm = [c for c in cols if c.startswith('map') and c[3:].isdigit()]
+  assert len(lidar) == 36 and len(loc) == 12 and len(hdm) == 8, (len(lidar), len(loc), len(hdm))
+  assert all(f'map_g{n}_0' in cols for n in GM), 'dataset.csv 가 옛 판이다 — make_dataset.py 를 다시 돌릴 것'
   runs = [r for r in sorted({r['run'] for r in rows})
           if sum(x['run'] == r for x in rows) >= MIN_RUN]
-  return rows, runs, lidar, loc
+  return rows, runs, lidar, loc, hdm
 
 
 def mat(rows, cols, sigma=None):
@@ -94,19 +98,26 @@ def fmt(per_seed):
 
 def main():
   dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-  rows, runs, lidar, loc = load()
+  rows, runs, lidar, loc, hdm = load()
   print(f'장치 {dev} · 샘플 {sum(r["run"] in runs for r in rows)} · 주행 {len(runs)}개 · 시드 {len(SEEDS)}개')
-  tag = lambda kind, n: lidar + [c.replace('loc', f'loc_{kind}{n}_', 1) for c in loc]
+  # 시험 조건마다 입력 열을 깨끗판(lidar+loc+map) 기준으로 잡고, 모델이 안 쓰는 map 열은 뒤에서 뺀다
+  tag = lambda kind, n: (lidar + [c.replace('loc', f'loc_{kind}{n}_', 1) for c in loc]
+                         + [c.replace('map', f'map_{kind}{n}_', 1) for c in hdm])
   # (이름, 입력 열, 그 조건의 σ)
-  conds = ([('깨끗', lidar + loc, SIG_CLEAN)]
+  conds = ([('깨끗', lidar + loc + hdm, SIG_CLEAN)]
            + [(f'백색 σ{n}', tag('n', n), float(n)) for n in WHITE]
            + [(f'FLOAT형 σ{n}' + (' *' if n not in GM_TRAIN else ''), tag('g', n), float(n))
               for n in GM]
            + [('FLOAT1.0 σ오보', tag('g', '1.0'), SIG_CLEAN)])
-  train_sets = {'B': [(lidar + loc, SIG_CLEAN)],
-                'B2': [(lidar + loc, SIG_CLEAN)] + [(tag('n', n), float(n)) for n in WHITE],
-                'B3': [(lidar + loc, SIG_CLEAN)] + [(tag('g', n), float(n)) for n in GM_TRAIN]}
+  clean = lidar + loc + hdm
+  train_sets = {'B': [(clean, SIG_CLEAN)],
+                'B2': [(clean, SIG_CLEAN)] + [(tag('n', n), float(n)) for n in WHITE],
+                'B3': [(clean, SIG_CLEAN)] + [(tag('g', n), float(n)) for n in GM_TRAIN]}
   train_sets['B4'] = train_sets['B3']
+  train_sets['D'] = train_sets['B']
+  train_sets['D4'] = train_sets['B3']
+  n_nomap = len(lidar) + len(loc)
+  pick = lambda name, cols: cols if name.startswith('D') else cols[:n_nomap]
   simple = {'평균값 예측': None, 'A lidar': lidar, 'C loc': loc}
   res = {k: {c: [[] for _ in SEEDS] for c, _, _ in conds} for k in train_sets}
   res_s = {k: [[] for _ in SEEDS] for k in simple}
@@ -125,10 +136,10 @@ def main():
         res_av[name][si].append(mae(p, yte, av))
       for name, sets in train_sets.items():
         use = name in USES_SIGMA
-        f = fit(torch.cat([mat(tr, c, s if use else None) for c, s in sets]),
+        f = fit(torch.cat([mat(tr, pick(name, c), s if use else None) for c, s in sets]),
                 ytr.repeat(len(sets)), dev, seed)
         for cname, cols, s in conds:
-          p = f(mat(te, cols, s if use else None))
+          p = f(mat(te, pick(name, cols), s if use else None))
           res[name][cname][si].append(mae(p, yte))
           if cname == '깨끗':
             res_av[name][si].append(mae(p, yte, av))
@@ -142,7 +153,7 @@ def main():
     print(f'{cname:<16}' + ''.join(f'{fmt(res[k][cname]):>14}' for k in train_sets))
   print(f'{"(회피, 깨끗)":<16}' + ''.join(f'{fmt(res_av[k]):>14}' for k in train_sets))
   print('\nB  깨끗한 측위로만 학습 · B2 백색 잡음 섞어 학습 · B3 FLOAT형 잡음 섞어 학습')
-  print('B4 B3 + 측위 오차 σ 입력')
+  print('B4 B3 + 측위 오차 σ 입력 · D = B + 정밀지도 · D4 = B4 + 정밀지도')
   print('* 어느 모델도 학습 때 안 본 오차 크기')
   print('σ오보: 실제 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고 (B4 만 영향을 받는다)')
 
