@@ -9,9 +9,13 @@
   B  lidar+loc  깨끗한 측위로만 학습
   B2 lidar+loc  학습 때 백색 잡음판(σ 0.1/0.3/1.0 m)도 섞는다
   B3 lidar+loc  학습 때 FLOAT형 잡음판(Gauss-Markov σ 0.1/0.3/1.0 m)도 섞는다
+  B4 B3 와 같되 입력에 '측위 오차 σ' 숫자 하나를 더 준다 (실차의 RTK 공분산 σ 자리).
+     B3 와 B4 의 차이 = σ 를 알려 준 효과. 깨끗한 측위는 σ=0.02 m (RTK FIXED 수준).
 
 ★ 시험 조건 — B·B2·B3 를 같은 시험 주행에서
   깨끗 / 백색 σ / FLOAT형 σ (0.5 m 는 어느 모델도 학습에 안 본 크기)
+  + '오보': 실제론 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고된 경우 — σ 를 믿는 B4 의 약점.
+  σ 입력은 시험 조건의 참값을 그대로 준다 (실제 공분산 추정의 오차는 아직 안 넣었다).
 
 ★ 평가: 주행 하나씩 빼서 시험(leave-one-run-out) × 시드 3개. 표의 값은
   시드별 (주행 평균) 의 평균 ± 표준편차.
@@ -37,6 +41,8 @@ SEEDS = (0, 1, 2)
 WHITE = ('0.1', '0.3', '1.0')
 GM = ('0.1', '0.3', '0.5', '1.0')
 GM_TRAIN = ('0.1', '0.3', '1.0')   # 0.5 는 시험 전용
+SIG_CLEAN = 0.02                   # 깨끗한 측위에 붙이는 σ [m]
+USES_SIGMA = {'B4'}
 
 
 def load():
@@ -51,8 +57,9 @@ def load():
   return rows, runs, lidar, loc
 
 
-def mat(rows, cols):
-  return torch.tensor([[float(r[c]) for c in cols] for r in rows])
+def mat(rows, cols, sigma=None):
+  m = torch.tensor([[float(r[c]) for c in cols] for r in rows])
+  return m if sigma is None else torch.cat([m, torch.full((len(rows), 1), sigma)], 1)
 
 
 def fit(X, y, dev, seed):
@@ -90,13 +97,18 @@ def main():
   rows, runs, lidar, loc = load()
   print(f'장치 {dev} · 샘플 {sum(r["run"] in runs for r in rows)} · 주행 {len(runs)}개 · 시드 {len(SEEDS)}개')
   tag = lambda kind, n: lidar + [c.replace('loc', f'loc_{kind}{n}_', 1) for c in loc]
-  conds = ([('깨끗', lidar + loc)] + [(f'백색 σ{n}', tag('n', n)) for n in WHITE]
-           + [(f'FLOAT형 σ{n}' + (' *' if n not in GM_TRAIN else ''), tag('g', n)) for n in GM])
-  train_sets = {'B': [lidar + loc],
-                'B2': [lidar + loc] + [tag('n', n) for n in WHITE],
-                'B3': [lidar + loc] + [tag('g', n) for n in GM_TRAIN]}
+  # (이름, 입력 열, 그 조건의 σ)
+  conds = ([('깨끗', lidar + loc, SIG_CLEAN)]
+           + [(f'백색 σ{n}', tag('n', n), float(n)) for n in WHITE]
+           + [(f'FLOAT형 σ{n}' + (' *' if n not in GM_TRAIN else ''), tag('g', n), float(n))
+              for n in GM]
+           + [('FLOAT1.0 σ오보', tag('g', '1.0'), SIG_CLEAN)])
+  train_sets = {'B': [(lidar + loc, SIG_CLEAN)],
+                'B2': [(lidar + loc, SIG_CLEAN)] + [(tag('n', n), float(n)) for n in WHITE],
+                'B3': [(lidar + loc, SIG_CLEAN)] + [(tag('g', n), float(n)) for n in GM_TRAIN]}
+  train_sets['B4'] = train_sets['B3']
   simple = {'평균값 예측': None, 'A lidar': lidar, 'C loc': loc}
-  res = {k: {c: [[] for _ in SEEDS] for c, _ in conds} for k in train_sets}
+  res = {k: {c: [[] for _ in SEEDS] for c, _, _ in conds} for k in train_sets}
   res_s = {k: [[] for _ in SEEDS] for k in simple}
   res_av = {k: [[] for _ in SEEDS] for k in list(simple) + list(train_sets)}
 
@@ -112,9 +124,11 @@ def main():
         res_s[name][si].append(mae(p, yte))
         res_av[name][si].append(mae(p, yte, av))
       for name, sets in train_sets.items():
-        f = fit(torch.cat([mat(tr, c) for c in sets]), ytr.repeat(len(sets)), dev, seed)
-        for cname, cols in conds:
-          p = f(mat(te, cols))
+        use = name in USES_SIGMA
+        f = fit(torch.cat([mat(tr, c, s if use else None) for c, s in sets]),
+                ytr.repeat(len(sets)), dev, seed)
+        for cname, cols, s in conds:
+          p = f(mat(te, cols, s if use else None))
           res[name][cname][si].append(mae(p, yte))
           if cname == '깨끗':
             res_av[name][si].append(mae(p, yte, av))
@@ -124,11 +138,13 @@ def main():
   for k in simple:
     print(f'{k:<24}{fmt(res_s[k]):>12}{fmt(res_av[k]):>14}')
   print(f'\n{"시험 조건":<16}' + ''.join(f'{k:>14}' for k in train_sets))
-  for cname, _ in conds:
+  for cname, _, _ in conds:
     print(f'{cname:<16}' + ''.join(f'{fmt(res[k][cname]):>14}' for k in train_sets))
   print(f'{"(회피, 깨끗)":<16}' + ''.join(f'{fmt(res_av[k]):>14}' for k in train_sets))
   print('\nB  깨끗한 측위로만 학습 · B2 백색 잡음 섞어 학습 · B3 FLOAT형 잡음 섞어 학습')
+  print('B4 B3 + 측위 오차 σ 입력')
   print('* 어느 모델도 학습 때 안 본 오차 크기')
+  print('σ오보: 실제 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고 (B4 만 영향을 받는다)')
 
 
 if __name__ == '__main__':
