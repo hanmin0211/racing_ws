@@ -131,7 +131,9 @@ class HdMap:
           p = [(x - ox, y - oy) for x, y in part]
           if close and p[0] != p[-1]:
             p.append(p[0])
-          if any(box[0] < x < box[1] and box[2] < y < box[3] for x, y in p):
+          # 꼭짓점이 아니라 경계 상자로 거른다 — 긴 직선은 양 끝이 영역 밖이어도 영역을 지난다
+          xs, ys = [x for x, _ in p], [y for _, y in p]
+          if min(xs) < box[1] and max(xs) > box[0] and min(ys) < box[3] and max(ys) > box[2]:
             out += list(zip(p, p[1:]))
       return out
     self.lane = segs('B2_SURFACELINEMARK', lambda r: r['Kind'] in LANE_KINDS)
