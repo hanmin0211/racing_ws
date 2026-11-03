@@ -27,10 +27,16 @@
   정답 조향(cmd_steer)은 Pure Pursuit 가 '측위+경로' 로 만든 값이다. 측위가
   들어간 모델이 이기는 건 일부 자명하다. 볼 것은 잡음에 대한 버팀과 회피 구간.
 
+★ --target speed : 조향 대신 속도 명령(cmd_v)을 맞힌다. 정지 순간도 포함한다.
+  속도는 장애물(라이다) 때문에 멈추는 경우가 많아, 측위가 자명하게 이기는 조향과 달리
+  '측위만으로는 안 되는 일' 을 본다. 두 번째 칸은 정지 순간(v ≤ 0.1)의 오차.
+
 사용 (학습 PC, conda env vla):
-  python research/vla_pilot/train.py
+  python research/vla_pilot/train.py                  # 조향
+  python research/vla_pilot/train.py --target speed   # 속도
 """
 
+import argparse
 import csv
 import os
 import statistics
@@ -48,9 +54,12 @@ SIG_CLEAN = 0.02                   # 깨끗한 측위에 붙이는 σ [m]
 USES_SIGMA = {'B4', 'D4'}
 
 
-def load():
+def load(target):
   rows = list(csv.DictReader(open(os.path.join(HERE, 'dataset.csv'), encoding='utf-8')))
   cols = rows[0].keys()
+  assert 'blocked' in cols, 'dataset.csv 가 옛 판이다 — make_dataset.py 를 다시 돌릴 것'
+  if target == 'steer':  # 조향은 주행 중 샘플만 (예전 실험과 같은 집합)
+    rows = [r for r in rows if float(r['v']) > 0.1]
   lidar = [c for c in cols if c.startswith('lidar')]
   loc = [c for c in cols if c.startswith('loc') and c[3:].isdigit()]
   hdm = [c for c in cols if c.startswith('map') and c[3:].isdigit()]
@@ -97,8 +106,12 @@ def fmt(per_seed):
 
 
 def main():
+  ap = argparse.ArgumentParser()
+  ap.add_argument('--target', choices=('steer', 'speed'), default='steer')
+  args = ap.parse_args()
+  lab = 'steer' if args.target == 'steer' else 'v'
   dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-  rows, runs, lidar, loc, hdm = load()
+  rows, runs, lidar, loc, hdm = load(args.target)
   print(f'장치 {dev} · 샘플 {sum(r["run"] in runs for r in rows)} · 주행 {len(runs)}개 · 시드 {len(SEEDS)}개')
   # 시험 조건마다 입력 열을 깨끗판(lidar+loc+map) 기준으로 잡고, 모델이 안 쓰는 map 열은 뒤에서 뺀다
   tag = lambda kind, n: (lidar + [c.replace('loc', f'loc_{kind}{n}_', 1) for c in loc]
@@ -127,8 +140,9 @@ def main():
     for test in runs:
       tr = [r for r in rows if r['run'] in runs and r['run'] != test]
       te = [r for r in rows if r['run'] == test]
-      ytr, yte = mat(tr, ['steer']).squeeze(1), mat(te, ['steer']).squeeze(1)
-      av = mat(te, ['avoid_active']).squeeze(1) > 0
+      ytr, yte = mat(tr, [lab]).squeeze(1), mat(te, [lab]).squeeze(1)
+      av = (mat(te, ['avoid_active']).squeeze(1) > 0 if lab == 'steer'
+            else mat(te, ['v']).squeeze(1) <= 0.1)
       for name, cols in simple.items():
         p = (torch.full_like(yte, ytr.mean().item()) if cols is None
              else fit(mat(tr, cols), ytr, dev, seed)(mat(te, cols)))
@@ -144,18 +158,20 @@ def main():
           if cname == '깨끗':
             res_av[name][si].append(mae(p, yte, av))
 
-  print('\n조향 오차 MAE [deg] (낮을수록 좋음) — 평균±편차, 시드 3개')
-  print(f'\n{"기준 모델 (깨끗한 측위)":<24}{"전체":>12}{"회피 구간":>14}')
+  sub = '회피 구간' if lab == 'steer' else '정지 순간'
+  print('\n' + ('조향 오차 MAE [deg]' if lab == 'steer' else '속도 오차 MAE [m/s]')
+        + ' (낮을수록 좋음) — 평균±편차, 시드 3개')
+  print(f'\n{"기준 모델 (깨끗한 측위)":<24}{"전체":>12}{sub:>14}')
   for k in simple:
     print(f'{k:<24}{fmt(res_s[k]):>12}{fmt(res_av[k]):>14}')
   print(f'\n{"시험 조건":<16}' + ''.join(f'{k:>14}' for k in train_sets))
   for cname, _, _ in conds:
     print(f'{cname:<16}' + ''.join(f'{fmt(res[k][cname]):>14}' for k in train_sets))
-  print(f'{"(회피, 깨끗)":<16}' + ''.join(f'{fmt(res_av[k]):>14}' for k in train_sets))
+  print(f'{"(" + sub + ", 깨끗)":<16}' + ''.join(f'{fmt(res_av[k]):>14}' for k in train_sets))
   print('\nB  깨끗한 측위로만 학습 · B2 백색 잡음 섞어 학습 · B3 FLOAT형 잡음 섞어 학습')
   print('B4 B3 + 측위 오차 σ 입력 · D = B + 정밀지도 · D4 = B4 + 정밀지도')
   print('* 어느 모델도 학습 때 안 본 오차 크기')
-  print('σ오보: 실제 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고 (B4 만 영향을 받는다)')
+  print('σ오보: 실제 FLOAT형 1.0 m 인데 σ 는 0.02 m 로 보고 (σ 를 입력받는 B4·D4 만 영향을 받는다)')
 
 
 if __name__ == '__main__':
