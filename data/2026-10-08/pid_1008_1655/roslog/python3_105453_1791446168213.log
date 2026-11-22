@@ -1,0 +1,15 @@
+[INFO] [1791446170.281330961] [serial_bridge_node]: 시리얼 포트 연결 성공: /dev/arduino @ 57600bps
+[INFO] [1791446170.291239797] [serial_bridge_node]: Serial read thread started
+[WARN] [1791446170.294800978] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3776mV — 배터리/전원 확인
+[WARN] [1791446173.301596891] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446176.312026095] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3990mV — 배터리/전원 확인
+[WARN] [1791446179.318503680] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446182.329131532] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446185.343762081] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446188.350508164] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446191.356963340] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446194.367714035] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446197.378280637] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446200.388902935] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446203.399388997] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446206.406234191] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인

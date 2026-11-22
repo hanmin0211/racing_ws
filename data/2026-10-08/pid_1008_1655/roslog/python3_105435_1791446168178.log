@@ -1,0 +1,9 @@
+[INFO] [1791446168.254123903] [ngii_vrs_ntrip_client]: NGII VRS NTRIP 클라이언트 시작: RTS2.ngii.go.kr:2101/VRS-RTCM32 (id=HAN6134001) → /ntrip_client/rtcm
+[INFO] [1791446168.418636414] [ngii_vrs_ntrip_client]: NTRIP 연결 성공: ICY 200 OK
+[INFO] [1791446173.242290040] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 28프레임 발행, GGA 실측(36.97096,127.87188)
+[INFO] [1791446178.242076342] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 48프레임 발행, GGA 실측(36.97096,127.87188)
+[INFO] [1791446183.241975286] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 76프레임 발행, GGA 실측(36.97095,127.87188)
+[INFO] [1791446188.241942967] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 96프레임 발행, GGA 실측(36.97095,127.87187)
+[INFO] [1791446193.242038460] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 124프레임 발행, GGA 실측(36.97095,127.87187)
+[INFO] [1791446198.242244658] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 144프레임 발행, GGA 실측(36.97095,127.87187)
+[INFO] [1791446203.241931439] [ngii_vrs_ntrip_client]: [NTRIP 연결됨] RTCM 172프레임 발행, GGA 실측(36.97095,127.87187)

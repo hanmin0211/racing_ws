@@ -1,0 +1,5 @@
+[INFO] [1791806783.712916929] [longitudinal_controller]: 종방향 제어 시작: v_max=1.6 v_min=0.25 (목표속도만 발행 — PWM은 펌웨어 PID가 담당)
+[WARN] [1791806880.045788332] [longitudinal_controller]: ⚠ 경로(/curvature) 끊김 → 정지 — 완주 신호는 없었다. GPS/IMU 끊김이나 로컬경로 생성 실패를 의심할 것
+[WARN] [1791806982.945681328] [longitudinal_controller]: ⚠ 경로(/curvature) 끊김 → 정지 — 완주 신호는 없었다. GPS/IMU 끊김이나 로컬경로 생성 실패를 의심할 것
+[INFO] [1791806983.289349372] [longitudinal_controller]: 🏁 완주 신호 수신 — 감속 정지합니다 (고장 아님)
+[INFO] [1791806983.295605730] [longitudinal_controller]: 🏁 완주 정지 완료

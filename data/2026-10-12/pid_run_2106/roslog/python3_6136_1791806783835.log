@@ -1,0 +1,1320 @@
+[INFO] [1791806783.895188660] [lidar_clustering]: LiDAR DBSCAN + Hungarian + Follow the Gap started. (scan=/scan_front, yaw_offset=180°, aim=path)
+[INFO] [1791806783.895439080] [lidar_clustering]: Vehicle coordinate: +X forward, +Y left, -Y right.
+[INFO] [1791806783.895620582] [lidar_clustering]: 회피 조향 슬루레이트 제한 꺼짐 (avoid_steer_rate_deg:=90.0 으로 켠다)
+[INFO] [1791806784.768110977] [lidar_clustering]: ID=1, X=3.31 m, Y=2.42 m, Width=0.10 m, Depth=6.33 m, Distance=4.10 m
+[INFO] [1791806784.768325380] [lidar_clustering]: ID=2, X=0.41 m, Y=-4.99 m, Width=0.11 m, Depth=0.20 m, Distance=5.01 m
+[INFO] [1791806784.768513745] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.40 m, best_angle=0.0 deg
+[INFO] [1791806785.726535539] [lidar_clustering]: ID=1, X=3.29 m, Y=2.42 m, Width=0.11 m, Depth=6.29 m, Distance=4.08 m
+[INFO] [1791806785.726752968] [lidar_clustering]: ID=2, X=0.41 m, Y=-4.99 m, Width=0.12 m, Depth=0.20 m, Distance=5.01 m
+[INFO] [1791806785.726983100] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.40 m, best_angle=0.0 deg
+[INFO] [1791806785.727172918] [lidar_clustering]: points=234, clusters=2, tracks=2
+[INFO] [1791806786.684378226] [lidar_clustering]: ID=1, X=3.29 m, Y=2.42 m, Width=0.11 m, Depth=6.32 m, Distance=4.08 m
+[INFO] [1791806786.684604451] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806786.684796393] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.40 m, best_angle=0.0 deg
+[INFO] [1791806787.648502321] [lidar_clustering]: ID=1, X=3.30 m, Y=2.42 m, Width=0.12 m, Depth=6.26 m, Distance=4.09 m
+[INFO] [1791806787.648728766] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806787.648981129] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.61 m, best_angle=0.0 deg
+[INFO] [1791806787.649224245] [lidar_clustering]: points=235, clusters=2, tracks=2
+[INFO] [1791806788.602968091] [lidar_clustering]: ID=1, X=3.29 m, Y=2.42 m, Width=0.11 m, Depth=6.26 m, Distance=4.08 m
+[INFO] [1791806788.603228258] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806788.603427844] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.61 m, best_angle=0.0 deg
+[INFO] [1791806789.564390019] [lidar_clustering]: ID=1, X=3.31 m, Y=2.42 m, Width=0.11 m, Depth=6.24 m, Distance=4.10 m
+[INFO] [1791806789.564905313] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.12 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806789.565223687] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.33 m, best_angle=0.0 deg
+[INFO] [1791806789.565505303] [lidar_clustering]: points=234, clusters=2, tracks=2
+[INFO] [1791806790.523223445] [lidar_clustering]: ID=1, X=2.62 m, Y=2.55 m, Width=1.17 m, Depth=7.00 m, Distance=3.66 m
+[INFO] [1791806790.523451914] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806790.523649336] [lidar_clustering]: ID=3, X=0.42 m, Y=3.53 m, Width=0.02 m, Depth=0.19 m, Distance=3.56 m
+[INFO] [1791806790.523844704] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.96 m, best_angle=0.0 deg
+[INFO] [1791806791.480941742] [lidar_clustering]: ID=1, X=2.56 m, Y=2.58 m, Width=1.16 m, Depth=7.08 m, Distance=3.64 m
+[INFO] [1791806791.481161806] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806791.481355541] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=1.06 m, best_angle=0.0 deg
+[INFO] [1791806791.481541121] [lidar_clustering]: points=334, clusters=2, tracks=2
+[INFO] [1791806792.439111553] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.29 m, Distance=3.60 m
+[INFO] [1791806792.439351984] [lidar_clustering]: ID=2, X=0.41 m, Y=-4.99 m, Width=0.10 m, Depth=0.20 m, Distance=5.01 m
+[INFO] [1791806792.439565355] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806793.396414493] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.18 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806793.396639305] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806793.396837889] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806793.397025994] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806794.354012961] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806794.354233957] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.15 m, Depth=0.22 m, Distance=5.02 m
+[INFO] [1791806794.354432440] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806795.311943838] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806795.312159474] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806795.312354281] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806795.312535773] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806796.264464759] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806796.264698888] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806796.264898864] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806797.222857091] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.18 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806797.223172029] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.12 m, Depth=0.22 m, Distance=5.02 m
+[INFO] [1791806797.223481666] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806797.223702942] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806798.179732845] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806798.179954351] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.14 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806798.180143568] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806799.131554337] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.27 m, Distance=3.60 m
+[INFO] [1791806799.131777523] [lidar_clustering]: ID=2, X=0.41 m, Y=-4.99 m, Width=0.11 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806799.131967244] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806799.132150202] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806800.092254273] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.23 m, Distance=3.60 m
+[INFO] [1791806800.092516976] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806800.092717148] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806801.041426392] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.18 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806801.041652052] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806801.041849047] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806801.042034670] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806801.999555639] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.18 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806801.999771371] [lidar_clustering]: ID=2, X=0.44 m, Y=-5.02 m, Width=0.14 m, Depth=0.21 m, Distance=5.04 m
+[INFO] [1791806801.999957604] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806802.951463100] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.59 m
+[INFO] [1791806802.951711174] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806802.951901295] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806802.952088080] [lidar_clustering]: points=353, clusters=3, tracks=2
+[INFO] [1791806803.910883383] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.26 m, Distance=3.60 m
+[INFO] [1791806803.911117680] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.16 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806803.911314945] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806804.861679107] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806804.861902102] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.12 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806804.862108585] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806804.862319827] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806805.819549649] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.23 m, Distance=3.60 m
+[INFO] [1791806805.819774257] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806805.819958687] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806806.772025806] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.17 m, Depth=7.24 m, Distance=3.60 m
+[INFO] [1791806806.772247187] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806806.772449782] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806806.772645213] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806807.726262375] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.18 m, Depth=7.22 m, Distance=3.59 m
+[INFO] [1791806807.726515448] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806807.726794251] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806808.681583762] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.16 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806808.681805914] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.15 m, Depth=0.22 m, Distance=5.02 m
+[INFO] [1791806808.682005243] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806808.682205593] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806809.640885355] [lidar_clustering]: ID=1, X=2.46 m, Y=2.61 m, Width=1.10 m, Depth=7.21 m, Distance=3.58 m
+[INFO] [1791806809.641193606] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.18 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806809.641485033] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806810.591765382] [lidar_clustering]: ID=1, X=2.46 m, Y=2.61 m, Width=1.09 m, Depth=7.21 m, Distance=3.58 m
+[INFO] [1791806810.591988086] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806810.592197283] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806810.592416289] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806811.549647274] [lidar_clustering]: ID=1, X=2.47 m, Y=2.61 m, Width=1.10 m, Depth=7.28 m, Distance=3.59 m
+[INFO] [1791806811.549868735] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.14 m, Depth=0.22 m, Distance=5.02 m
+[INFO] [1791806811.550057342] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806812.507590277] [lidar_clustering]: ID=1, X=2.47 m, Y=2.61 m, Width=1.10 m, Depth=7.23 m, Distance=3.59 m
+[INFO] [1791806812.507809302] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.01 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806812.507996777] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806812.508179642] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806813.459348958] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.18 m, Distance=3.60 m
+[INFO] [1791806813.459569637] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806813.459756650] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806814.417654478] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.20 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806814.417881439] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806814.418073552] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806814.418260185] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806815.375709259] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.26 m, Distance=3.60 m
+[INFO] [1791806815.375932562] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806815.376145476] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806816.327776080] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806816.327999052] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.19 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806816.328184813] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806816.328372227] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806817.286115658] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806817.286344232] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.21 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806817.286534020] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806818.237757609] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806818.237978638] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806818.238210918] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806818.238465252] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806819.195652612] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.21 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806819.195873199] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806819.196062516] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806820.154719549] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.24 m, Distance=3.61 m
+[INFO] [1791806820.154966397] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806820.155167316] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806820.155485854] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806821.112441326] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806821.112690068] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.12 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806821.112891278] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806822.071060255] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806822.071307394] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806822.071503474] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806822.071694975] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806823.023110737] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806823.023424815] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806823.023667806] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806823.980284010] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806823.980529425] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806823.980734302] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806823.980929880] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806824.931898100] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806824.932179324] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806824.932462121] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806825.883707270] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806825.883944258] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806825.884152090] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806825.884352217] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806826.835913115] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806826.836133491] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806826.836327266] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806827.793649393] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.23 m, Distance=3.60 m
+[INFO] [1791806827.793868867] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.18 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806827.794056429] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806827.794238942] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806828.745674143] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.24 m, Distance=3.60 m
+[INFO] [1791806828.745982449] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806828.746196021] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806829.697620023] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806829.697845348] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.20 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806829.698052598] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806829.698238177] [lidar_clustering]: points=351, clusters=2, tracks=2
+[INFO] [1791806830.650360714] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.24 m, Distance=3.60 m
+[INFO] [1791806830.650584917] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806830.650775745] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806831.601857574] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.27 m, Distance=3.61 m
+[INFO] [1791806831.602088049] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806831.602286932] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806831.602490986] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806832.553112824] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806832.553341565] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.27 m, Distance=5.02 m
+[INFO] [1791806832.553533646] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806833.505934416] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.18 m, Depth=7.27 m, Distance=3.60 m
+[INFO] [1791806833.506167947] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806833.506371078] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806833.506572858] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806834.458359437] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806834.458600632] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806834.458813894] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806835.408884094] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.27 m, Distance=3.61 m
+[INFO] [1791806835.409110210] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806835.409303933] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806835.409493689] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806836.360953944] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806836.361191922] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.17 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806836.361410794] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806837.313122602] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806837.313351292] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806837.313554423] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806837.313757845] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806838.265843996] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806838.266076423] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806838.266272451] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806839.216421709] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.18 m, Depth=7.27 m, Distance=3.60 m
+[INFO] [1791806839.216650730] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806839.216843982] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806839.217033987] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806840.168469153] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806840.168720316] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806840.168917205] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806841.126475985] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.24 m, Distance=3.60 m
+[INFO] [1791806841.126694987] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806841.126882898] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806841.127066211] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806842.078338014] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806842.078558137] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806842.078745327] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806843.030613841] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.24 m, Distance=3.60 m
+[INFO] [1791806843.030839575] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806843.031043107] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806843.031292496] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806843.982851452] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.18 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806843.983086665] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.20 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806843.983311537] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806844.934510976] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.20 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806844.934731880] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806844.934920072] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806844.935106240] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806845.885985071] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806845.886215393] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806845.886415127] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806846.831971258] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.19 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806846.832195779] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.18 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806846.832396584] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806846.832588212] [lidar_clustering]: points=351, clusters=2, tracks=2
+[INFO] [1791806847.783862824] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.20 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806847.784091523] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806847.784285646] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806848.735627617] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.20 m, Depth=7.29 m, Distance=3.61 m
+[INFO] [1791806848.735850976] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806848.736038405] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806848.736223641] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806849.681557707] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.18 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806849.681848475] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806849.682124365] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806850.633812864] [lidar_clustering]: ID=1, X=2.47 m, Y=2.63 m, Width=1.20 m, Depth=7.29 m, Distance=3.61 m
+[INFO] [1791806850.634106608] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806850.634426090] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806850.634647155] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806851.585708141] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.19 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806851.585988409] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806851.586272023] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806852.531944014] [lidar_clustering]: ID=1, X=2.46 m, Y=2.63 m, Width=1.18 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806852.532231085] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.20 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806852.532479441] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806852.532724300] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806853.484059440] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806853.484322284] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806853.484522808] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806854.434540247] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806854.434760679] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.18 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806854.434949561] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806854.435137050] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806855.386906201] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.18 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806855.387192430] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.19 m, Depth=0.25 m, Distance=5.01 m
+[INFO] [1791806855.387477856] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806856.332424074] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.27 m, Distance=3.59 m
+[INFO] [1791806856.332647983] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806856.332836704] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806856.333019243] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806857.284623366] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.23 m, Distance=3.59 m
+[INFO] [1791806857.284843989] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.15 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806857.285048510] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806858.230230872] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.29 m, Distance=3.60 m
+[INFO] [1791806858.230555453] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806858.230776937] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806858.230965508] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806859.181902006] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.23 m, Distance=3.60 m
+[INFO] [1791806859.182119583] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806859.182318764] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806860.127791258] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806860.128014144] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806860.128203446] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806860.128423216] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806861.080606547] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.28 m, Distance=3.60 m
+[INFO] [1791806861.080896030] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806861.081173571] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806862.025147722] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.16 m, Depth=7.29 m, Distance=3.60 m
+[INFO] [1791806862.025371950] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.12 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806862.025565661] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806862.025748971] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806862.980719658] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806862.981204906] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806862.981569623] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806863.923016269] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806863.923309860] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806863.923515473] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806863.923705637] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806864.874898706] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.59 m
+[INFO] [1791806864.875125800] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806864.875323919] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806865.820644711] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806865.820878357] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.15 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806865.821069833] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806865.821265146] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806866.767040523] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.25 m, Distance=3.60 m
+[INFO] [1791806866.767266113] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.23 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806866.767461005] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806867.718780665] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806867.719008170] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806867.719206839] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806867.719408404] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806868.665597971] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.28 m, Distance=3.61 m
+[INFO] [1791806868.665850042] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.20 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806868.666072757] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806869.609675346] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.20 m, Distance=3.60 m
+[INFO] [1791806869.609905475] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.22 m, Depth=0.27 m, Distance=5.03 m
+[INFO] [1791806869.610101729] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806869.610296090] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806870.555884298] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806870.556147970] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806870.556358412] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=1.01 m, best_angle=0.0 deg
+[INFO] [1791806871.508428273] [lidar_clustering]: ID=1, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.29 m, Distance=3.60 m
+[INFO] [1791806871.508666146] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806871.508861499] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.89 m, best_angle=0.0 deg
+[INFO] [1791806871.509048706] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806872.453633739] [lidar_clustering]: ID=1, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.21 m, Distance=3.60 m
+[INFO] [1791806872.453937989] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806872.454215047] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.93 m, best_angle=0.0 deg
+[INFO] [1791806873.401682714] [lidar_clustering]: ID=1, X=2.64 m, Y=2.55 m, Width=1.16 m, Depth=6.96 m, Distance=3.67 m
+[INFO] [1791806873.401923243] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.20 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806873.402135828] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.85 m, best_angle=0.0 deg
+[INFO] [1791806873.402346800] [lidar_clustering]: points=323, clusters=2, tracks=2
+[INFO] [1791806874.344763415] [lidar_clustering]: ID=1, X=2.79 m, Y=2.48 m, Width=0.99 m, Depth=6.72 m, Distance=3.73 m
+[INFO] [1791806874.344988413] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806874.345198804] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.90 m, best_angle=0.0 deg
+[INFO] [1791806875.292141650] [lidar_clustering]: ID=1, X=2.74 m, Y=2.49 m, Width=1.08 m, Depth=6.71 m, Distance=3.71 m
+[INFO] [1791806875.292382109] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.01 m, Width=0.18 m, Depth=0.26 m, Distance=5.02 m
+[INFO] [1791806875.292588452] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.91 m, best_angle=0.0 deg
+[INFO] [1791806875.292795145] [lidar_clustering]: points=306, clusters=2, tracks=2
+[INFO] [1791806876.237297652] [lidar_clustering]: ID=1, X=3.43 m, Y=2.42 m, Width=0.11 m, Depth=6.15 m, Distance=4.19 m
+[INFO] [1791806876.237584930] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.14 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806876.237804628] [lidar_clustering]: ID=5, X=0.50 m, Y=3.51 m, Width=0.00 m, Depth=0.04 m, Distance=3.54 m
+[INFO] [1791806876.238007184] [lidar_clustering]: ID=6, X=0.36 m, Y=0.74 m, Width=0.02 m, Depth=0.13 m, Distance=0.82 m
+[INFO] [1791806876.238230138] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.69 m, best_angle=0.0 deg
+[INFO] [1791806877.191691626] [lidar_clustering]: ID=1, X=4.67 m, Y=2.44 m, Width=0.08 m, Depth=4.21 m, Distance=5.27 m
+[INFO] [1791806877.192049577] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806877.192352965] [lidar_clustering]: ID=5, X=0.34 m, Y=3.55 m, Width=0.01 m, Depth=0.06 m, Distance=3.57 m
+[INFO] [1791806877.192720986] [lidar_clustering]: ID=6, X=0.33 m, Y=0.14 m, Width=0.11 m, Depth=0.06 m, Distance=0.36 m
+[INFO] [1791806877.193031236] [lidar_clustering]: ID=7, X=2.05 m, Y=2.40 m, Width=0.11 m, Depth=1.89 m, Distance=3.15 m
+[INFO] [1791806877.193341808] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.33 m, best_angle=0.0 deg
+[INFO] [1791806877.193645035] [lidar_clustering]: points=241, clusters=4, tracks=5
+[INFO] [1791806878.136073370] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806878.136320360] [lidar_clustering]: ID=5, X=2.45 m, Y=2.62 m, Width=1.16 m, Depth=7.20 m, Distance=3.59 m
+[INFO] [1791806878.136508117] [lidar_clustering]: ID=6, X=0.37 m, Y=-0.16 m, Width=0.19 m, Depth=0.10 m, Distance=0.40 m
+[INFO] [1791806878.136705934] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.31 m, best_angle=0.0 deg
+[INFO] [1791806879.079774889] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.17 m, Depth=7.22 m, Distance=3.60 m
+[INFO] [1791806879.080003635] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=0.50 m, best_angle=0.0 deg
+[INFO] [1791806879.080191402] [lidar_clustering]: points=335, clusters=1, tracks=1
+[INFO] [1791806880.028335348] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806880.028574873] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.29 m, Distance=3.61 m
+[INFO] [1791806880.028769033] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806880.970989681] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806880.971212294] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.17 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806880.971402366] [lidar_clustering]: ID=8, X=0.93 m, Y=-6.90 m, Width=0.33 m, Depth=0.35 m, Distance=6.97 m
+[INFO] [1791806880.971595884] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806880.971783271] [lidar_clustering]: points=366, clusters=3, tracks=3
+[INFO] [1791806881.923491794] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.20 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806881.923739074] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.16 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806881.923923946] [lidar_clustering]: ID=8, X=1.85 m, Y=-7.13 m, Width=0.19 m, Depth=0.40 m, Distance=7.36 m
+[INFO] [1791806881.924119678] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806882.868493640] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.16 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806882.868779223] [lidar_clustering]: ID=5, X=2.47 m, Y=2.61 m, Width=1.12 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806882.869038696] [lidar_clustering]: ID=8, X=2.86 m, Y=-7.36 m, Width=0.14 m, Depth=0.19 m, Distance=7.89 m
+[INFO] [1791806882.869314310] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806882.869573573] [lidar_clustering]: points=359, clusters=3, tracks=3
+[INFO] [1791806883.820477254] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806883.820703715] [lidar_clustering]: ID=5, X=2.45 m, Y=2.61 m, Width=1.10 m, Depth=7.25 m, Distance=3.58 m
+[INFO] [1791806883.820899156] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806884.766319408] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806884.766544606] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.22 m, Distance=3.59 m
+[INFO] [1791806884.766737613] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806884.766926602] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806885.711691670] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.13 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806885.711911397] [lidar_clustering]: ID=5, X=2.45 m, Y=2.62 m, Width=1.15 m, Depth=7.24 m, Distance=3.59 m
+[INFO] [1791806885.712098583] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806886.657785857] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.15 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806886.658011446] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806886.658205314] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806886.658400575] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806887.604240094] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806887.604509787] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.26 m, Distance=3.60 m
+[INFO] [1791806887.604705168] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806888.549136773] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806888.549363062] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806888.549554626] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806888.549740178] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806889.496469589] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.11 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806889.496701489] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.22 m, Distance=3.59 m
+[INFO] [1791806889.496900106] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806890.441164081] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.21 m, Depth=0.27 m, Distance=5.02 m
+[INFO] [1791806890.441406241] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.16 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806890.441632781] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806890.441899497] [lidar_clustering]: points=351, clusters=2, tracks=2
+[INFO] [1791806891.393822545] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806891.394168201] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.24 m, Distance=3.59 m
+[INFO] [1791806891.394389822] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806892.338325241] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806892.338552823] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.16 m, Depth=7.21 m, Distance=3.59 m
+[INFO] [1791806892.338758102] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806892.338953703] [lidar_clustering]: points=348, clusters=2, tracks=2
+[INFO] [1791806893.285011793] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.19 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806893.285260996] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.23 m, Distance=3.59 m
+[INFO] [1791806893.285468279] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806894.229820551] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.16 m, Depth=0.23 m, Distance=5.01 m
+[INFO] [1791806894.230180834] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.26 m, Distance=3.60 m
+[INFO] [1791806894.230453932] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806894.230683888] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806895.175433973] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.20 m, Depth=0.25 m, Distance=5.02 m
+[INFO] [1791806895.175663759] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.24 m, Distance=3.59 m
+[INFO] [1791806895.175860973] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806896.122235891] [lidar_clustering]: ID=2, X=0.42 m, Y=-4.99 m, Width=0.15 m, Depth=0.24 m, Distance=5.01 m
+[INFO] [1791806896.122469834] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.24 m, Distance=3.59 m
+[INFO] [1791806896.122668741] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806896.122862519] [lidar_clustering]: points=349, clusters=2, tracks=2
+[INFO] [1791806897.067619233] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806897.067848538] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.28 m, Distance=3.60 m
+[INFO] [1791806897.068044399] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806898.012708015] [lidar_clustering]: ID=2, X=0.43 m, Y=-5.00 m, Width=0.17 m, Depth=0.24 m, Distance=5.02 m
+[INFO] [1791806898.012935436] [lidar_clustering]: ID=5, X=2.47 m, Y=2.62 m, Width=1.15 m, Depth=7.30 m, Distance=3.60 m
+[INFO] [1791806898.013129284] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806898.013325425] [lidar_clustering]: points=350, clusters=2, tracks=2
+[INFO] [1791806898.958518728] [lidar_clustering]: ID=2, X=0.42 m, Y=-5.00 m, Width=0.15 m, Depth=0.22 m, Distance=5.01 m
+[INFO] [1791806898.958735619] [lidar_clustering]: ID=5, X=2.46 m, Y=2.62 m, Width=1.15 m, Depth=7.25 m, Distance=3.59 m
+[INFO] [1791806898.958924938] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806899.904489112] [lidar_clustering]: ID=2, X=0.36 m, Y=-5.04 m, Width=0.09 m, Depth=0.08 m, Distance=5.06 m
+[INFO] [1791806899.904723155] [lidar_clustering]: ID=5, X=2.28 m, Y=2.90 m, Width=1.44 m, Depth=5.66 m, Distance=3.69 m
+[INFO] [1791806899.904911782] [lidar_clustering]: ID=9, X=6.84 m, Y=2.88 m, Width=0.08 m, Depth=1.15 m, Distance=7.42 m
+[INFO] [1791806899.905104598] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806899.905306911] [lidar_clustering]: points=333, clusters=3, tracks=3
+[INFO] [1791806900.862436083] [lidar_clustering]: ID=5, X=2.28 m, Y=2.77 m, Width=0.30 m, Depth=5.81 m, Distance=3.59 m
+[INFO] [1791806900.862775706] [lidar_clustering]: ID=9, X=6.86 m, Y=2.89 m, Width=0.06 m, Depth=0.94 m, Distance=7.45 m
+[INFO] [1791806900.862982839] [lidar_clustering]: ID=10, X=5.53 m, Y=-4.80 m, Width=0.50 m, Depth=0.45 m, Distance=7.32 m
+[INFO] [1791806900.863166476] [lidar_clustering]: ID=11, X=2.53 m, Y=2.62 m, Width=0.23 m, Depth=7.18 m, Distance=3.65 m
+[INFO] [1791806900.863354703] [lidar_clustering]: ID=12, X=6.28 m, Y=2.96 m, Width=0.10 m, Depth=1.46 m, Distance=6.94 m
+[INFO] [1791806900.863544172] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806901.844791650] [lidar_clustering]: ID=9, X=7.29 m, Y=2.84 m, Width=0.10 m, Depth=0.04 m, Distance=7.83 m
+[INFO] [1791806901.845062994] [lidar_clustering]: ID=10, X=4.25 m, Y=-4.78 m, Width=0.52 m, Depth=0.48 m, Distance=6.40 m
+[INFO] [1791806901.845255148] [lidar_clustering]: ID=11, X=2.52 m, Y=2.63 m, Width=0.26 m, Depth=7.14 m, Distance=3.64 m
+[INFO] [1791806901.845468672] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806901.845738203] [lidar_clustering]: points=346, clusters=2, tracks=3
+[INFO] [1791806902.815135851] [lidar_clustering]: ID=10, X=2.81 m, Y=-4.85 m, Width=0.37 m, Depth=0.58 m, Distance=5.60 m
+[INFO] [1791806902.815368020] [lidar_clustering]: ID=11, X=2.62 m, Y=2.72 m, Width=0.17 m, Depth=7.18 m, Distance=3.78 m
+[INFO] [1791806902.815566436] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806903.791657497] [lidar_clustering]: ID=5, X=2.08 m, Y=2.68 m, Width=0.21 m, Depth=4.58 m, Distance=3.39 m
+[INFO] [1791806903.791943479] [lidar_clustering]: ID=9, X=7.25 m, Y=2.74 m, Width=0.18 m, Depth=0.33 m, Distance=7.75 m
+[INFO] [1791806903.792217738] [lidar_clustering]: ID=10, X=1.38 m, Y=-4.93 m, Width=0.29 m, Depth=0.61 m, Distance=5.12 m
+[INFO] [1791806903.792614990] [lidar_clustering]: ID=11, X=2.61 m, Y=2.53 m, Width=0.39 m, Depth=7.37 m, Distance=3.64 m
+[INFO] [1791806903.792861647] [lidar_clustering]: ID=13, X=5.90 m, Y=2.72 m, Width=0.11 m, Depth=1.81 m, Distance=6.49 m
+[INFO] [1791806903.793059842] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806903.793255873] [lidar_clustering]: points=371, clusters=2, tracks=5
+[INFO] [1791806904.763170889] [lidar_clustering]: ID=5, X=1.73 m, Y=2.58 m, Width=0.18 m, Depth=2.99 m, Distance=3.11 m
+[INFO] [1791806904.763513337] [lidar_clustering]: ID=10, X=0.39 m, Y=-4.98 m, Width=0.14 m, Depth=0.12 m, Distance=4.99 m
+[INFO] [1791806904.763720209] [lidar_clustering]: ID=11, X=2.34 m, Y=2.40 m, Width=0.39 m, Depth=6.07 m, Distance=3.36 m
+[INFO] [1791806904.763911080] [lidar_clustering]: ID=12, X=6.35 m, Y=2.63 m, Width=0.64 m, Depth=0.43 m, Distance=6.87 m
+[INFO] [1791806904.764104085] [lidar_clustering]: ID=13, X=5.62 m, Y=2.57 m, Width=0.10 m, Depth=0.03 m, Distance=6.17 m
+[INFO] [1791806904.764325895] [lidar_clustering]: ID=14, X=5.91 m, Y=-5.11 m, Width=0.52 m, Depth=0.46 m, Distance=7.81 m
+[INFO] [1791806904.764522367] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806905.836485284] [lidar_clustering]: ID=11, X=1.99 m, Y=2.42 m, Width=0.20 m, Depth=4.56 m, Distance=3.13 m
+[INFO] [1791806905.836782596] [lidar_clustering]: ID=14, X=4.55 m, Y=-4.99 m, Width=0.52 m, Depth=0.48 m, Distance=6.75 m
+[INFO] [1791806905.837016339] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806905.837212159] [lidar_clustering]: points=316, clusters=2, tracks=2
+[INFO] [1791806906.813465168] [lidar_clustering]: ID=11, X=1.61 m, Y=2.43 m, Width=0.14 m, Depth=3.16 m, Distance=2.91 m
+[INFO] [1791806906.813708879] [lidar_clustering]: ID=12, X=6.14 m, Y=3.38 m, Width=0.49 m, Depth=2.38 m, Distance=7.01 m
+[INFO] [1791806906.813905591] [lidar_clustering]: ID=14, X=3.41 m, Y=-4.82 m, Width=0.46 m, Depth=0.51 m, Distance=5.91 m
+[INFO] [1791806906.814101952] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806907.796033231] [lidar_clustering]: ID=11, X=1.18 m, Y=2.46 m, Width=0.13 m, Depth=1.88 m, Distance=2.72 m
+[INFO] [1791806907.796337616] [lidar_clustering]: ID=12, X=5.19 m, Y=3.64 m, Width=0.87 m, Depth=3.68 m, Distance=6.34 m
+[INFO] [1791806907.796588321] [lidar_clustering]: ID=14, X=2.19 m, Y=-4.78 m, Width=0.39 m, Depth=0.58 m, Distance=5.25 m
+[INFO] [1791806907.796881685] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806907.797168488] [lidar_clustering]: points=333, clusters=3, tracks=3
+[INFO] [1791806908.766593808] [lidar_clustering]: ID=11, X=0.81 m, Y=2.46 m, Width=0.05 m, Depth=1.02 m, Distance=2.59 m
+[INFO] [1791806908.766905618] [lidar_clustering]: ID=12, X=4.45 m, Y=4.01 m, Width=1.00 m, Depth=4.59 m, Distance=5.99 m
+[INFO] [1791806908.767117378] [lidar_clustering]: ID=14, X=1.29 m, Y=-4.77 m, Width=0.21 m, Depth=0.58 m, Distance=4.94 m
+[INFO] [1791806908.767319982] [lidar_clustering]: ID=15, X=6.80 m, Y=2.71 m, Width=0.12 m, Depth=1.09 m, Distance=7.32 m
+[INFO] [1791806908.767522565] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806909.730161517] [lidar_clustering]: ID=11, X=0.62 m, Y=2.38 m, Width=0.02 m, Depth=0.62 m, Distance=2.46 m
+[INFO] [1791806909.730401461] [lidar_clustering]: ID=12, X=3.62 m, Y=4.83 m, Width=0.49 m, Depth=4.41 m, Distance=6.04 m
+[INFO] [1791806909.730590869] [lidar_clustering]: ID=14, X=0.55 m, Y=-4.84 m, Width=0.16 m, Depth=0.49 m, Distance=4.87 m
+[INFO] [1791806909.730768996] [lidar_clustering]: ID=16, X=5.76 m, Y=5.25 m, Width=0.34 m, Depth=0.83 m, Distance=7.79 m
+[INFO] [1791806909.730956120] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806909.731140498] [lidar_clustering]: points=252, clusters=3, tracks=4
+[INFO] [1791806910.694172933] [lidar_clustering]: ID=11, X=0.37 m, Y=2.16 m, Width=0.02 m, Depth=0.10 m, Distance=2.19 m
+[INFO] [1791806910.694428496] [lidar_clustering]: ID=12, X=3.20 m, Y=4.29 m, Width=0.81 m, Depth=6.54 m, Distance=5.35 m
+[INFO] [1791806910.694632181] [lidar_clustering]: ID=16, X=5.65 m, Y=4.69 m, Width=0.57 m, Depth=2.30 m, Distance=7.34 m
+[INFO] [1791806910.694836507] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806911.665060925] [lidar_clustering]: ID=12, X=2.79 m, Y=4.58 m, Width=1.01 m, Depth=5.33 m, Distance=5.37 m
+[INFO] [1791806911.665292873] [lidar_clustering]: ID=16, X=6.21 m, Y=4.20 m, Width=0.04 m, Depth=0.18 m, Distance=7.50 m
+[INFO] [1791806911.665488252] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806911.665689823] [lidar_clustering]: points=264, clusters=1, tracks=2
+[INFO] [1791806912.641058358] [lidar_clustering]: ID=12, X=2.19 m, Y=4.67 m, Width=1.24 m, Depth=3.69 m, Distance=5.16 m
+[INFO] [1791806912.641296949] [lidar_clustering]: ID=16, X=5.49 m, Y=4.82 m, Width=0.28 m, Depth=1.41 m, Distance=7.31 m
+[INFO] [1791806912.641491497] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806913.629990703] [lidar_clustering]: ID=12, X=1.04 m, Y=4.61 m, Width=0.21 m, Depth=1.36 m, Distance=4.73 m
+[INFO] [1791806913.630239363] [lidar_clustering]: ID=16, X=3.73 m, Y=5.42 m, Width=0.89 m, Depth=3.57 m, Distance=6.58 m
+[INFO] [1791806913.630462956] [lidar_clustering]: ID=17, X=3.16 m, Y=4.19 m, Width=1.60 m, Depth=6.93 m, Distance=5.25 m
+[INFO] [1791806913.630717536] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806913.630954815] [lidar_clustering]: points=197, clusters=2, tracks=3
+[INFO] [1791806914.612262780] [lidar_clustering]: ID=12, X=0.51 m, Y=4.75 m, Width=0.05 m, Depth=0.31 m, Distance=4.78 m
+[INFO] [1791806914.612540755] [lidar_clustering]: ID=16, X=3.08 m, Y=5.17 m, Width=0.30 m, Depth=5.44 m, Distance=6.02 m
+[INFO] [1791806914.612731055] [lidar_clustering]: ID=17, X=3.08 m, Y=4.67 m, Width=0.72 m, Depth=6.44 m, Distance=5.59 m
+[INFO] [1791806914.612926133] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806915.582628933] [lidar_clustering]: ID=16, X=2.74 m, Y=5.53 m, Width=0.34 m, Depth=5.50 m, Distance=6.17 m
+[INFO] [1791806915.582859098] [lidar_clustering]: ID=17, X=2.74 m, Y=5.06 m, Width=0.44 m, Depth=5.76 m, Distance=5.76 m
+[INFO] [1791806915.583059516] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806915.583256308] [lidar_clustering]: points=218, clusters=1, tracks=2
+[INFO] [1791806916.552899966] [lidar_clustering]: ID=16, X=2.89 m, Y=5.16 m, Width=0.49 m, Depth=6.07 m, Distance=5.91 m
+[INFO] [1791806916.553125792] [lidar_clustering]: ID=17, X=3.04 m, Y=4.46 m, Width=1.03 m, Depth=5.96 m, Distance=5.39 m
+[INFO] [1791806916.553327994] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806917.531367040] [lidar_clustering]: ID=17, X=2.93 m, Y=4.39 m, Width=1.12 m, Depth=5.87 m, Distance=5.28 m
+[INFO] [1791806917.531607454] [lidar_clustering]: ID=18, X=7.00 m, Y=3.42 m, Width=0.60 m, Depth=0.80 m, Distance=7.80 m
+[INFO] [1791806917.531795740] [lidar_clustering]: ID=19, X=2.83 m, Y=4.14 m, Width=1.49 m, Depth=5.39 m, Distance=5.02 m
+[INFO] [1791806917.531978995] [lidar_clustering]: ID=20, X=7.56 m, Y=1.17 m, Width=2.26 m, Depth=0.40 m, Distance=7.65 m
+[INFO] [1791806917.532166079] [lidar_clustering]: ID=21, X=7.26 m, Y=-1.30 m, Width=3.31 m, Depth=0.39 m, Distance=7.37 m
+[INFO] [1791806917.532361217] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806917.532547749] [lidar_clustering]: points=527, clusters=4, tracks=5
+[INFO] [1791806918.506551138] [lidar_clustering]: ID=16, X=3.67 m, Y=4.92 m, Width=0.63 m, Depth=0.54 m, Distance=6.14 m
+[INFO] [1791806918.506802803] [lidar_clustering]: ID=18, X=6.56 m, Y=4.15 m, Width=0.07 m, Depth=0.04 m, Distance=7.76 m
+[INFO] [1791806918.507001518] [lidar_clustering]: ID=19, X=2.10 m, Y=4.94 m, Width=0.79 m, Depth=3.53 m, Distance=5.37 m
+[INFO] [1791806918.507194612] [lidar_clustering]: ID=20, X=7.02 m, Y=0.18 m, Width=4.11 m, Depth=1.23 m, Distance=7.02 m
+[INFO] [1791806918.507388258] [lidar_clustering]: ID=21, X=5.86 m, Y=-2.62 m, Width=1.61 m, Depth=0.62 m, Distance=6.42 m
+[INFO] [1791806918.507581532] [lidar_clustering]: ID=22, X=6.64 m, Y=3.73 m, Width=0.32 m, Depth=0.57 m, Distance=7.61 m
+[INFO] [1791806918.507773765] [lidar_clustering]: ID=23, X=5.25 m, Y=4.47 m, Width=1.16 m, Depth=1.73 m, Distance=6.90 m
+[INFO] [1791806918.507966920] [lidar_clustering]: ID=24, X=5.68 m, Y=-1.57 m, Width=0.29 m, Depth=0.11 m, Distance=5.89 m
+[INFO] [1791806918.508167929] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806919.476411413] [lidar_clustering]: ID=18, X=5.76 m, Y=4.80 m, Width=0.54 m, Depth=1.76 m, Distance=7.50 m
+[INFO] [1791806919.476649172] [lidar_clustering]: ID=19, X=2.20 m, Y=4.77 m, Width=0.57 m, Depth=4.05 m, Distance=5.25 m
+[INFO] [1791806919.476834461] [lidar_clustering]: ID=20, X=6.17 m, Y=-0.92 m, Width=5.13 m, Depth=3.26 m, Distance=6.24 m
+[INFO] [1791806919.477061419] [lidar_clustering]: ID=21, X=5.16 m, Y=-2.88 m, Width=0.35 m, Depth=0.13 m, Distance=5.90 m
+[INFO] [1791806919.477321440] [lidar_clustering]: ID=23, X=5.45 m, Y=5.31 m, Width=0.11 m, Depth=0.97 m, Distance=7.61 m
+[INFO] [1791806919.477572664] [lidar_clustering]: ID=24, X=3.90 m, Y=-2.88 m, Width=0.24 m, Depth=0.24 m, Distance=4.85 m
+[INFO] [1791806919.477821373] [lidar_clustering]: ID=25, X=6.13 m, Y=-4.59 m, Width=0.16 m, Depth=0.14 m, Distance=7.66 m
+[INFO] [1791806919.478226638] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806919.478600684] [lidar_clustering]: points=524, clusters=4, tracks=7
+[INFO] [1791806920.448720146] [lidar_clustering]: ID=18, X=5.08 m, Y=2.98 m, Width=1.02 m, Depth=2.26 m, Distance=5.89 m
+[INFO] [1791806920.448953036] [lidar_clustering]: ID=19, X=2.49 m, Y=2.48 m, Width=2.37 m, Depth=4.75 m, Distance=3.52 m
+[INFO] [1791806920.449140940] [lidar_clustering]: ID=20, X=5.42 m, Y=-1.44 m, Width=6.33 m, Depth=4.77 m, Distance=5.60 m
+[INFO] [1791806920.449327151] [lidar_clustering]: ID=21, X=4.40 m, Y=-2.32 m, Width=5.68 m, Depth=5.81 m, Distance=4.98 m
+[INFO] [1791806920.449508884] [lidar_clustering]: ID=24, X=2.48 m, Y=-3.68 m, Width=0.23 m, Depth=0.44 m, Distance=4.44 m
+[INFO] [1791806920.449691118] [lidar_clustering]: ID=26, X=5.96 m, Y=1.04 m, Width=0.29 m, Depth=0.86 m, Distance=6.05 m
+[INFO] [1791806920.449897998] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806921.423610169] [lidar_clustering]: ID=17, X=2.69 m, Y=4.00 m, Width=0.43 m, Depth=6.38 m, Distance=4.82 m
+[INFO] [1791806921.423848759] [lidar_clustering]: ID=20, X=5.54 m, Y=-1.30 m, Width=0.14 m, Depth=0.03 m, Distance=5.69 m
+[INFO] [1791806921.424046933] [lidar_clustering]: ID=21, X=3.26 m, Y=-3.43 m, Width=2.94 m, Depth=5.93 m, Distance=4.73 m
+[INFO] [1791806921.424236821] [lidar_clustering]: ID=24, X=1.74 m, Y=-4.08 m, Width=0.94 m, Depth=2.55 m, Distance=4.44 m
+[INFO] [1791806921.424433241] [lidar_clustering]: ID=25, X=5.80 m, Y=-4.93 m, Width=0.56 m, Depth=1.37 m, Distance=7.62 m
+[INFO] [1791806921.424636224] [lidar_clustering]: ID=28, X=6.95 m, Y=-1.14 m, Width=0.67 m, Depth=0.24 m, Distance=7.04 m
+[INFO] [1791806921.424829339] [lidar_clustering]: ID=29, X=6.43 m, Y=-4.09 m, Width=0.13 m, Depth=0.15 m, Distance=7.62 m
+[INFO] [1791806921.425031209] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806921.425235445] [lidar_clustering]: points=535, clusters=6, tracks=7
+[INFO] [1791806922.400205679] [lidar_clustering]: ID=17, X=2.87 m, Y=4.07 m, Width=0.80 m, Depth=6.69 m, Distance=4.98 m
+[INFO] [1791806922.400446082] [lidar_clustering]: ID=20, X=3.92 m, Y=-2.32 m, Width=0.05 m, Depth=0.03 m, Distance=4.55 m
+[INFO] [1791806922.400635359] [lidar_clustering]: ID=24, X=0.60 m, Y=-4.21 m, Width=0.10 m, Depth=0.40 m, Distance=4.26 m
+[INFO] [1791806922.400818765] [lidar_clustering]: ID=25, X=2.88 m, Y=-5.67 m, Width=0.05 m, Depth=0.25 m, Distance=6.36 m
+[INFO] [1791806922.401001039] [lidar_clustering]: ID=28, X=5.60 m, Y=-2.05 m, Width=0.26 m, Depth=0.21 m, Distance=5.96 m
+[INFO] [1791806922.401180608] [lidar_clustering]: ID=29, X=4.50 m, Y=-5.69 m, Width=0.79 m, Depth=2.31 m, Distance=7.25 m
+[INFO] [1791806922.401377208] [lidar_clustering]: ID=30, X=2.15 m, Y=-6.11 m, Width=0.33 m, Depth=1.55 m, Distance=6.47 m
+[INFO] [1791806922.401562588] [lidar_clustering]: ID=31, X=5.73 m, Y=-4.94 m, Width=0.29 m, Depth=0.18 m, Distance=7.57 m
+[INFO] [1791806922.401756243] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806923.376486207] [lidar_clustering]: ID=17, X=2.92 m, Y=3.47 m, Width=1.39 m, Depth=7.09 m, Distance=4.53 m
+[INFO] [1791806923.376744474] [lidar_clustering]: ID=20, X=1.56 m, Y=-2.79 m, Width=0.02 m, Depth=0.04 m, Distance=3.20 m
+[INFO] [1791806923.376938370] [lidar_clustering]: ID=21, X=3.59 m, Y=-4.29 m, Width=0.06 m, Depth=0.06 m, Distance=5.59 m
+[INFO] [1791806923.377123759] [lidar_clustering]: ID=25, X=2.58 m, Y=-6.07 m, Width=0.63 m, Depth=2.33 m, Distance=6.59 m
+[INFO] [1791806923.377310431] [lidar_clustering]: ID=29, X=4.72 m, Y=-5.92 m, Width=0.25 m, Depth=1.61 m, Distance=7.57 m
+[INFO] [1791806923.377492595] [lidar_clustering]: ID=30, X=0.96 m, Y=-6.26 m, Width=0.06 m, Depth=0.44 m, Distance=6.33 m
+[INFO] [1791806923.377671973] [lidar_clustering]: ID=31, X=5.39 m, Y=-5.84 m, Width=0.08 m, Depth=0.16 m, Distance=7.94 m
+[INFO] [1791806923.377852153] [lidar_clustering]: ID=32, X=0.45 m, Y=-6.22 m, Width=0.14 m, Depth=0.24 m, Distance=6.23 m
+[INFO] [1791806923.378031541] [lidar_clustering]: ID=33, X=0.50 m, Y=-5.84 m, Width=0.04 m, Depth=0.26 m, Distance=5.86 m
+[INFO] [1791806923.378215117] [lidar_clustering]: ID=34, X=7.28 m, Y=-2.99 m, Width=0.43 m, Depth=0.28 m, Distance=7.87 m
+[INFO] [1791806923.378417088] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806923.378610052] [lidar_clustering]: points=522, clusters=7, tracks=10
+[INFO] [1791806924.352951398] [lidar_clustering]: ID=17, X=2.98 m, Y=3.49 m, Width=0.64 m, Depth=7.06 m, Distance=4.59 m
+[INFO] [1791806924.353179037] [lidar_clustering]: ID=20, X=0.55 m, Y=-2.84 m, Width=0.03 m, Depth=0.03 m, Distance=2.90 m
+[INFO] [1791806924.353377291] [lidar_clustering]: ID=21, X=1.83 m, Y=-4.58 m, Width=0.02 m, Depth=0.06 m, Distance=4.93 m
+[INFO] [1791806924.353594380] [lidar_clustering]: ID=24, X=0.59 m, Y=-4.16 m, Width=0.02 m, Depth=0.10 m, Distance=4.20 m
+[INFO] [1791806924.353848970] [lidar_clustering]: ID=25, X=1.83 m, Y=-5.30 m, Width=0.09 m, Depth=0.07 m, Distance=5.61 m
+[INFO] [1791806924.354123147] [lidar_clustering]: ID=27, X=7.31 m, Y=2.77 m, Width=0.09 m, Depth=0.38 m, Distance=7.81 m
+[INFO] [1791806924.354430286] [lidar_clustering]: ID=29, X=3.76 m, Y=-5.99 m, Width=0.25 m, Depth=2.81 m, Distance=7.07 m
+[INFO] [1791806924.354752804] [lidar_clustering]: ID=30, X=1.48 m, Y=-5.86 m, Width=0.47 m, Depth=0.71 m, Distance=6.04 m
+[INFO] [1791806924.355050285] [lidar_clustering]: ID=31, X=4.23 m, Y=-5.91 m, Width=0.76 m, Depth=3.37 m, Distance=7.27 m
+[INFO] [1791806924.355260491] [lidar_clustering]: ID=32, X=0.67 m, Y=-6.26 m, Width=0.15 m, Depth=0.76 m, Distance=6.29 m
+[INFO] [1791806924.355463785] [lidar_clustering]: ID=34, X=7.27 m, Y=-2.95 m, Width=0.16 m, Depth=0.19 m, Distance=7.85 m
+[INFO] [1791806924.355648142] [lidar_clustering]: ID=35, X=6.19 m, Y=-3.02 m, Width=0.54 m, Depth=2.00 m, Distance=6.89 m
+[INFO] [1791806924.355829214] [lidar_clustering]: ID=36, X=1.64 m, Y=-2.66 m, Width=0.02 m, Depth=0.04 m, Distance=3.12 m
+[INFO] [1791806924.356018691] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806925.323796333] [lidar_clustering]: ID=17, X=2.95 m, Y=3.36 m, Width=1.09 m, Depth=7.13 m, Distance=4.47 m
+[INFO] [1791806925.324025114] [lidar_clustering]: ID=29, X=2.64 m, Y=-5.85 m, Width=0.84 m, Depth=4.33 m, Distance=6.42 m
+[INFO] [1791806925.324213890] [lidar_clustering]: ID=31, X=5.33 m, Y=-5.62 m, Width=0.13 m, Depth=0.79 m, Distance=7.75 m
+[INFO] [1791806925.324402806] [lidar_clustering]: ID=32, X=0.49 m, Y=-5.77 m, Width=0.05 m, Depth=0.29 m, Distance=5.79 m
+[INFO] [1791806925.324583166] [lidar_clustering]: ID=33, X=0.70 m, Y=-5.98 m, Width=0.23 m, Depth=0.63 m, Distance=6.02 m
+[INFO] [1791806925.324770098] [lidar_clustering]: ID=34, X=6.55 m, Y=-2.71 m, Width=0.26 m, Depth=1.79 m, Distance=7.09 m
+[INFO] [1791806925.325020250] [lidar_clustering]: ID=35, X=4.15 m, Y=-3.04 m, Width=0.13 m, Depth=0.02 m, Distance=5.15 m
+[INFO] [1791806925.325217211] [lidar_clustering]: ID=36, X=0.44 m, Y=-2.66 m, Width=0.03 m, Depth=0.04 m, Distance=2.70 m
+[INFO] [1791806925.325414242] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806925.325601245] [lidar_clustering]: points=574, clusters=5, tracks=8
+[INFO] [1791806926.300780750] [lidar_clustering]: ID=17, X=3.09 m, Y=3.60 m, Width=0.86 m, Depth=7.12 m, Distance=4.74 m
+[INFO] [1791806926.301023197] [lidar_clustering]: ID=27, X=7.41 m, Y=2.66 m, Width=0.05 m, Depth=0.12 m, Distance=7.88 m
+[INFO] [1791806926.301214538] [lidar_clustering]: ID=29, X=2.48 m, Y=-5.77 m, Width=0.82 m, Depth=4.91 m, Distance=6.27 m
+[INFO] [1791806926.301402662] [lidar_clustering]: ID=30, X=2.25 m, Y=-5.75 m, Width=0.68 m, Depth=4.28 m, Distance=6.18 m
+[INFO] [1791806926.301587391] [lidar_clustering]: ID=31, X=4.07 m, Y=-5.62 m, Width=0.08 m, Depth=0.77 m, Distance=6.94 m
+[INFO] [1791806926.301771117] [lidar_clustering]: ID=34, X=5.64 m, Y=-2.72 m, Width=0.30 m, Depth=2.49 m, Distance=6.26 m
+[INFO] [1791806926.301958099] [lidar_clustering]: ID=35, X=3.13 m, Y=-3.04 m, Width=0.06 m, Depth=0.10 m, Distance=4.36 m
+[INFO] [1791806926.302139331] [lidar_clustering]: ID=37, X=3.16 m, Y=3.17 m, Width=1.87 m, Depth=7.47 m, Distance=4.47 m
+[INFO] [1791806926.302324750] [lidar_clustering]: ID=38, X=7.72 m, Y=0.68 m, Width=0.21 m, Depth=0.04 m, Distance=7.75 m
+[INFO] [1791806926.302517273] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806927.270177362] [lidar_clustering]: ID=17, X=3.31 m, Y=3.59 m, Width=2.88 m, Depth=7.38 m, Distance=4.89 m
+[INFO] [1791806927.270413687] [lidar_clustering]: ID=27, X=6.43 m, Y=1.46 m, Width=0.04 m, Depth=0.12 m, Distance=6.59 m
+[INFO] [1791806927.270605058] [lidar_clustering]: ID=30, X=1.46 m, Y=-5.77 m, Width=0.45 m, Depth=0.87 m, Distance=5.95 m
+[INFO] [1791806927.270797761] [lidar_clustering]: ID=32, X=0.50 m, Y=-5.78 m, Width=0.05 m, Depth=0.28 m, Distance=5.80 m
+[INFO] [1791806927.270988300] [lidar_clustering]: ID=33, X=0.82 m, Y=-5.93 m, Width=0.44 m, Depth=1.25 m, Distance=5.99 m
+[INFO] [1791806927.271175904] [lidar_clustering]: ID=35, X=2.88 m, Y=-3.49 m, Width=0.38 m, Depth=6.65 m, Distance=4.53 m
+[INFO] [1791806927.271367094] [lidar_clustering]: ID=38, X=6.32 m, Y=-0.41 m, Width=0.15 m, Depth=0.02 m, Distance=6.33 m
+[INFO] [1791806927.271551932] [lidar_clustering]: ID=39, X=7.83 m, Y=1.11 m, Width=0.30 m, Depth=0.08 m, Distance=7.91 m
+[INFO] [1791806927.271746008] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806927.271940655] [lidar_clustering]: points=669, clusters=6, tracks=8
+[INFO] [1791806928.239691494] [lidar_clustering]: ID=17, X=2.62 m, Y=5.00 m, Width=0.49 m, Depth=5.51 m, Distance=5.64 m
+[INFO] [1791806928.239920165] [lidar_clustering]: ID=24, X=2.27 m, Y=-4.01 m, Width=0.09 m, Depth=0.40 m, Distance=4.61 m
+[INFO] [1791806928.240107558] [lidar_clustering]: ID=27, X=5.81 m, Y=1.03 m, Width=0.20 m, Depth=0.07 m, Distance=5.90 m
+[INFO] [1791806928.240287477] [lidar_clustering]: ID=31, X=3.93 m, Y=-5.18 m, Width=0.05 m, Depth=0.15 m, Distance=6.50 m
+[INFO] [1791806928.240471253] [lidar_clustering]: ID=34, X=7.02 m, Y=-2.93 m, Width=0.61 m, Depth=0.19 m, Distance=7.60 m
+[INFO] [1791806928.240649288] [lidar_clustering]: ID=35, X=2.95 m, Y=-4.44 m, Width=0.10 m, Depth=0.16 m, Distance=5.33 m
+[INFO] [1791806928.240826061] [lidar_clustering]: ID=36, X=0.45 m, Y=-4.01 m, Width=0.08 m, Depth=0.29 m, Distance=4.04 m
+[INFO] [1791806928.241002955] [lidar_clustering]: ID=38, X=4.93 m, Y=-1.85 m, Width=0.18 m, Depth=0.04 m, Distance=5.26 m
+[INFO] [1791806928.241180479] [lidar_clustering]: ID=39, X=6.87 m, Y=3.48 m, Width=0.21 m, Depth=0.12 m, Distance=7.70 m
+[INFO] [1791806928.241361460] [lidar_clustering]: ID=40, X=6.20 m, Y=-4.03 m, Width=1.50 m, Depth=0.36 m, Distance=7.39 m
+[INFO] [1791806928.241538584] [lidar_clustering]: ID=41, X=5.52 m, Y=0.05 m, Width=0.17 m, Depth=0.03 m, Distance=5.52 m
+[INFO] [1791806928.241804385] [lidar_clustering]: ID=42, X=1.39 m, Y=-4.28 m, Width=0.15 m, Depth=0.65 m, Distance=4.50 m
+[INFO] [1791806928.242004532] [lidar_clustering]: ID=43, X=6.53 m, Y=3.23 m, Width=0.18 m, Depth=0.09 m, Distance=7.28 m
+[INFO] [1791806928.242196834] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806929.203809302] [lidar_clustering]: ID=17, X=2.53 m, Y=5.22 m, Width=0.37 m, Depth=5.05 m, Distance=5.80 m
+[INFO] [1791806929.204051679] [lidar_clustering]: ID=27, X=4.92 m, Y=-0.36 m, Width=0.14 m, Depth=0.02 m, Distance=4.93 m
+[INFO] [1791806929.204259961] [lidar_clustering]: ID=31, X=4.33 m, Y=-5.51 m, Width=0.14 m, Depth=0.11 m, Distance=7.00 m
+[INFO] [1791806929.204459948] [lidar_clustering]: ID=33, X=0.45 m, Y=-7.50 m, Width=0.34 m, Depth=0.18 m, Distance=7.51 m
+[INFO] [1791806929.204658051] [lidar_clustering]: ID=38, X=3.26 m, Y=-3.09 m, Width=0.11 m, Depth=0.11 m, Distance=4.49 m
+[INFO] [1791806929.204846796] [lidar_clustering]: ID=39, X=6.06 m, Y=4.61 m, Width=1.37 m, Depth=1.29 m, Distance=7.62 m
+[INFO] [1791806929.205033007] [lidar_clustering]: ID=40, X=4.06 m, Y=-5.15 m, Width=0.13 m, Depth=0.31 m, Distance=6.56 m
+[INFO] [1791806929.205216773] [lidar_clustering]: ID=41, X=4.28 m, Y=-1.40 m, Width=0.15 m, Depth=0.05 m, Distance=4.51 m
+[INFO] [1791806929.205401120] [lidar_clustering]: ID=43, X=6.24 m, Y=1.98 m, Width=0.17 m, Depth=0.05 m, Distance=6.55 m
+[INFO] [1791806929.205579587] [lidar_clustering]: ID=44, X=6.02 m, Y=1.41 m, Width=0.13 m, Depth=0.03 m, Distance=6.18 m
+[INFO] [1791806929.205813126] [lidar_clustering]: ID=45, X=3.89 m, Y=-5.89 m, Width=0.21 m, Depth=0.10 m, Distance=7.06 m
+[INFO] [1791806929.206080841] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806929.206352452] [lidar_clustering]: points=332, clusters=7, tracks=11
+[INFO] [1791806930.181118660] [lidar_clustering]: ID=17, X=2.15 m, Y=4.46 m, Width=0.58 m, Depth=4.00 m, Distance=4.95 m
+[INFO] [1791806930.181422112] [lidar_clustering]: ID=27, X=3.36 m, Y=-1.92 m, Width=0.13 m, Depth=0.07 m, Distance=3.87 m
+[INFO] [1791806930.181606819] [lidar_clustering]: ID=34, X=7.14 m, Y=-2.64 m, Width=0.22 m, Depth=0.10 m, Distance=7.61 m
+[INFO] [1791806930.181787019] [lidar_clustering]: ID=38, X=0.98 m, Y=-4.06 m, Width=0.01 m, Depth=0.06 m, Distance=4.18 m
+[INFO] [1791806930.181964373] [lidar_clustering]: ID=39, X=6.29 m, Y=3.04 m, Width=1.84 m, Depth=1.09 m, Distance=6.99 m
+[INFO] [1791806930.182141757] [lidar_clustering]: ID=40, X=1.15 m, Y=-6.27 m, Width=0.05 m, Depth=0.18 m, Distance=6.38 m
+[INFO] [1791806930.182324972] [lidar_clustering]: ID=41, X=2.45 m, Y=-2.73 m, Width=0.11 m, Depth=0.09 m, Distance=3.67 m
+[INFO] [1791806930.182509540] [lidar_clustering]: ID=44, X=5.07 m, Y=-0.36 m, Width=0.12 m, Depth=0.03 m, Distance=5.08 m
+[INFO] [1791806930.182706961] [lidar_clustering]: ID=46, X=5.89 m, Y=4.82 m, Width=0.29 m, Depth=0.96 m, Distance=7.61 m
+[INFO] [1791806930.182895617] [lidar_clustering]: ID=47, X=6.31 m, Y=2.51 m, Width=2.49 m, Depth=1.04 m, Distance=6.79 m
+[INFO] [1791806930.183076327] [lidar_clustering]: ID=48, X=2.14 m, Y=-6.92 m, Width=0.09 m, Depth=0.13 m, Distance=7.24 m
+[INFO] [1791806930.183256927] [lidar_clustering]: ID=49, X=7.46 m, Y=-0.67 m, Width=0.10 m, Depth=0.01 m, Distance=7.49 m
+[INFO] [1791806930.183442206] [lidar_clustering]: ID=50, X=7.27 m, Y=-1.73 m, Width=0.16 m, Depth=0.25 m, Distance=7.48 m
+[INFO] [1791806930.183620101] [lidar_clustering]: ID=51, X=6.73 m, Y=1.00 m, Width=0.11 m, Depth=0.03 m, Distance=6.81 m
+[INFO] [1791806930.183797215] [lidar_clustering]: ID=52, X=4.88 m, Y=4.47 m, Width=0.07 m, Depth=0.18 m, Distance=6.62 m
+[INFO] [1791806930.183977745] [lidar_clustering]: ID=53, X=4.41 m, Y=4.32 m, Width=0.13 m, Depth=0.11 m, Distance=6.17 m
+[INFO] [1791806930.184165739] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806931.150754500] [lidar_clustering]: ID=17, X=2.38 m, Y=4.40 m, Width=1.60 m, Depth=4.18 m, Distance=5.00 m
+[INFO] [1791806931.150990514] [lidar_clustering]: ID=27, X=1.16 m, Y=-3.07 m, Width=0.06 m, Depth=0.13 m, Distance=3.28 m
+[INFO] [1791806931.151175422] [lidar_clustering]: ID=34, X=6.33 m, Y=-3.76 m, Width=0.28 m, Depth=0.16 m, Distance=7.36 m
+[INFO] [1791806931.151365029] [lidar_clustering]: ID=41, X=0.62 m, Y=-3.42 m, Width=0.03 m, Depth=0.15 m, Distance=3.47 m
+[INFO] [1791806931.151567671] [lidar_clustering]: ID=43, X=6.34 m, Y=1.03 m, Width=0.20 m, Depth=0.05 m, Distance=6.43 m
+[INFO] [1791806931.151750685] [lidar_clustering]: ID=44, X=3.25 m, Y=-2.15 m, Width=0.11 m, Depth=0.07 m, Distance=3.89 m
+[INFO] [1791806931.151927679] [lidar_clustering]: ID=47, X=5.71 m, Y=0.37 m, Width=0.94 m, Depth=0.38 m, Distance=5.72 m
+[INFO] [1791806931.152104922] [lidar_clustering]: ID=51, X=5.48 m, Y=-1.15 m, Width=0.18 m, Depth=0.07 m, Distance=5.60 m
+[INFO] [1791806931.152285833] [lidar_clustering]: ID=54, X=6.50 m, Y=-2.77 m, Width=0.16 m, Depth=0.06 m, Distance=7.07 m
+[INFO] [1791806931.152476472] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806931.152662262] [lidar_clustering]: points=353, clusters=8, tracks=9
+[INFO] [1791806932.122020776] [lidar_clustering]: ID=17, X=1.45 m, Y=5.16 m, Width=0.93 m, Depth=2.32 m, Distance=5.36 m
+[INFO] [1791806932.122261810] [lidar_clustering]: ID=34, X=4.65 m, Y=-5.66 m, Width=0.71 m, Depth=0.17 m, Distance=7.32 m
+[INFO] [1791806932.122456346] [lidar_clustering]: ID=39, X=6.46 m, Y=3.08 m, Width=0.55 m, Depth=2.12 m, Distance=7.15 m
+[INFO] [1791806932.122642046] [lidar_clustering]: ID=44, X=1.33 m, Y=-2.87 m, Width=0.06 m, Depth=0.11 m, Distance=3.16 m
+[INFO] [1791806932.122824820] [lidar_clustering]: ID=47, X=4.33 m, Y=-0.94 m, Width=0.17 m, Depth=0.02 m, Distance=4.43 m
+[INFO] [1791806932.123007794] [lidar_clustering]: ID=51, X=3.69 m, Y=-2.32 m, Width=0.09 m, Depth=0.11 m, Distance=4.36 m
+[INFO] [1791806932.123191640] [lidar_clustering]: ID=54, X=4.63 m, Y=-3.96 m, Width=1.00 m, Depth=1.25 m, Distance=6.09 m
+[INFO] [1791806932.123378392] [lidar_clustering]: ID=55, X=4.47 m, Y=3.06 m, Width=0.34 m, Depth=0.38 m, Distance=5.42 m
+[INFO] [1791806932.123559753] [lidar_clustering]: ID=56, X=4.46 m, Y=-4.13 m, Width=0.61 m, Depth=0.13 m, Distance=6.07 m
+[INFO] [1791806932.123739181] [lidar_clustering]: ID=57, X=2.90 m, Y=3.24 m, Width=1.07 m, Depth=0.67 m, Distance=4.35 m
+[INFO] [1791806932.123927386] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806933.097417005] [lidar_clustering]: ID=17, X=0.95 m, Y=4.55 m, Width=0.18 m, Depth=1.11 m, Distance=4.65 m
+[INFO] [1791806933.097645476] [lidar_clustering]: ID=44, X=0.53 m, Y=-2.96 m, Width=0.04 m, Depth=0.12 m, Distance=3.01 m
+[INFO] [1791806933.097848918] [lidar_clustering]: ID=46, X=5.69 m, Y=4.49 m, Width=0.13 m, Depth=1.75 m, Distance=7.24 m
+[INFO] [1791806933.098048955] [lidar_clustering]: ID=47, X=2.83 m, Y=-1.30 m, Width=0.34 m, Depth=0.33 m, Distance=3.11 m
+[INFO] [1791806933.098246266] [lidar_clustering]: ID=51, X=2.03 m, Y=-2.68 m, Width=0.08 m, Depth=0.10 m, Distance=3.37 m
+[INFO] [1791806933.098446684] [lidar_clustering]: ID=52, X=5.72 m, Y=5.20 m, Width=0.08 m, Depth=0.63 m, Distance=7.73 m
+[INFO] [1791806933.098640909] [lidar_clustering]: ID=56, X=2.60 m, Y=-4.52 m, Width=0.71 m, Depth=0.51 m, Distance=5.22 m
+[INFO] [1791806933.098832109] [lidar_clustering]: ID=57, X=1.75 m, Y=2.72 m, Width=1.37 m, Depth=1.26 m, Distance=3.23 m
+[INFO] [1791806933.099025704] [lidar_clustering]: ID=60, X=3.17 m, Y=-6.60 m, Width=0.04 m, Depth=0.09 m, Distance=7.32 m
+[INFO] [1791806933.099224247] [lidar_clustering]: FollowGap: mode=AVOID, direction=STRAIGHT, front=3.04 m, best_angle=1.4 deg
+[INFO] [1791806933.099425196] [lidar_clustering]: points=350, clusters=6, tracks=9
+[INFO] [1791806934.075304622] [lidar_clustering]: ID=17, X=0.45 m, Y=5.36 m, Width=0.07 m, Depth=0.17 m, Distance=5.38 m
+[INFO] [1791806934.075549483] [lidar_clustering]: ID=39, X=6.67 m, Y=2.71 m, Width=3.00 m, Depth=1.40 m, Distance=7.20 m
+[INFO] [1791806934.075764808] [lidar_clustering]: ID=46, X=3.85 m, Y=4.45 m, Width=0.58 m, Depth=3.23 m, Distance=5.88 m
+[INFO] [1791806934.075953023] [lidar_clustering]: ID=47, X=1.17 m, Y=-1.56 m, Width=0.09 m, Depth=0.13 m, Distance=1.95 m
+[INFO] [1791806934.076134925] [lidar_clustering]: ID=51, X=0.37 m, Y=-2.83 m, Width=0.01 m, Depth=0.03 m, Distance=2.85 m
+[INFO] [1791806934.076321716] [lidar_clustering]: ID=54, X=2.28 m, Y=-4.49 m, Width=0.04 m, Depth=0.10 m, Distance=5.04 m
+[INFO] [1791806934.076503479] [lidar_clustering]: ID=56, X=1.39 m, Y=-4.40 m, Width=0.10 m, Depth=0.72 m, Distance=4.62 m
+[INFO] [1791806934.076680271] [lidar_clustering]: ID=57, X=0.73 m, Y=2.33 m, Width=0.24 m, Depth=0.94 m, Distance=2.44 m
+[INFO] [1791806934.076859789] [lidar_clustering]: ID=59, X=1.21 m, Y=-5.17 m, Width=0.09 m, Depth=0.13 m, Distance=5.31 m
+[INFO] [1791806934.077051540] [lidar_clustering]: ID=61, X=0.47 m, Y=3.33 m, Width=0.01 m, Depth=0.08 m, Distance=3.36 m
+[INFO] [1791806934.077250084] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806935.044373673] [lidar_clustering]: ID=39, X=6.11 m, Y=1.40 m, Width=5.92 m, Depth=2.93 m, Distance=6.27 m
+[INFO] [1791806935.044605229] [lidar_clustering]: ID=44, X=0.51 m, Y=-3.42 m, Width=0.01 m, Depth=0.05 m, Distance=3.46 m
+[INFO] [1791806935.044796078] [lidar_clustering]: ID=46, X=3.05 m, Y=3.68 m, Width=4.59 m, Depth=4.90 m, Distance=4.78 m
+[INFO] [1791806935.044980245] [lidar_clustering]: ID=47, X=0.51 m, Y=-1.58 m, Width=0.09 m, Depth=0.22 m, Distance=1.66 m
+[INFO] [1791806935.045162608] [lidar_clustering]: ID=55, X=5.10 m, Y=2.38 m, Width=2.98 m, Depth=1.05 m, Distance=5.63 m
+[INFO] [1791806935.045347576] [lidar_clustering]: ID=56, X=0.45 m, Y=-4.47 m, Width=0.10 m, Depth=0.18 m, Distance=4.49 m
+[INFO] [1791806935.045528146] [lidar_clustering]: ID=57, X=0.36 m, Y=2.79 m, Width=0.11 m, Depth=0.06 m, Distance=2.81 m
+[INFO] [1791806935.045705730] [lidar_clustering]: ID=59, X=1.08 m, Y=-4.84 m, Width=0.01 m, Depth=0.07 m, Distance=4.96 m
+[INFO] [1791806935.045889917] [lidar_clustering]: ID=61, X=0.51 m, Y=3.70 m, Width=0.05 m, Depth=0.07 m, Distance=3.73 m
+[INFO] [1791806935.046074374] [lidar_clustering]: ID=62, X=0.45 m, Y=-4.74 m, Width=0.29 m, Depth=0.23 m, Distance=4.76 m
+[INFO] [1791806935.046254092] [lidar_clustering]: ID=63, X=6.52 m, Y=-0.99 m, Width=4.33 m, Depth=1.41 m, Distance=6.59 m
+[INFO] [1791806935.046449369] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806935.046635229] [lidar_clustering]: points=568, clusters=2, tracks=11
+[INFO] [1791806936.024081307] [lidar_clustering]: ID=55, X=3.76 m, Y=1.85 m, Width=7.92 m, Depth=5.68 m, Distance=4.19 m
+[INFO] [1791806936.024339583] [lidar_clustering]: ID=64, X=6.33 m, Y=-3.86 m, Width=0.28 m, Depth=0.16 m, Distance=7.41 m
+[INFO] [1791806936.024537816] [lidar_clustering]: ID=65, X=4.81 m, Y=-5.81 m, Width=0.53 m, Depth=0.74 m, Distance=7.54 m
+[INFO] [1791806936.024737893] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806936.991532354] [lidar_clustering]: ID=46, X=2.25 m, Y=4.40 m, Width=1.16 m, Depth=4.16 m, Distance=4.94 m
+[INFO] [1791806936.991793445] [lidar_clustering]: ID=55, X=3.90 m, Y=2.13 m, Width=8.49 m, Depth=5.44 m, Distance=4.45 m
+[INFO] [1791806936.991983974] [lidar_clustering]: ID=63, X=4.37 m, Y=1.05 m, Width=0.07 m, Depth=0.06 m, Distance=4.49 m
+[INFO] [1791806936.992170535] [lidar_clustering]: ID=65, X=1.32 m, Y=-7.27 m, Width=0.20 m, Depth=0.19 m, Distance=7.39 m
+[INFO] [1791806936.992358358] [lidar_clustering]: ID=66, X=5.57 m, Y=-3.95 m, Width=0.08 m, Depth=0.06 m, Distance=6.83 m
+[INFO] [1791806936.992551902] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806936.992764172] [lidar_clustering]: points=625, clusters=3, tracks=5
+[INFO] [1791806937.961155762] [lidar_clustering]: ID=39, X=6.58 m, Y=1.02 m, Width=0.17 m, Depth=0.17 m, Distance=6.66 m
+[INFO] [1791806937.961402096] [lidar_clustering]: ID=46, X=2.42 m, Y=5.40 m, Width=1.26 m, Depth=4.75 m, Distance=5.92 m
+[INFO] [1791806937.961655653] [lidar_clustering]: ID=67, X=6.86 m, Y=-0.43 m, Width=0.14 m, Depth=0.11 m, Distance=6.88 m
+[INFO] [1791806937.961900894] [lidar_clustering]: ID=68, X=2.73 m, Y=-3.13 m, Width=1.31 m, Depth=1.20 m, Distance=4.16 m
+[INFO] [1791806937.962093015] [lidar_clustering]: ID=69, X=5.45 m, Y=-1.66 m, Width=0.30 m, Depth=0.11 m, Distance=5.69 m
+[INFO] [1791806937.962271922] [lidar_clustering]: ID=70, X=6.82 m, Y=-0.99 m, Width=0.23 m, Depth=0.13 m, Distance=6.90 m
+[INFO] [1791806937.962460136] [lidar_clustering]: ID=71, X=7.02 m, Y=1.44 m, Width=2.48 m, Depth=0.94 m, Distance=7.17 m
+[INFO] [1791806937.962638832] [lidar_clustering]: ID=72, X=6.44 m, Y=-1.35 m, Width=0.56 m, Depth=0.43 m, Distance=6.58 m
+[INFO] [1791806937.962825914] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806938.938287085] [lidar_clustering]: ID=39, X=6.31 m, Y=0.02 m, Width=0.15 m, Depth=0.15 m, Distance=6.31 m
+[INFO] [1791806938.938524522] [lidar_clustering]: ID=46, X=1.97 m, Y=4.45 m, Width=0.71 m, Depth=3.25 m, Distance=4.87 m
+[INFO] [1791806938.938724508] [lidar_clustering]: ID=67, X=7.73 m, Y=-0.15 m, Width=0.36 m, Depth=0.09 m, Distance=7.73 m
+[INFO] [1791806938.938915186] [lidar_clustering]: ID=68, X=0.72 m, Y=-3.93 m, Width=0.41 m, Depth=0.84 m, Distance=3.99 m
+[INFO] [1791806938.939100184] [lidar_clustering]: ID=70, X=7.62 m, Y=-0.74 m, Width=0.70 m, Depth=0.47 m, Distance=7.66 m
+[INFO] [1791806938.939293167] [lidar_clustering]: ID=71, X=7.14 m, Y=0.10 m, Width=1.84 m, Depth=0.85 m, Distance=7.14 m
+[INFO] [1791806938.939479177] [lidar_clustering]: ID=72, X=7.22 m, Y=-1.00 m, Width=1.23 m, Depth=0.56 m, Distance=7.29 m
+[INFO] [1791806938.939663053] [lidar_clustering]: ID=73, X=5.17 m, Y=5.14 m, Width=0.26 m, Depth=1.61 m, Distance=7.29 m
+[INFO] [1791806938.939845336] [lidar_clustering]: ID=74, X=3.41 m, Y=4.40 m, Width=1.03 m, Depth=6.77 m, Distance=5.57 m
+[INFO] [1791806938.940034883] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806938.940226212] [lidar_clustering]: points=384, clusters=3, tracks=9
+[INFO] [1791806939.914295326] [lidar_clustering]: ID=72, X=6.08 m, Y=-4.10 m, Width=1.17 m, Depth=1.32 m, Distance=7.34 m
+[INFO] [1791806939.914542822] [lidar_clustering]: ID=73, X=5.66 m, Y=4.45 m, Width=1.75 m, Depth=2.44 m, Distance=7.20 m
+[INFO] [1791806939.914729102] [lidar_clustering]: ID=74, X=1.51 m, Y=3.77 m, Width=1.49 m, Depth=2.71 m, Distance=4.07 m
+[INFO] [1791806939.914923317] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806940.891255801] [lidar_clustering]: ID=46, X=1.02 m, Y=2.99 m, Width=0.26 m, Depth=1.55 m, Distance=3.16 m
+[INFO] [1791806940.891491134] [lidar_clustering]: ID=72, X=4.18 m, Y=-4.69 m, Width=1.07 m, Depth=1.53 m, Distance=6.28 m
+[INFO] [1791806940.891679438] [lidar_clustering]: ID=73, X=4.09 m, Y=3.27 m, Width=1.43 m, Depth=4.02 m, Distance=5.24 m
+[INFO] [1791806940.891862843] [lidar_clustering]: ID=74, X=0.49 m, Y=4.55 m, Width=0.14 m, Depth=0.09 m, Distance=4.58 m
+[INFO] [1791806940.892048872] [lidar_clustering]: ID=75, X=7.35 m, Y=2.56 m, Width=0.28 m, Depth=0.46 m, Distance=7.78 m
+[INFO] [1791806940.892230274] [lidar_clustering]: ID=76, X=7.44 m, Y=2.05 m, Width=0.04 m, Depth=0.28 m, Distance=7.72 m
+[INFO] [1791806940.892422936] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806940.892609877] [lidar_clustering]: points=409, clusters=5, tracks=6
+[INFO] [1791806941.867034049] [lidar_clustering]: ID=46, X=0.52 m, Y=3.07 m, Width=0.17 m, Depth=0.40 m, Distance=3.11 m
+[INFO] [1791806941.867263530] [lidar_clustering]: ID=73, X=2.94 m, Y=3.58 m, Width=1.72 m, Depth=4.47 m, Distance=4.63 m
+[INFO] [1791806941.867460580] [lidar_clustering]: ID=75, X=6.12 m, Y=2.88 m, Width=0.29 m, Depth=1.16 m, Distance=6.76 m
+[INFO] [1791806941.867646330] [lidar_clustering]: ID=76, X=7.01 m, Y=2.89 m, Width=0.06 m, Depth=0.06 m, Distance=7.58 m
+[INFO] [1791806941.867828412] [lidar_clustering]: ID=77, X=2.66 m, Y=-5.35 m, Width=0.04 m, Depth=0.07 m, Distance=5.97 m
+[INFO] [1791806941.868010785] [lidar_clustering]: ID=78, X=6.28 m, Y=2.13 m, Width=0.12 m, Depth=0.11 m, Distance=6.63 m
+[INFO] [1791806941.868193488] [lidar_clustering]: ID=79, X=5.85 m, Y=2.20 m, Width=0.16 m, Depth=0.21 m, Distance=6.25 m
+[INFO] [1791806941.868379768] [lidar_clustering]: ID=80, X=2.28 m, Y=3.40 m, Width=1.29 m, Depth=4.58 m, Distance=4.10 m
+[INFO] [1791806941.868561821] [lidar_clustering]: ID=81, X=2.50 m, Y=-4.73 m, Width=0.46 m, Depth=1.50 m, Distance=5.35 m
+[INFO] [1791806941.868741088] [lidar_clustering]: ID=82, X=5.32 m, Y=2.93 m, Width=0.09 m, Depth=0.05 m, Distance=6.08 m
+[INFO] [1791806941.868932978] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806942.849701072] [lidar_clustering]: ID=72, X=3.41 m, Y=-4.98 m, Width=0.05 m, Depth=0.07 m, Distance=6.03 m
+[INFO] [1791806942.849956503] [lidar_clustering]: ID=73, X=3.45 m, Y=3.14 m, Width=0.09 m, Depth=0.04 m, Distance=4.67 m
+[INFO] [1791806942.850160937] [lidar_clustering]: ID=75, X=5.09 m, Y=4.87 m, Width=0.51 m, Depth=1.19 m, Distance=7.05 m
+[INFO] [1791806942.850356354] [lidar_clustering]: ID=78, X=4.53 m, Y=2.48 m, Width=0.32 m, Depth=0.17 m, Distance=5.17 m
+[INFO] [1791806942.850544518] [lidar_clustering]: ID=79, X=3.52 m, Y=2.26 m, Width=0.25 m, Depth=0.12 m, Distance=4.19 m
+[INFO] [1791806942.850729015] [lidar_clustering]: ID=80, X=1.40 m, Y=3.56 m, Width=1.83 m, Depth=2.26 m, Distance=3.83 m
+[INFO] [1791806942.850911007] [lidar_clustering]: ID=81, X=1.22 m, Y=-4.59 m, Width=0.28 m, Depth=1.59 m, Distance=4.75 m
+[INFO] [1791806942.851092919] [lidar_clustering]: ID=82, X=3.87 m, Y=3.23 m, Width=0.06 m, Depth=0.10 m, Distance=5.04 m
+[INFO] [1791806942.851286362] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806942.851480778] [lidar_clustering]: points=370, clusters=7, tracks=8
+[INFO] [1791806943.825139015] [lidar_clustering]: ID=46, X=0.72 m, Y=3.10 m, Width=0.49 m, Depth=0.90 m, Distance=3.19 m
+[INFO] [1791806943.825370621] [lidar_clustering]: ID=75, X=4.10 m, Y=4.45 m, Width=0.06 m, Depth=0.06 m, Distance=6.05 m
+[INFO] [1791806943.825558664] [lidar_clustering]: ID=77, X=2.56 m, Y=-4.94 m, Width=0.04 m, Depth=0.07 m, Distance=5.57 m
+[INFO] [1791806943.825744043] [lidar_clustering]: ID=78, X=2.83 m, Y=2.65 m, Width=0.27 m, Depth=0.18 m, Distance=3.87 m
+[INFO] [1791806943.825921927] [lidar_clustering]: ID=79, X=1.88 m, Y=2.40 m, Width=0.02 m, Depth=0.06 m, Distance=3.05 m
+[INFO] [1791806943.826100002] [lidar_clustering]: ID=80, X=1.42 m, Y=3.83 m, Width=0.01 m, Depth=0.04 m, Distance=4.08 m
+[INFO] [1791806943.826277405] [lidar_clustering]: ID=81, X=0.70 m, Y=-4.58 m, Width=0.16 m, Depth=0.80 m, Distance=4.63 m
+[INFO] [1791806943.826464156] [lidar_clustering]: ID=82, X=2.08 m, Y=3.44 m, Width=0.09 m, Depth=0.08 m, Distance=4.02 m
+[INFO] [1791806943.826644755] [lidar_clustering]: ID=83, X=0.50 m, Y=-4.63 m, Width=0.51 m, Depth=0.41 m, Distance=4.65 m
+[INFO] [1791806943.826823792] [lidar_clustering]: ID=84, X=5.71 m, Y=4.22 m, Width=0.14 m, Depth=1.84 m, Distance=7.09 m
+[INFO] [1791806943.827053123] [lidar_clustering]: ID=85, X=1.48 m, Y=2.98 m, Width=0.06 m, Depth=0.06 m, Distance=3.33 m
+[INFO] [1791806943.827319163] [lidar_clustering]: ID=86, X=2.73 m, Y=4.27 m, Width=0.25 m, Depth=2.29 m, Distance=5.07 m
+[INFO] [1791806943.827588018] [lidar_clustering]: ID=87, X=4.73 m, Y=4.51 m, Width=0.07 m, Depth=0.38 m, Distance=6.53 m
+[INFO] [1791806943.827855090] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806944.795808169] [lidar_clustering]: ID=46, X=0.69 m, Y=3.88 m, Width=0.18 m, Depth=0.73 m, Distance=3.94 m
+[INFO] [1791806944.796050424] [lidar_clustering]: ID=74, X=0.37 m, Y=4.92 m, Width=0.00 m, Depth=0.07 m, Distance=4.94 m
+[INFO] [1791806944.796243898] [lidar_clustering]: ID=78, X=1.24 m, Y=2.65 m, Width=0.22 m, Depth=0.23 m, Distance=2.92 m
+[INFO] [1791806944.796438223] [lidar_clustering]: ID=79, X=0.71 m, Y=2.44 m, Width=0.02 m, Depth=0.07 m, Distance=2.54 m
+[INFO] [1791806944.796635554] [lidar_clustering]: ID=80, X=1.69 m, Y=3.83 m, Width=0.32 m, Depth=0.85 m, Distance=4.19 m
+[INFO] [1791806944.796825541] [lidar_clustering]: ID=82, X=0.51 m, Y=3.45 m, Width=0.03 m, Depth=0.05 m, Distance=3.49 m
+[INFO] [1791806944.797011360] [lidar_clustering]: ID=83, X=0.37 m, Y=-4.82 m, Width=0.01 m, Depth=0.07 m, Distance=4.84 m
+[INFO] [1791806944.797198301] [lidar_clustering]: ID=84, X=4.22 m, Y=3.87 m, Width=0.54 m, Depth=5.03 m, Distance=5.73 m
+[INFO] [1791806944.797403577] [lidar_clustering]: ID=85, X=0.50 m, Y=3.01 m, Width=0.08 m, Depth=0.10 m, Distance=3.05 m
+[INFO] [1791806944.797644520] [lidar_clustering]: ID=86, X=1.22 m, Y=4.58 m, Width=0.39 m, Depth=1.10 m, Distance=4.74 m
+[INFO] [1791806944.797848684] [lidar_clustering]: ID=88, X=0.87 m, Y=2.86 m, Width=0.05 m, Depth=0.05 m, Distance=2.99 m
+[INFO] [1791806944.798038590] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806944.798225652] [lidar_clustering]: points=290, clusters=7, tracks=11
+[INFO] [1791806945.759782180] [lidar_clustering]: ID=74, X=0.40 m, Y=5.20 m, Width=0.02 m, Depth=0.06 m, Distance=5.21 m
+[INFO] [1791806945.759997905] [lidar_clustering]: ID=75, X=3.03 m, Y=4.62 m, Width=1.53 m, Depth=6.60 m, Distance=5.52 m
+[INFO] [1791806945.760180639] [lidar_clustering]: ID=78, X=0.37 m, Y=2.57 m, Width=0.06 m, Depth=0.06 m, Distance=2.60 m
+[INFO] [1791806945.760366668] [lidar_clustering]: ID=84, X=3.19 m, Y=4.23 m, Width=0.51 m, Depth=6.00 m, Distance=5.30 m
+[INFO] [1791806945.760556224] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806946.730315936] [lidar_clustering]: ID=75, X=2.11 m, Y=6.02 m, Width=0.82 m, Depth=4.28 m, Distance=6.38 m
+[INFO] [1791806946.730552902] [lidar_clustering]: ID=84, X=3.29 m, Y=4.28 m, Width=1.59 m, Depth=6.95 m, Distance=5.40 m
+[INFO] [1791806946.730743019] [lidar_clustering]: ID=89, X=6.66 m, Y=-2.88 m, Width=0.63 m, Depth=0.31 m, Distance=7.26 m
+[INFO] [1791806946.730933116] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806946.731118214] [lidar_clustering]: points=340, clusters=2, tracks=3
+[INFO] [1791806947.706759254] [lidar_clustering]: ID=89, X=5.02 m, Y=-3.09 m, Width=0.52 m, Depth=0.34 m, Distance=5.89 m
+[INFO] [1791806947.706983254] [lidar_clustering]: ID=90, X=2.72 m, Y=5.03 m, Width=0.57 m, Depth=5.62 m, Distance=5.72 m
+[INFO] [1791806947.707181166] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806948.677220526] [lidar_clustering]: ID=89, X=3.04 m, Y=-3.66 m, Width=0.44 m, Depth=0.52 m, Distance=4.76 m
+[INFO] [1791806948.677456258] [lidar_clustering]: ID=90, X=3.62 m, Y=3.72 m, Width=2.63 m, Depth=7.51 m, Distance=5.19 m
+[INFO] [1791806948.677657597] [lidar_clustering]: ID=91, X=5.90 m, Y=-4.39 m, Width=1.07 m, Depth=1.33 m, Distance=7.35 m
+[INFO] [1791806948.677846461] [lidar_clustering]: ID=92, X=5.15 m, Y=-3.76 m, Width=0.05 m, Depth=0.04 m, Distance=6.37 m
+[INFO] [1791806948.678035516] [lidar_clustering]: ID=93, X=3.13 m, Y=4.12 m, Width=1.41 m, Depth=6.89 m, Distance=5.18 m
+[INFO] [1791806948.678221826] [lidar_clustering]: ID=94, X=6.67 m, Y=3.82 m, Width=0.28 m, Depth=0.84 m, Distance=7.69 m
+[INFO] [1791806948.678418496] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806948.678607971] [lidar_clustering]: points=465, clusters=5, tracks=6
+[INFO] [1791806949.660086636] [lidar_clustering]: ID=89, X=0.58 m, Y=-4.65 m, Width=0.14 m, Depth=0.38 m, Distance=4.68 m
+[INFO] [1791806949.660383644] [lidar_clustering]: ID=90, X=3.59 m, Y=3.29 m, Width=3.35 m, Depth=6.91 m, Distance=4.87 m
+[INFO] [1791806949.660606973] [lidar_clustering]: ID=91, X=4.22 m, Y=-5.70 m, Width=0.64 m, Depth=1.53 m, Distance=7.09 m
+[INFO] [1791806949.660802801] [lidar_clustering]: ID=93, X=2.73 m, Y=4.57 m, Width=0.25 m, Depth=6.30 m, Distance=5.32 m
+[INFO] [1791806949.660986536] [lidar_clustering]: ID=95, X=7.02 m, Y=0.49 m, Width=0.85 m, Depth=1.73 m, Distance=7.04 m
+[INFO] [1791806949.661169870] [lidar_clustering]: ID=96, X=6.96 m, Y=0.90 m, Width=3.54 m, Depth=1.51 m, Distance=7.01 m
+[INFO] [1791806949.661366620] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806950.636580272] [lidar_clustering]: ID=89, X=0.62 m, Y=-5.41 m, Width=0.01 m, Depth=0.08 m, Distance=5.45 m
+[INFO] [1791806950.636830271] [lidar_clustering]: ID=90, X=3.33 m, Y=3.17 m, Width=3.16 m, Depth=5.54 m, Distance=4.59 m
+[INFO] [1791806950.637037410] [lidar_clustering]: ID=93, X=2.83 m, Y=4.24 m, Width=0.36 m, Depth=6.39 m, Distance=5.10 m
+[INFO] [1791806950.637234300] [lidar_clustering]: ID=95, X=7.07 m, Y=0.55 m, Width=0.70 m, Depth=1.60 m, Distance=7.09 m
+[INFO] [1791806950.637437281] [lidar_clustering]: ID=96, X=6.21 m, Y=1.12 m, Width=4.92 m, Depth=2.52 m, Distance=6.31 m
+[INFO] [1791806950.637628921] [lidar_clustering]: ID=97, X=3.43 m, Y=-6.70 m, Width=0.05 m, Depth=0.09 m, Distance=7.52 m
+[INFO] [1791806950.637832233] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806950.638035154] [lidar_clustering]: points=427, clusters=3, tracks=6
+[INFO] [1791806951.631401709] [lidar_clustering]: ID=89, X=0.41 m, Y=-4.67 m, Width=0.10 m, Depth=0.17 m, Distance=4.68 m
+[INFO] [1791806951.631625760] [lidar_clustering]: ID=90, X=3.45 m, Y=2.68 m, Width=5.08 m, Depth=7.68 m, Distance=4.37 m
+[INFO] [1791806951.631808613] [lidar_clustering]: ID=91, X=5.43 m, Y=-5.08 m, Width=0.18 m, Depth=0.26 m, Distance=7.44 m
+[INFO] [1791806951.631988160] [lidar_clustering]: ID=95, X=7.24 m, Y=0.59 m, Width=0.86 m, Depth=1.08 m, Distance=7.26 m
+[INFO] [1791806951.632172787] [lidar_clustering]: ID=96, X=7.60 m, Y=1.09 m, Width=0.07 m, Depth=0.14 m, Distance=7.67 m
+[INFO] [1791806951.632355750] [lidar_clustering]: ID=98, X=0.77 m, Y=4.06 m, Width=0.01 m, Depth=0.04 m, Distance=4.14 m
+[INFO] [1791806951.632548963] [lidar_clustering]: ID=99, X=4.25 m, Y=-4.16 m, Width=0.53 m, Depth=4.43 m, Distance=5.95 m
+[INFO] [1791806951.632764758] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806952.609886290] [lidar_clustering]: ID=89, X=0.47 m, Y=-3.84 m, Width=0.14 m, Depth=0.36 m, Distance=3.87 m
+[INFO] [1791806952.610118596] [lidar_clustering]: ID=90, X=1.83 m, Y=1.57 m, Width=2.14 m, Depth=2.96 m, Distance=2.41 m
+[INFO] [1791806952.610324322] [lidar_clustering]: ID=95, X=5.23 m, Y=-0.15 m, Width=1.57 m, Depth=2.18 m, Distance=5.23 m
+[INFO] [1791806952.610526992] [lidar_clustering]: ID=97, X=3.42 m, Y=-4.48 m, Width=0.40 m, Depth=0.20 m, Distance=5.64 m
+[INFO] [1791806952.610717921] [lidar_clustering]: ID=99, X=3.80 m, Y=-2.14 m, Width=1.79 m, Depth=3.14 m, Distance=4.36 m
+[INFO] [1791806952.610905282] [lidar_clustering]: ID=100, X=1.96 m, Y=-3.16 m, Width=0.03 m, Depth=0.04 m, Distance=3.72 m
+[INFO] [1791806952.611094658] [lidar_clustering]: ID=101, X=2.64 m, Y=0.18 m, Width=5.40 m, Depth=4.95 m, Distance=2.65 m
+[INFO] [1791806952.611285185] [lidar_clustering]: ID=102, X=3.74 m, Y=-4.92 m, Width=0.35 m, Depth=0.14 m, Distance=6.18 m
+[INFO] [1791806952.611490962] [lidar_clustering]: FollowGap: mode=AVOID, direction=RIGHT, front=2.21 m, best_angle=-11.6 deg
+[INFO] [1791806952.611687220] [lidar_clustering]: points=714, clusters=3, tracks=8
+[INFO] [1791806953.585285478] [lidar_clustering]: ID=89, X=0.37 m, Y=-3.60 m, Width=0.09 m, Depth=0.09 m, Distance=3.62 m
+[INFO] [1791806953.585525609] [lidar_clustering]: ID=90, X=2.37 m, Y=1.84 m, Width=2.70 m, Depth=4.72 m, Distance=3.00 m
+[INFO] [1791806953.585757093] [lidar_clustering]: ID=99, X=2.79 m, Y=-0.80 m, Width=4.95 m, Depth=5.78 m, Distance=2.91 m
+[INFO] [1791806953.585950967] [lidar_clustering]: ID=100, X=0.88 m, Y=-2.42 m, Width=0.01 m, Depth=0.03 m, Distance=2.58 m
+[INFO] [1791806953.586131375] [lidar_clustering]: ID=101, X=2.81 m, Y=1.08 m, Width=6.96 m, Depth=5.98 m, Distance=3.01 m
+[INFO] [1791806953.586329728] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=2.47 m, best_angle=18.0 deg
+[INFO] [1791806954.560105421] [lidar_clustering]: ID=95, X=4.46 m, Y=-0.93 m, Width=0.60 m, Depth=0.31 m, Distance=4.55 m
+[INFO] [1791806954.560342456] [lidar_clustering]: ID=99, X=2.28 m, Y=-1.65 m, Width=0.13 m, Depth=0.07 m, Distance=2.81 m
+[INFO] [1791806954.560531300] [lidar_clustering]: ID=100, X=0.94 m, Y=-1.89 m, Width=0.37 m, Depth=1.19 m, Distance=2.11 m
+[INFO] [1791806954.560715776] [lidar_clustering]: ID=103, X=1.95 m, Y=6.45 m, Width=1.02 m, Depth=3.86 m, Distance=6.74 m
+[INFO] [1791806954.560896115] [lidar_clustering]: ID=104, X=6.10 m, Y=-3.07 m, Width=0.08 m, Depth=0.05 m, Distance=6.83 m
+[INFO] [1791806954.561075882] [lidar_clustering]: ID=105, X=3.91 m, Y=-0.40 m, Width=0.11 m, Depth=0.09 m, Distance=3.93 m
+[INFO] [1791806954.561255789] [lidar_clustering]: ID=106, X=5.30 m, Y=-3.56 m, Width=0.17 m, Depth=0.15 m, Distance=6.39 m
+[INFO] [1791806954.561438262] [lidar_clustering]: ID=107, X=6.97 m, Y=-2.77 m, Width=0.10 m, Depth=0.04 m, Distance=7.50 m
+[INFO] [1791806954.561616356] [lidar_clustering]: ID=108, X=6.17 m, Y=-4.81 m, Width=0.08 m, Depth=0.07 m, Distance=7.82 m
+[INFO] [1791806954.561805441] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806954.561990278] [lidar_clustering]: points=377, clusters=7, tracks=9
+[INFO] [1791806955.536515862] [lidar_clustering]: ID=95, X=2.70 m, Y=-2.75 m, Width=0.44 m, Depth=0.46 m, Distance=3.85 m
+[INFO] [1791806955.536734342] [lidar_clustering]: ID=97, X=2.40 m, Y=-6.14 m, Width=0.03 m, Depth=0.09 m, Distance=6.59 m
+[INFO] [1791806955.536915943] [lidar_clustering]: ID=99, X=0.45 m, Y=-2.62 m, Width=0.06 m, Depth=0.09 m, Distance=2.66 m
+[INFO] [1791806955.537098525] [lidar_clustering]: ID=102, X=2.34 m, Y=-7.18 m, Width=0.07 m, Depth=0.20 m, Distance=7.55 m
+[INFO] [1791806955.537288632] [lidar_clustering]: ID=103, X=2.83 m, Y=4.91 m, Width=0.43 m, Depth=6.01 m, Distance=5.67 m
+[INFO] [1791806955.537479139] [lidar_clustering]: ID=104, X=3.73 m, Y=-5.23 m, Width=0.13 m, Depth=0.10 m, Distance=6.43 m
+[INFO] [1791806955.537654709] [lidar_clustering]: ID=105, X=4.90 m, Y=-2.31 m, Width=0.06 m, Depth=0.04 m, Distance=5.42 m
+[INFO] [1791806955.537829266] [lidar_clustering]: ID=106, X=2.45 m, Y=-5.31 m, Width=0.14 m, Depth=0.16 m, Distance=5.85 m
+[INFO] [1791806955.538002261] [lidar_clustering]: ID=108, X=4.81 m, Y=-5.02 m, Width=0.07 m, Depth=0.07 m, Distance=6.95 m
+[INFO] [1791806955.538183461] [lidar_clustering]: ID=109, X=1.79 m, Y=-2.66 m, Width=0.07 m, Depth=0.34 m, Distance=3.21 m
+[INFO] [1791806955.538372786] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806956.508517928] [lidar_clustering]: ID=95, X=0.97 m, Y=-3.44 m, Width=0.13 m, Depth=0.48 m, Distance=3.57 m
+[INFO] [1791806956.508743541] [lidar_clustering]: ID=97, X=2.53 m, Y=-6.71 m, Width=0.04 m, Depth=0.09 m, Distance=7.18 m
+[INFO] [1791806956.508934970] [lidar_clustering]: ID=102, X=0.68 m, Y=-7.64 m, Width=0.06 m, Depth=0.13 m, Distance=7.67 m
+[INFO] [1791806956.509113946] [lidar_clustering]: ID=103, X=2.33 m, Y=4.39 m, Width=0.96 m, Depth=4.02 m, Distance=4.97 m
+[INFO] [1791806956.509293573] [lidar_clustering]: ID=104, X=0.46 m, Y=-5.90 m, Width=0.01 m, Depth=0.08 m, Distance=5.92 m
+[INFO] [1791806956.509467580] [lidar_clustering]: ID=109, X=0.51 m, Y=-2.93 m, Width=0.02 m, Depth=0.12 m, Distance=2.98 m
+[INFO] [1791806956.509638741] [lidar_clustering]: ID=110, X=7.31 m, Y=2.62 m, Width=0.87 m, Depth=0.53 m, Distance=7.76 m
+[INFO] [1791806956.509808499] [lidar_clustering]: ID=111, X=5.39 m, Y=4.30 m, Width=0.22 m, Depth=0.61 m, Distance=6.90 m
+[INFO] [1791806956.509989569] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806956.510172763] [lidar_clustering]: points=312, clusters=5, tracks=8
+[INFO] [1791806957.482837811] [lidar_clustering]: ID=95, X=0.38 m, Y=-3.50 m, Width=0.13 m, Depth=0.11 m, Distance=3.52 m
+[INFO] [1791806957.483055980] [lidar_clustering]: ID=97, X=1.72 m, Y=-6.81 m, Width=0.02 m, Depth=0.09 m, Distance=7.02 m
+[INFO] [1791806957.483254963] [lidar_clustering]: ID=103, X=2.30 m, Y=4.11 m, Width=0.89 m, Depth=4.58 m, Distance=4.71 m
+[INFO] [1791806957.483435863] [lidar_clustering]: ID=104, X=0.79 m, Y=-6.47 m, Width=0.01 m, Depth=0.09 m, Distance=6.52 m
+[INFO] [1791806957.483608516] [lidar_clustering]: ID=110, X=6.46 m, Y=3.04 m, Width=2.70 m, Depth=1.87 m, Distance=7.14 m
+[INFO] [1791806957.483779497] [lidar_clustering]: ID=111, X=5.79 m, Y=4.35 m, Width=0.10 m, Depth=0.04 m, Distance=7.24 m
+[INFO] [1791806957.483959515] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806958.447239412] [lidar_clustering]: ID=103, X=3.03 m, Y=3.36 m, Width=1.10 m, Depth=7.22 m, Distance=4.52 m
+[INFO] [1791806958.447488639] [lidar_clustering]: ID=104, X=0.37 m, Y=-6.39 m, Width=0.00 m, Depth=0.07 m, Distance=6.40 m
+[INFO] [1791806958.447672885] [lidar_clustering]: ID=108, X=2.97 m, Y=-6.89 m, Width=0.04 m, Depth=0.10 m, Distance=7.50 m
+[INFO] [1791806958.447870175] [lidar_clustering]: ID=110, X=5.82 m, Y=2.89 m, Width=1.40 m, Depth=2.79 m, Distance=6.50 m
+[INFO] [1791806958.448075570] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806958.448276006] [lidar_clustering]: points=336, clusters=2, tracks=4
+[INFO] [1791806959.411302545] [lidar_clustering]: ID=97, X=1.47 m, Y=-6.45 m, Width=0.02 m, Depth=0.09 m, Distance=6.62 m
+[INFO] [1791806959.411525363] [lidar_clustering]: ID=103, X=2.82 m, Y=3.82 m, Width=0.60 m, Depth=6.17 m, Distance=4.75 m
+[INFO] [1791806959.411705480] [lidar_clustering]: ID=104, X=0.68 m, Y=-6.35 m, Width=0.07 m, Depth=0.19 m, Distance=6.39 m
+[INFO] [1791806959.411881000] [lidar_clustering]: ID=108, X=2.58 m, Y=-6.51 m, Width=0.03 m, Depth=0.09 m, Distance=7.00 m
+[INFO] [1791806959.412079913] [lidar_clustering]: ID=113, X=6.33 m, Y=-4.21 m, Width=1.43 m, Depth=0.95 m, Distance=7.61 m
+[INFO] [1791806959.412328990] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806960.378106295] [lidar_clustering]: ID=97, X=2.79 m, Y=-6.10 m, Width=0.04 m, Depth=0.08 m, Distance=6.71 m
+[INFO] [1791806960.378358738] [lidar_clustering]: ID=103, X=1.91 m, Y=3.73 m, Width=1.00 m, Depth=3.94 m, Distance=4.19 m
+[INFO] [1791806960.378632662] [lidar_clustering]: ID=104, X=0.41 m, Y=-6.08 m, Width=0.07 m, Depth=0.17 m, Distance=6.09 m
+[INFO] [1791806960.378823379] [lidar_clustering]: ID=108, X=3.90 m, Y=-5.78 m, Width=0.05 m, Depth=0.08 m, Distance=6.97 m
+[INFO] [1791806960.379006413] [lidar_clustering]: ID=111, X=5.40 m, Y=4.80 m, Width=0.38 m, Depth=1.71 m, Distance=7.23 m
+[INFO] [1791806960.379182553] [lidar_clustering]: ID=113, X=5.89 m, Y=-3.53 m, Width=3.17 m, Depth=2.19 m, Distance=6.87 m
+[INFO] [1791806960.379363662] [lidar_clustering]: ID=114, X=4.83 m, Y=-5.73 m, Width=0.07 m, Depth=0.08 m, Distance=7.50 m
+[INFO] [1791806960.379538420] [lidar_clustering]: ID=115, X=1.91 m, Y=-5.93 m, Width=0.03 m, Depth=0.08 m, Distance=6.23 m
+[INFO] [1791806960.379721603] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806960.379910698] [lidar_clustering]: points=394, clusters=8, tracks=8
+[INFO] [1791806961.340605103] [lidar_clustering]: ID=97, X=3.08 m, Y=-5.37 m, Width=0.08 m, Depth=0.15 m, Distance=6.19 m
+[INFO] [1791806961.340840955] [lidar_clustering]: ID=103, X=1.70 m, Y=3.48 m, Width=0.01 m, Depth=0.04 m, Distance=3.87 m
+[INFO] [1791806961.341034298] [lidar_clustering]: ID=104, X=0.47 m, Y=-5.83 m, Width=0.04 m, Depth=0.15 m, Distance=5.84 m
+[INFO] [1791806961.341225496] [lidar_clustering]: ID=108, X=4.18 m, Y=-5.25 m, Width=0.06 m, Depth=0.07 m, Distance=6.71 m
+[INFO] [1791806961.341413759] [lidar_clustering]: ID=111, X=6.07 m, Y=4.60 m, Width=0.13 m, Depth=0.39 m, Distance=7.61 m
+[INFO] [1791806961.341601291] [lidar_clustering]: ID=112, X=2.20 m, Y=-5.48 m, Width=0.06 m, Depth=0.13 m, Distance=5.90 m
+[INFO] [1791806961.341783703] [lidar_clustering]: ID=113, X=5.15 m, Y=-2.80 m, Width=3.53 m, Depth=3.54 m, Distance=5.86 m
+[INFO] [1791806961.341968810] [lidar_clustering]: ID=114, X=5.50 m, Y=-5.04 m, Width=0.12 m, Depth=0.07 m, Distance=7.45 m
+[INFO] [1791806961.342153616] [lidar_clustering]: ID=115, X=1.35 m, Y=-5.60 m, Width=0.02 m, Depth=0.08 m, Distance=5.76 m
+[INFO] [1791806961.342340476] [lidar_clustering]: ID=116, X=3.53 m, Y=-3.93 m, Width=0.48 m, Depth=0.11 m, Distance=5.28 m
+[INFO] [1791806961.342524962] [lidar_clustering]: ID=118, X=5.17 m, Y=3.87 m, Width=0.19 m, Depth=0.11 m, Distance=6.46 m
+[INFO] [1791806961.342707935] [lidar_clustering]: ID=119, X=2.61 m, Y=4.50 m, Width=0.97 m, Depth=6.00 m, Distance=5.20 m
+[INFO] [1791806961.342902821] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806962.298894223] [lidar_clustering]: ID=97, X=1.43 m, Y=-5.58 m, Width=0.07 m, Depth=0.14 m, Distance=5.76 m
+[INFO] [1791806962.299124004] [lidar_clustering]: ID=103, X=1.18 m, Y=4.47 m, Width=0.45 m, Depth=1.80 m, Distance=4.62 m
+[INFO] [1791806962.299317627] [lidar_clustering]: ID=108, X=2.03 m, Y=-4.52 m, Width=0.03 m, Depth=0.06 m, Distance=4.96 m
+[INFO] [1791806962.299501381] [lidar_clustering]: ID=112, X=0.54 m, Y=-5.68 m, Width=0.02 m, Depth=0.14 m, Distance=5.70 m
+[INFO] [1791806962.299683893] [lidar_clustering]: ID=113, X=4.07 m, Y=-2.80 m, Width=3.03 m, Depth=4.91 m, Distance=4.94 m
+[INFO] [1791806962.299887034] [lidar_clustering]: ID=114, X=3.28 m, Y=-5.30 m, Width=0.17 m, Depth=0.13 m, Distance=6.23 m
+[INFO] [1791806962.300074535] [lidar_clustering]: ID=115, X=0.43 m, Y=-5.71 m, Width=0.03 m, Depth=0.10 m, Distance=5.73 m
+[INFO] [1791806962.300255124] [lidar_clustering]: ID=116, X=1.89 m, Y=-3.63 m, Width=0.03 m, Depth=0.05 m, Distance=4.09 m
+[INFO] [1791806962.300440982] [lidar_clustering]: ID=117, X=1.70 m, Y=-3.29 m, Width=0.19 m, Depth=0.07 m, Distance=3.70 m
+[INFO] [1791806962.300622903] [lidar_clustering]: ID=120, X=2.65 m, Y=-4.29 m, Width=0.04 m, Depth=0.06 m, Distance=5.04 m
+[INFO] [1791806962.300803552] [lidar_clustering]: ID=121, X=3.77 m, Y=5.21 m, Width=0.77 m, Depth=3.37 m, Distance=6.43 m
+[INFO] [1791806962.300997906] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806962.301187021] [lidar_clustering]: points=471, clusters=9, tracks=11
+[INFO] [1791806963.251222137] [lidar_clustering]: ID=103, X=0.92 m, Y=4.20 m, Width=0.17 m, Depth=1.14 m, Distance=4.30 m
+[INFO] [1791806963.251477806] [lidar_clustering]: ID=104, X=0.85 m, Y=-5.81 m, Width=0.06 m, Depth=0.10 m, Distance=5.87 m
+[INFO] [1791806963.251661891] [lidar_clustering]: ID=108, X=1.18 m, Y=-4.31 m, Width=1.21 m, Depth=0.10 m, Distance=4.47 m
+[INFO] [1791806963.251844233] [lidar_clustering]: ID=111, X=5.90 m, Y=5.13 m, Width=0.07 m, Depth=0.35 m, Distance=7.82 m
+[INFO] [1791806963.252082810] [lidar_clustering]: ID=112, X=0.47 m, Y=-5.91 m, Width=0.01 m, Depth=0.08 m, Distance=5.92 m
+[INFO] [1791806963.252261154] [lidar_clustering]: ID=113, X=3.11 m, Y=-3.02 m, Width=0.32 m, Depth=6.06 m, Distance=4.33 m
+[INFO] [1791806963.252442514] [lidar_clustering]: ID=116, X=0.67 m, Y=-3.98 m, Width=0.05 m, Depth=0.07 m, Distance=4.03 m
+[INFO] [1791806963.252620979] [lidar_clustering]: ID=117, X=0.59 m, Y=-3.40 m, Width=0.01 m, Depth=0.07 m, Distance=3.45 m
+[INFO] [1791806963.252803390] [lidar_clustering]: ID=119, X=2.86 m, Y=4.10 m, Width=0.53 m, Depth=6.62 m, Distance=5.00 m
+[INFO] [1791806963.253058468] [lidar_clustering]: ID=121, X=3.55 m, Y=5.22 m, Width=0.39 m, Depth=3.56 m, Distance=6.31 m
+[INFO] [1791806963.253341279] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806964.213753683] [lidar_clustering]: ID=103, X=0.71 m, Y=3.70 m, Width=0.32 m, Depth=0.79 m, Distance=3.77 m
+[INFO] [1791806964.214030071] [lidar_clustering]: ID=113, X=1.99 m, Y=-4.03 m, Width=1.17 m, Depth=3.91 m, Distance=4.50 m
+[INFO] [1791806964.214287904] [lidar_clustering]: ID=121, X=3.54 m, Y=4.95 m, Width=0.38 m, Depth=4.55 m, Distance=6.09 m
+[INFO] [1791806964.214536239] [lidar_clustering]: ID=122, X=5.69 m, Y=-5.08 m, Width=0.17 m, Depth=0.62 m, Distance=7.63 m
+[INFO] [1791806964.214760690] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806964.214979380] [lidar_clustering]: points=422, clusters=4, tracks=4
+[INFO] [1791806965.181260399] [lidar_clustering]: ID=97, X=1.74 m, Y=-5.53 m, Width=0.02 m, Depth=0.08 m, Distance=5.80 m
+[INFO] [1791806965.181489959] [lidar_clustering]: ID=104, X=0.60 m, Y=-5.27 m, Width=0.43 m, Depth=0.64 m, Distance=5.31 m
+[INFO] [1791806965.181675106] [lidar_clustering]: ID=111, X=6.84 m, Y=3.44 m, Width=0.55 m, Depth=0.81 m, Distance=7.65 m
+[INFO] [1791806965.181855734] [lidar_clustering]: ID=112, X=1.00 m, Y=-5.65 m, Width=0.02 m, Depth=0.10 m, Distance=5.74 m
+[INFO] [1791806965.182033247] [lidar_clustering]: ID=113, X=1.35 m, Y=-4.94 m, Width=0.04 m, Depth=0.13 m, Distance=5.12 m
+[INFO] [1791806965.182210148] [lidar_clustering]: ID=114, X=1.79 m, Y=-6.00 m, Width=0.03 m, Depth=0.18 m, Distance=6.26 m
+[INFO] [1791806965.182388402] [lidar_clustering]: ID=116, X=0.57 m, Y=-4.22 m, Width=0.22 m, Depth=0.44 m, Distance=4.26 m
+[INFO] [1791806965.182569021] [lidar_clustering]: ID=119, X=2.70 m, Y=3.68 m, Width=1.20 m, Depth=5.77 m, Distance=4.57 m
+[INFO] [1791806965.182744760] [lidar_clustering]: ID=122, X=2.85 m, Y=-6.64 m, Width=0.83 m, Depth=1.49 m, Distance=7.23 m
+[INFO] [1791806965.182920269] [lidar_clustering]: ID=123, X=7.56 m, Y=-1.11 m, Width=0.82 m, Depth=0.55 m, Distance=7.64 m
+[INFO] [1791806965.183094726] [lidar_clustering]: ID=124, X=7.45 m, Y=-1.19 m, Width=0.84 m, Depth=0.69 m, Distance=7.55 m
+[INFO] [1791806965.183280444] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806966.142221719] [lidar_clustering]: ID=111, X=6.69 m, Y=1.94 m, Width=0.20 m, Depth=0.10 m, Distance=6.96 m
+[INFO] [1791806966.142462149] [lidar_clustering]: ID=114, X=0.62 m, Y=-7.58 m, Width=0.51 m, Depth=0.52 m, Distance=7.60 m
+[INFO] [1791806966.142659279] [lidar_clustering]: ID=119, X=2.77 m, Y=3.49 m, Width=1.51 m, Depth=6.08 m, Distance=4.46 m
+[INFO] [1791806966.142851268] [lidar_clustering]: ID=122, X=1.88 m, Y=-7.60 m, Width=0.02 m, Depth=0.08 m, Distance=7.83 m
+[INFO] [1791806966.143040252] [lidar_clustering]: ID=123, X=5.75 m, Y=-4.24 m, Width=0.08 m, Depth=0.06 m, Distance=7.15 m
+[INFO] [1791806966.143222855] [lidar_clustering]: ID=125, X=5.16 m, Y=-3.83 m, Width=1.14 m, Depth=0.80 m, Distance=6.43 m
+[INFO] [1791806966.143418752] [lidar_clustering]: ID=126, X=7.07 m, Y=3.27 m, Width=0.25 m, Depth=0.50 m, Distance=7.79 m
+[INFO] [1791806966.143608166] [lidar_clustering]: ID=127, X=4.54 m, Y=-5.54 m, Width=0.12 m, Depth=0.14 m, Distance=7.16 m
+[INFO] [1791806966.143788504] [lidar_clustering]: ID=128, X=5.88 m, Y=3.08 m, Width=0.11 m, Depth=0.62 m, Distance=6.64 m
+[INFO] [1791806966.143966598] [lidar_clustering]: ID=129, X=2.40 m, Y=-7.34 m, Width=0.08 m, Depth=0.20 m, Distance=7.72 m
+[INFO] [1791806966.144145183] [lidar_clustering]: ID=130, X=3.60 m, Y=-6.33 m, Width=0.05 m, Depth=0.09 m, Distance=7.29 m
+[INFO] [1791806966.144329728] [lidar_clustering]: ID=131, X=7.35 m, Y=1.13 m, Width=0.17 m, Depth=0.06 m, Distance=7.43 m
+[INFO] [1791806966.144515005] [lidar_clustering]: ID=132, X=5.56 m, Y=2.61 m, Width=0.10 m, Depth=0.17 m, Distance=6.14 m
+[INFO] [1791806966.144705212] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806966.144892673] [lidar_clustering]: points=378, clusters=8, tracks=13
+[INFO] [1791806967.112413863] [lidar_clustering]: ID=97, X=1.74 m, Y=-5.67 m, Width=0.14 m, Depth=0.20 m, Distance=5.94 m
+[INFO] [1791806967.112726969] [lidar_clustering]: ID=103, X=1.41 m, Y=2.72 m, Width=0.82 m, Depth=2.78 m, Distance=3.07 m
+[INFO] [1791806967.113001604] [lidar_clustering]: ID=111, X=7.55 m, Y=1.53 m, Width=0.08 m, Depth=0.02 m, Distance=7.71 m
+[INFO] [1791806967.113278352] [lidar_clustering]: ID=112, X=1.31 m, Y=-5.75 m, Width=0.09 m, Depth=0.19 m, Distance=5.89 m
+[INFO] [1791806967.113546454] [lidar_clustering]: ID=119, X=3.03 m, Y=3.12 m, Width=1.32 m, Depth=6.52 m, Distance=4.35 m
+[INFO] [1791806967.113804297] [lidar_clustering]: ID=121, X=5.13 m, Y=3.76 m, Width=0.41 m, Depth=3.24 m, Distance=6.36 m
+[INFO] [1791806967.114060527] [lidar_clustering]: ID=123, X=2.02 m, Y=-6.44 m, Width=0.09 m, Depth=0.19 m, Distance=6.75 m
+[INFO] [1791806967.114327538] [lidar_clustering]: ID=125, X=1.90 m, Y=-5.21 m, Width=0.09 m, Depth=0.28 m, Distance=5.55 m
+[INFO] [1791806967.114586954] [lidar_clustering]: ID=126, X=7.27 m, Y=2.05 m, Width=0.18 m, Depth=0.27 m, Distance=7.56 m
+[INFO] [1791806967.114838405] [lidar_clustering]: ID=127, X=1.79 m, Y=-6.73 m, Width=0.07 m, Depth=0.16 m, Distance=6.97 m
+[INFO] [1791806967.115089645] [lidar_clustering]: ID=128, X=6.59 m, Y=3.17 m, Width=0.23 m, Depth=0.74 m, Distance=7.31 m
+[INFO] [1791806967.115354712] [lidar_clustering]: ID=129, X=0.75 m, Y=-7.03 m, Width=0.05 m, Depth=0.39 m, Distance=7.07 m
+[INFO] [1791806967.115615200] [lidar_clustering]: ID=130, X=2.26 m, Y=-5.56 m, Width=0.14 m, Depth=0.19 m, Distance=6.00 m
+[INFO] [1791806967.115872131] [lidar_clustering]: ID=131, X=5.72 m, Y=-1.09 m, Width=1.51 m, Depth=0.44 m, Distance=5.82 m
+[INFO] [1791806967.116129543] [lidar_clustering]: ID=132, X=6.06 m, Y=2.46 m, Width=0.30 m, Depth=0.22 m, Distance=6.54 m
+[INFO] [1791806967.116403667] [lidar_clustering]: ID=133, X=6.32 m, Y=-0.38 m, Width=0.17 m, Depth=0.16 m, Distance=6.33 m
+[INFO] [1791806967.116667411] [lidar_clustering]: ID=134, X=7.85 m, Y=-0.14 m, Width=0.14 m, Depth=0.02 m, Distance=7.85 m
+[INFO] [1791806967.116927869] [lidar_clustering]: ID=135, X=7.06 m, Y=-0.17 m, Width=0.52 m, Depth=0.14 m, Distance=7.06 m
+[INFO] [1791806967.117186834] [lidar_clustering]: ID=136, X=5.91 m, Y=-0.17 m, Width=0.19 m, Depth=0.07 m, Distance=5.91 m
+[INFO] [1791806967.117456790] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806968.095797053] [lidar_clustering]: ID=103, X=1.15 m, Y=2.20 m, Width=0.08 m, Depth=1.87 m, Distance=2.48 m
+[INFO] [1791806968.096029618] [lidar_clustering]: ID=114, X=0.86 m, Y=-7.91 m, Width=0.01 m, Depth=0.17 m, Distance=7.96 m
+[INFO] [1791806968.096222450] [lidar_clustering]: ID=121, X=5.43 m, Y=3.90 m, Width=0.40 m, Depth=2.85 m, Distance=6.69 m
+[INFO] [1791806968.096409921] [lidar_clustering]: ID=122, X=1.89 m, Y=-7.74 m, Width=0.03 m, Depth=0.11 m, Distance=7.97 m
+[INFO] [1791806968.096608232] [lidar_clustering]: ID=125, X=0.46 m, Y=-5.55 m, Width=0.08 m, Depth=0.12 m, Distance=5.57 m
+[INFO] [1791806968.096896913] [lidar_clustering]: ID=131, X=3.81 m, Y=-2.10 m, Width=1.18 m, Depth=0.98 m, Distance=4.35 m
+[INFO] [1791806968.097157912] [lidar_clustering]: ID=135, X=5.61 m, Y=-1.57 m, Width=0.32 m, Depth=0.05 m, Distance=5.83 m
+[INFO] [1791806968.097351324] [lidar_clustering]: ID=137, X=4.91 m, Y=-1.72 m, Width=0.13 m, Depth=0.45 m, Distance=5.21 m
+[INFO] [1791806968.097544195] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806968.097732979] [lidar_clustering]: points=367, clusters=4, tracks=8
+[INFO] [1791806969.065386835] [lidar_clustering]: ID=103, X=0.63 m, Y=1.82 m, Width=0.08 m, Depth=0.61 m, Distance=1.92 m
+[INFO] [1791806969.065677079] [lidar_clustering]: ID=111, X=7.79 m, Y=1.29 m, Width=0.17 m, Depth=0.02 m, Distance=7.90 m
+[INFO] [1791806969.065954669] [lidar_clustering]: ID=121, X=3.98 m, Y=3.84 m, Width=0.20 m, Depth=4.71 m, Distance=5.53 m
+[INFO] [1791806969.066222460] [lidar_clustering]: ID=131, X=1.56 m, Y=-3.42 m, Width=0.13 m, Depth=0.09 m, Distance=3.76 m
+[INFO] [1791806969.066665540] [lidar_clustering]: ID=134, X=7.57 m, Y=0.27 m, Width=3.99 m, Depth=0.29 m, Distance=7.57 m
+[INFO] [1791806969.066965913] [lidar_clustering]: ID=135, X=1.66 m, Y=-2.94 m, Width=0.17 m, Depth=0.08 m, Distance=3.38 m
+[INFO] [1791806969.067154245] [lidar_clustering]: ID=138, X=1.64 m, Y=-2.44 m, Width=0.13 m, Depth=0.24 m, Distance=2.95 m
+[INFO] [1791806969.067344221] [lidar_clustering]: ID=139, X=3.08 m, Y=-3.31 m, Width=0.65 m, Depth=0.17 m, Distance=4.52 m
+[INFO] [1791806969.067535209] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806970.036837405] [lidar_clustering]: ID=121, X=2.60 m, Y=3.88 m, Width=0.45 m, Depth=5.08 m, Distance=4.67 m
+[INFO] [1791806970.037092793] [lidar_clustering]: ID=122, X=2.55 m, Y=-6.92 m, Width=0.13 m, Depth=0.14 m, Distance=7.38 m
+[INFO] [1791806970.037364552] [lidar_clustering]: ID=128, X=6.41 m, Y=4.04 m, Width=0.25 m, Depth=1.00 m, Distance=7.58 m
+[INFO] [1791806970.037625901] [lidar_clustering]: ID=131, X=1.78 m, Y=-3.89 m, Width=0.06 m, Depth=0.09 m, Distance=4.28 m
+[INFO] [1791806970.037878023] [lidar_clustering]: ID=134, X=6.46 m, Y=1.11 m, Width=5.13 m, Depth=0.98 m, Distance=6.55 m
+[INFO] [1791806970.038095100] [lidar_clustering]: ID=135, X=0.45 m, Y=-3.31 m, Width=0.51 m, Depth=0.20 m, Distance=3.34 m
+[INFO] [1791806970.038344667] [lidar_clustering]: ID=139, X=1.13 m, Y=-3.66 m, Width=0.34 m, Depth=0.23 m, Distance=3.83 m
+[INFO] [1791806970.038554330] [lidar_clustering]: ID=140, X=3.84 m, Y=-6.45 m, Width=0.14 m, Depth=0.07 m, Distance=7.51 m
+[INFO] [1791806970.038737713] [lidar_clustering]: ID=141, X=0.42 m, Y=3.85 m, Width=0.08 m, Depth=0.11 m, Distance=3.87 m
+[INFO] [1791806970.038919624] [lidar_clustering]: ID=142, X=4.11 m, Y=-6.58 m, Width=0.12 m, Depth=0.05 m, Distance=7.76 m
+[INFO] [1791806970.039093119] [lidar_clustering]: ID=143, X=0.37 m, Y=3.45 m, Width=0.01 m, Depth=0.06 m, Distance=3.47 m
+[INFO] [1791806970.039275430] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806970.039513085] [lidar_clustering]: points=482, clusters=2, tracks=11
+[INFO] [1791806971.006607351] [lidar_clustering]: ID=121, X=2.24 m, Y=3.22 m, Width=0.84 m, Depth=4.70 m, Distance=3.92 m
+[INFO] [1791806971.006829537] [lidar_clustering]: ID=134, X=5.53 m, Y=0.80 m, Width=4.34 m, Depth=1.44 m, Distance=5.58 m
+[INFO] [1791806971.007009424] [lidar_clustering]: ID=144, X=3.51 m, Y=1.79 m, Width=5.48 m, Depth=5.54 m, Distance=3.94 m
+[INFO] [1791806971.007185694] [lidar_clustering]: ID=145, X=6.75 m, Y=-3.80 m, Width=2.09 m, Depth=0.96 m, Distance=7.75 m
+[INFO] [1791806971.007365561] [lidar_clustering]: ID=146, X=6.45 m, Y=-4.48 m, Width=0.46 m, Depth=0.38 m, Distance=7.86 m
+[INFO] [1791806971.007548914] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806971.977499770] [lidar_clustering]: ID=121, X=3.57 m, Y=3.95 m, Width=0.49 m, Depth=4.24 m, Distance=5.32 m
+[INFO] [1791806971.977719060] [lidar_clustering]: ID=128, X=6.79 m, Y=3.60 m, Width=0.41 m, Depth=0.19 m, Distance=7.69 m
+[INFO] [1791806971.977900640] [lidar_clustering]: ID=134, X=4.54 m, Y=0.17 m, Width=4.02 m, Depth=2.96 m, Distance=4.54 m
+[INFO] [1791806971.978078353] [lidar_clustering]: ID=140, X=3.25 m, Y=-7.02 m, Width=0.62 m, Depth=0.44 m, Distance=7.73 m
+[INFO] [1791806971.978254513] [lidar_clustering]: ID=141, X=0.66 m, Y=4.24 m, Width=0.32 m, Depth=0.77 m, Distance=4.30 m
+[INFO] [1791806971.978446963] [lidar_clustering]: ID=143, X=1.21 m, Y=3.67 m, Width=0.51 m, Depth=1.38 m, Distance=3.86 m
+[INFO] [1791806971.978656065] [lidar_clustering]: ID=144, X=3.84 m, Y=1.83 m, Width=6.01 m, Depth=5.64 m, Distance=4.26 m
+[INFO] [1791806971.978831132] [lidar_clustering]: ID=145, X=4.63 m, Y=-4.83 m, Width=3.54 m, Depth=2.62 m, Distance=6.69 m
+[INFO] [1791806971.979003645] [lidar_clustering]: ID=147, X=5.51 m, Y=-3.23 m, Width=0.07 m, Depth=0.05 m, Distance=6.39 m
+[INFO] [1791806971.979182851] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=3.72 m, best_angle=10.0 deg
+[INFO] [1791806971.979365733] [lidar_clustering]: points=736, clusters=10, tracks=9
+[INFO] [1791806972.941270812] [lidar_clustering]: ID=128, X=6.87 m, Y=3.53 m, Width=0.04 m, Depth=0.52 m, Distance=7.72 m
+[INFO] [1791806972.941509739] [lidar_clustering]: ID=134, X=3.25 m, Y=-1.17 m, Width=0.25 m, Depth=0.27 m, Distance=3.45 m
+[INFO] [1791806972.941703682] [lidar_clustering]: ID=140, X=0.48 m, Y=-7.68 m, Width=0.16 m, Depth=0.13 m, Distance=7.69 m
+[INFO] [1791806972.941891243] [lidar_clustering]: ID=141, X=1.00 m, Y=3.68 m, Width=1.12 m, Depth=1.71 m, Distance=3.81 m
+[INFO] [1791806972.942076070] [lidar_clustering]: ID=143, X=3.78 m, Y=3.71 m, Width=0.58 m, Depth=4.19 m, Distance=5.30 m
+[INFO] [1791806972.942259122] [lidar_clustering]: ID=144, X=4.46 m, Y=-0.21 m, Width=1.32 m, Depth=1.70 m, Distance=4.46 m
+[INFO] [1791806972.942450711] [lidar_clustering]: ID=145, X=4.03 m, Y=-4.55 m, Width=4.60 m, Depth=4.76 m, Distance=6.08 m
+[INFO] [1791806972.942668058] [lidar_clustering]: ID=147, X=3.74 m, Y=-4.44 m, Width=3.18 m, Depth=4.79 m, Distance=5.81 m
+[INFO] [1791806972.942864776] [lidar_clustering]: ID=148, X=7.41 m, Y=1.00 m, Width=0.33 m, Depth=0.22 m, Distance=7.47 m
+[INFO] [1791806972.943050123] [lidar_clustering]: ID=149, X=0.69 m, Y=3.07 m, Width=0.01 m, Depth=0.04 m, Distance=3.15 m
+[INFO] [1791806972.943230591] [lidar_clustering]: ID=151, X=6.73 m, Y=-2.03 m, Width=0.46 m, Depth=0.42 m, Distance=7.03 m
+[INFO] [1791806972.943422670] [lidar_clustering]: ID=152, X=0.71 m, Y=-6.93 m, Width=0.57 m, Depth=0.75 m, Distance=6.97 m
+[INFO] [1791806972.943604571] [lidar_clustering]: ID=153, X=1.65 m, Y=-6.46 m, Width=0.23 m, Depth=0.32 m, Distance=6.66 m
+[INFO] [1791806972.943792944] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=3.43 m, best_angle=7.2 deg
+[INFO] [1791806974.010035652] [lidar_clustering]: ID=121, X=4.64 m, Y=4.09 m, Width=0.06 m, Depth=0.14 m, Distance=6.18 m
+[INFO] [1791806974.010254421] [lidar_clustering]: ID=128, X=5.88 m, Y=4.40 m, Width=0.37 m, Depth=0.88 m, Distance=7.35 m
+[INFO] [1791806974.010451440] [lidar_clustering]: ID=134, X=3.27 m, Y=-1.41 m, Width=0.05 m, Depth=0.02 m, Distance=3.56 m
+[INFO] [1791806974.010629563] [lidar_clustering]: ID=141, X=2.76 m, Y=3.34 m, Width=0.02 m, Depth=0.08 m, Distance=4.33 m
+[INFO] [1791806974.010804571] [lidar_clustering]: ID=143, X=2.73 m, Y=4.61 m, Width=0.67 m, Depth=4.68 m, Distance=5.36 m
+[INFO] [1791806974.010979609] [lidar_clustering]: ID=144, X=4.58 m, Y=-0.49 m, Width=0.09 m, Depth=0.07 m, Distance=4.61 m
+[INFO] [1791806974.011154005] [lidar_clustering]: ID=145, X=3.30 m, Y=-4.54 m, Width=2.50 m, Depth=6.07 m, Distance=5.62 m
+[INFO] [1791806974.011333050] [lidar_clustering]: ID=146, X=7.27 m, Y=-2.60 m, Width=0.33 m, Depth=0.35 m, Distance=7.72 m
+[INFO] [1791806974.011512045] [lidar_clustering]: ID=147, X=3.13 m, Y=-4.64 m, Width=1.91 m, Depth=3.77 m, Distance=5.60 m
+[INFO] [1791806974.011685550] [lidar_clustering]: ID=149, X=2.10 m, Y=2.92 m, Width=0.09 m, Depth=0.18 m, Distance=3.59 m
+[INFO] [1791806974.011858514] [lidar_clustering]: ID=150, X=3.62 m, Y=-1.07 m, Width=0.12 m, Depth=0.23 m, Distance=3.78 m
+[INFO] [1791806974.012032189] [lidar_clustering]: ID=151, X=7.19 m, Y=-2.00 m, Width=0.51 m, Depth=0.23 m, Distance=7.46 m
+[INFO] [1791806974.012206555] [lidar_clustering]: ID=152, X=0.61 m, Y=-5.69 m, Width=0.64 m, Depth=0.59 m, Distance=5.72 m
+[INFO] [1791806974.012384458] [lidar_clustering]: ID=154, X=1.01 m, Y=4.39 m, Width=0.04 m, Depth=0.08 m, Distance=4.51 m
+[INFO] [1791806974.012563393] [lidar_clustering]: ID=155, X=3.66 m, Y=3.28 m, Width=0.13 m, Depth=0.06 m, Distance=4.91 m
+[INFO] [1791806974.012745053] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806974.012925801] [lidar_clustering]: points=574, clusters=8, tracks=15
+[INFO] [1791806974.986494756] [lidar_clustering]: ID=143, X=2.84 m, Y=4.83 m, Width=1.01 m, Depth=6.34 m, Distance=5.60 m
+[INFO] [1791806974.986719947] [lidar_clustering]: ID=145, X=5.16 m, Y=-3.77 m, Width=0.61 m, Depth=0.63 m, Distance=6.39 m
+[INFO] [1791806974.986903321] [lidar_clustering]: ID=146, X=7.16 m, Y=-2.82 m, Width=0.05 m, Depth=0.17 m, Distance=7.70 m
+[INFO] [1791806974.987080342] [lidar_clustering]: ID=147, X=2.40 m, Y=-5.07 m, Width=0.96 m, Depth=4.06 m, Distance=5.61 m
+[INFO] [1791806974.987259567] [lidar_clustering]: ID=151, X=6.42 m, Y=-3.47 m, Width=0.24 m, Depth=0.22 m, Distance=7.30 m
+[INFO] [1791806974.987460704] [lidar_clustering]: ID=152, X=0.58 m, Y=-5.18 m, Width=0.31 m, Depth=0.55 m, Distance=5.22 m
+[INFO] [1791806974.987641953] [lidar_clustering]: ID=154, X=1.51 m, Y=5.03 m, Width=0.69 m, Depth=2.56 m, Distance=5.25 m
+[INFO] [1791806974.987817231] [lidar_clustering]: ID=156, X=5.03 m, Y=-4.36 m, Width=0.19 m, Depth=0.22 m, Distance=6.65 m
+[INFO] [1791806974.987990876] [lidar_clustering]: ID=157, X=5.75 m, Y=-3.44 m, Width=0.29 m, Depth=0.17 m, Distance=6.70 m
+[INFO] [1791806974.988166996] [lidar_clustering]: ID=158, X=6.87 m, Y=-3.72 m, Width=0.10 m, Depth=0.05 m, Distance=7.81 m
+[INFO] [1791806974.988353234] [lidar_clustering]: ID=159, X=7.58 m, Y=-2.39 m, Width=0.37 m, Depth=0.22 m, Distance=7.95 m
+[INFO] [1791806974.988529885] [lidar_clustering]: ID=160, X=6.99 m, Y=-3.22 m, Width=0.60 m, Depth=0.45 m, Distance=7.69 m
+[INFO] [1791806974.988704502] [lidar_clustering]: ID=161, X=4.40 m, Y=5.19 m, Width=0.31 m, Depth=3.21 m, Distance=6.81 m
+[INFO] [1791806974.988890300] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806975.955969336] [lidar_clustering]: ID=143, X=3.38 m, Y=3.96 m, Width=1.58 m, Depth=6.94 m, Distance=5.20 m
+[INFO] [1791806975.956203034] [lidar_clustering]: ID=145, X=4.25 m, Y=-4.94 m, Width=0.06 m, Depth=0.07 m, Distance=6.52 m
+[INFO] [1791806975.956397508] [lidar_clustering]: ID=146, X=6.00 m, Y=-4.23 m, Width=0.05 m, Depth=0.06 m, Distance=7.34 m
+[INFO] [1791806975.956596951] [lidar_clustering]: ID=147, X=1.61 m, Y=-5.34 m, Width=0.50 m, Depth=2.27 m, Distance=5.58 m
+[INFO] [1791806975.956778100] [lidar_clustering]: ID=151, X=3.11 m, Y=-5.00 m, Width=0.21 m, Depth=0.36 m, Distance=5.89 m
+[INFO] [1791806975.956961203] [lidar_clustering]: ID=152, X=0.61 m, Y=-5.34 m, Width=0.43 m, Depth=0.61 m, Distance=5.37 m
+[INFO] [1791806975.957207694] [lidar_clustering]: ID=154, X=0.57 m, Y=4.89 m, Width=0.28 m, Depth=0.24 m, Distance=4.92 m
+[INFO] [1791806975.957464104] [lidar_clustering]: ID=156, X=3.40 m, Y=-4.33 m, Width=0.63 m, Depth=0.92 m, Distance=5.51 m
+[INFO] [1791806975.957717418] [lidar_clustering]: ID=157, X=4.43 m, Y=-4.48 m, Width=0.12 m, Depth=0.25 m, Distance=6.30 m
+[INFO] [1791806975.957937380] [lidar_clustering]: ID=158, X=5.41 m, Y=-4.84 m, Width=0.19 m, Depth=0.53 m, Distance=7.26 m
+[INFO] [1791806975.958163793] [lidar_clustering]: ID=159, X=6.59 m, Y=-4.06 m, Width=0.44 m, Depth=0.75 m, Distance=7.73 m
+[INFO] [1791806975.958406357] [lidar_clustering]: ID=160, X=5.12 m, Y=-3.94 m, Width=0.53 m, Depth=0.22 m, Distance=6.46 m
+[INFO] [1791806975.958666444] [lidar_clustering]: ID=161, X=4.56 m, Y=4.44 m, Width=1.40 m, Depth=4.76 m, Distance=6.36 m
+[INFO] [1791806975.958884302] [lidar_clustering]: ID=162, X=1.26 m, Y=4.67 m, Width=0.82 m, Depth=1.95 m, Distance=4.84 m
+[INFO] [1791806975.959074969] [lidar_clustering]: ID=163, X=5.32 m, Y=-4.08 m, Width=0.39 m, Depth=0.14 m, Distance=6.70 m
+[INFO] [1791806975.959276105] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806975.959476550] [lidar_clustering]: points=582, clusters=10, tracks=15
+[INFO] [1791806976.926170732] [lidar_clustering]: ID=143, X=3.24 m, Y=4.01 m, Width=2.31 m, Depth=6.07 m, Distance=5.16 m
+[INFO] [1791806976.926399410] [lidar_clustering]: ID=145, X=2.17 m, Y=-4.95 m, Width=0.03 m, Depth=0.09 m, Distance=5.40 m
+[INFO] [1791806976.926583073] [lidar_clustering]: ID=146, X=3.85 m, Y=-5.03 m, Width=0.18 m, Depth=0.10 m, Distance=6.33 m
+[INFO] [1791806976.926759353] [lidar_clustering]: ID=147, X=1.44 m, Y=-6.06 m, Width=0.13 m, Depth=0.26 m, Distance=6.23 m
+[INFO] [1791806976.926935142] [lidar_clustering]: ID=151, X=1.80 m, Y=-4.50 m, Width=0.48 m, Depth=1.03 m, Distance=4.85 m
+[INFO] [1791806976.927115209] [lidar_clustering]: ID=152, X=0.61 m, Y=-5.27 m, Width=0.42 m, Depth=0.58 m, Distance=5.31 m
+[INFO] [1791806976.927296118] [lidar_clustering]: ID=154, X=0.38 m, Y=4.27 m, Width=0.07 m, Depth=0.10 m, Distance=4.28 m
+[INFO] [1791806976.927475974] [lidar_clustering]: ID=156, X=2.82 m, Y=-5.09 m, Width=0.03 m, Depth=0.05 m, Distance=5.82 m
+[INFO] [1791806976.927652925] [lidar_clustering]: ID=157, X=2.89 m, Y=-4.68 m, Width=0.53 m, Depth=0.61 m, Distance=5.50 m
+[INFO] [1791806976.927828394] [lidar_clustering]: ID=158, X=4.52 m, Y=-4.22 m, Width=0.40 m, Depth=0.20 m, Distance=6.18 m
+[INFO] [1791806976.928001307] [lidar_clustering]: ID=159, X=5.66 m, Y=-4.05 m, Width=0.60 m, Depth=2.35 m, Distance=6.96 m
+[INFO] [1791806976.928174792] [lidar_clustering]: ID=160, X=3.81 m, Y=-4.16 m, Width=0.62 m, Depth=0.94 m, Distance=5.64 m
+[INFO] [1791806976.928352544] [lidar_clustering]: ID=161, X=5.30 m, Y=4.22 m, Width=0.89 m, Depth=2.64 m, Distance=6.78 m
+[INFO] [1791806976.928526891] [lidar_clustering]: ID=162, X=1.77 m, Y=4.37 m, Width=0.26 m, Depth=3.68 m, Distance=4.71 m
+[INFO] [1791806976.928700816] [lidar_clustering]: ID=164, X=1.69 m, Y=-5.19 m, Width=0.15 m, Depth=0.15 m, Distance=5.46 m
+[INFO] [1791806976.928873209] [lidar_clustering]: ID=165, X=6.97 m, Y=-2.62 m, Width=0.44 m, Depth=0.80 m, Distance=7.44 m
+[INFO] [1791806976.929046864] [lidar_clustering]: ID=166, X=3.37 m, Y=-4.85 m, Width=0.09 m, Depth=0.17 m, Distance=5.91 m
+[INFO] [1791806976.929228904] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806977.903996588] [lidar_clustering]: ID=143, X=2.70 m, Y=3.95 m, Width=1.25 m, Depth=4.92 m, Distance=4.79 m
+[INFO] [1791806977.904244311] [lidar_clustering]: ID=145, X=0.47 m, Y=-4.51 m, Width=0.21 m, Depth=0.23 m, Distance=4.53 m
+[INFO] [1791806977.904457390] [lidar_clustering]: ID=146, X=1.69 m, Y=-4.84 m, Width=0.24 m, Depth=0.95 m, Distance=5.13 m
+[INFO] [1791806977.904638579] [lidar_clustering]: ID=147, X=0.39 m, Y=-6.08 m, Width=0.02 m, Depth=0.07 m, Distance=6.09 m
+[INFO] [1791806977.904816381] [lidar_clustering]: ID=151, X=1.25 m, Y=-4.53 m, Width=0.11 m, Depth=0.02 m, Distance=4.70 m
+[INFO] [1791806977.905078792] [lidar_clustering]: ID=152, X=0.40 m, Y=-5.22 m, Width=0.00 m, Depth=0.05 m, Distance=5.24 m
+[INFO] [1791806977.905253008] [lidar_clustering]: ID=155, X=4.29 m, Y=4.28 m, Width=0.53 m, Depth=2.97 m, Distance=6.06 m
+[INFO] [1791806977.905433105] [lidar_clustering]: ID=156, X=2.81 m, Y=-5.37 m, Width=0.07 m, Depth=0.04 m, Distance=6.06 m
+[INFO] [1791806977.905607161] [lidar_clustering]: ID=157, X=1.03 m, Y=-5.60 m, Width=0.12 m, Depth=0.22 m, Distance=5.70 m
+[INFO] [1791806977.905781167] [lidar_clustering]: ID=158, X=2.74 m, Y=-4.81 m, Width=0.04 m, Depth=0.07 m, Distance=5.54 m
+[INFO] [1791806977.905958539] [lidar_clustering]: ID=160, X=2.22 m, Y=-4.15 m, Width=0.36 m, Depth=0.32 m, Distance=4.71 m
+[INFO] [1791806977.906130059] [lidar_clustering]: ID=161, X=5.82 m, Y=3.49 m, Width=0.08 m, Depth=0.05 m, Distance=6.79 m
+[INFO] [1791806977.906305648] [lidar_clustering]: ID=162, X=1.56 m, Y=4.51 m, Width=0.70 m, Depth=2.28 m, Distance=4.77 m
+[INFO] [1791806977.906477249] [lidar_clustering]: ID=163, X=4.21 m, Y=-4.21 m, Width=0.89 m, Depth=3.02 m, Distance=5.95 m
+[INFO] [1791806977.906648239] [lidar_clustering]: ID=164, X=1.67 m, Y=-5.32 m, Width=0.02 m, Depth=0.06 m, Distance=5.58 m
+[INFO] [1791806977.906823026] [lidar_clustering]: ID=165, X=6.06 m, Y=-2.68 m, Width=0.34 m, Depth=2.11 m, Distance=6.63 m
+[INFO] [1791806977.907014144] [lidar_clustering]: ID=166, X=2.22 m, Y=-5.22 m, Width=0.03 m, Depth=0.16 m, Distance=5.68 m
+[INFO] [1791806977.907198689] [lidar_clustering]: ID=167, X=6.77 m, Y=-3.96 m, Width=0.05 m, Depth=0.12 m, Distance=7.84 m
+[INFO] [1791806977.907384917] [lidar_clustering]: ID=168, X=3.06 m, Y=-5.95 m, Width=0.04 m, Depth=0.09 m, Distance=6.69 m
+[INFO] [1791806977.907566597] [lidar_clustering]: ID=169, X=2.46 m, Y=-4.39 m, Width=0.15 m, Depth=0.38 m, Distance=5.03 m
+[INFO] [1791806977.907745552] [lidar_clustering]: ID=170, X=5.72 m, Y=-3.15 m, Width=0.08 m, Depth=0.04 m, Distance=6.53 m
+[INFO] [1791806977.907938844] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806977.908120914] [lidar_clustering]: points=553, clusters=11, tracks=21
+[INFO] [1791806978.866366663] [lidar_clustering]: ID=141, X=2.92 m, Y=4.11 m, Width=0.31 m, Depth=2.25 m, Distance=5.04 m
+[INFO] [1791806978.866583769] [lidar_clustering]: ID=143, X=1.78 m, Y=3.96 m, Width=0.17 m, Depth=0.18 m, Distance=4.34 m
+[INFO] [1791806978.866780076] [lidar_clustering]: ID=145, X=0.53 m, Y=-4.24 m, Width=0.36 m, Depth=0.37 m, Distance=4.27 m
+[INFO] [1791806978.866969160] [lidar_clustering]: ID=146, X=1.32 m, Y=-5.31 m, Width=0.10 m, Depth=0.34 m, Distance=5.47 m
+[INFO] [1791806978.867154366] [lidar_clustering]: ID=147, X=0.79 m, Y=-5.57 m, Width=0.10 m, Depth=0.07 m, Distance=5.62 m
+[INFO] [1791806978.867342288] [lidar_clustering]: ID=151, X=0.45 m, Y=-5.56 m, Width=0.03 m, Depth=0.10 m, Distance=5.58 m
+[INFO] [1791806978.867531181] [lidar_clustering]: ID=152, X=0.59 m, Y=-4.82 m, Width=0.02 m, Depth=0.07 m, Distance=4.86 m
+[INFO] [1791806978.867720516] [lidar_clustering]: ID=154, X=0.40 m, Y=4.26 m, Width=0.19 m, Depth=0.21 m, Distance=4.28 m
+[INFO] [1791806978.867909790] [lidar_clustering]: ID=155, X=4.47 m, Y=4.16 m, Width=0.21 m, Depth=0.73 m, Distance=6.11 m
+[INFO] [1791806978.868096469] [lidar_clustering]: ID=157, X=0.74 m, Y=-5.79 m, Width=0.01 m, Depth=0.08 m, Distance=5.84 m
+[INFO] [1791806978.868281675] [lidar_clustering]: ID=159, X=4.65 m, Y=-5.06 m, Width=0.20 m, Depth=0.37 m, Distance=6.87 m
+[INFO] [1791806978.868470449] [lidar_clustering]: ID=160, X=1.14 m, Y=-4.17 m, Width=0.44 m, Depth=0.46 m, Distance=4.33 m
+[INFO] [1791806978.868653952] [lidar_clustering]: ID=161, X=5.04 m, Y=4.04 m, Width=0.12 m, Depth=0.11 m, Distance=6.46 m
+[INFO] [1791806978.868842555] [lidar_clustering]: ID=162, X=1.11 m, Y=3.94 m, Width=0.43 m, Depth=0.87 m, Distance=4.09 m
+[INFO] [1791806978.869027080] [lidar_clustering]: ID=163, X=2.88 m, Y=-4.64 m, Width=0.34 m, Depth=2.45 m, Distance=5.46 m
+[INFO] [1791806978.869210223] [lidar_clustering]: ID=164, X=1.42 m, Y=-4.71 m, Width=0.60 m, Depth=0.56 m, Distance=4.92 m
+[INFO] [1791806978.869399006] [lidar_clustering]: ID=165, X=5.34 m, Y=-3.92 m, Width=0.14 m, Depth=0.20 m, Distance=6.63 m
+[INFO] [1791806978.869583020] [lidar_clustering]: ID=167, X=4.76 m, Y=-3.86 m, Width=0.14 m, Depth=0.39 m, Distance=6.13 m
+[INFO] [1791806978.869810435] [lidar_clustering]: ID=169, X=1.97 m, Y=-4.42 m, Width=0.18 m, Depth=0.31 m, Distance=4.84 m
+[INFO] [1791806978.870066164] [lidar_clustering]: ID=170, X=4.16 m, Y=-3.55 m, Width=0.17 m, Depth=0.05 m, Distance=5.47 m
+[INFO] [1791806978.870337411] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=1.09 m, best_angle=10.8 deg
+[INFO] [1791806979.838211884] [lidar_clustering]: ID=141, X=3.85 m, Y=4.15 m, Width=0.08 m, Depth=0.11 m, Distance=5.66 m
+[INFO] [1791806979.838452253] [lidar_clustering]: ID=143, X=1.88 m, Y=4.22 m, Width=0.34 m, Depth=1.80 m, Distance=4.62 m
+[INFO] [1791806979.838668117] [lidar_clustering]: ID=147, X=0.62 m, Y=-5.41 m, Width=0.26 m, Depth=0.61 m, Distance=5.45 m
+[INFO] [1791806979.838960133] [lidar_clustering]: ID=154, X=1.26 m, Y=4.36 m, Width=0.17 m, Depth=2.62 m, Distance=4.54 m
+[INFO] [1791806979.839210301] [lidar_clustering]: ID=155, X=3.32 m, Y=2.83 m, Width=0.11 m, Depth=0.20 m, Distance=4.36 m
+[INFO] [1791806979.839406448] [lidar_clustering]: ID=158, X=2.19 m, Y=-4.97 m, Width=0.07 m, Depth=0.19 m, Distance=5.43 m
+[INFO] [1791806979.839593929] [lidar_clustering]: ID=161, X=4.95 m, Y=4.61 m, Width=0.19 m, Depth=0.58 m, Distance=6.77 m
+[INFO] [1791806979.839775859] [lidar_clustering]: ID=162, X=2.32 m, Y=3.26 m, Width=0.07 m, Depth=0.17 m, Distance=4.00 m
+[INFO] [1791806979.839958080] [lidar_clustering]: ID=163, X=1.64 m, Y=-6.02 m, Width=0.97 m, Depth=0.92 m, Distance=6.24 m
+[INFO] [1791806979.840141864] [lidar_clustering]: ID=167, X=3.13 m, Y=-4.68 m, Width=0.15 m, Depth=0.34 m, Distance=5.63 m
+[INFO] [1791806979.840338853] [lidar_clustering]: ID=171, X=0.33 m, Y=0.95 m, Width=0.01 m, Depth=0.03 m, Distance=1.01 m
+[INFO] [1791806979.840528678] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=0.83 m, best_angle=7.2 deg
+[INFO] [1791806979.840721508] [lidar_clustering]: points=301, clusters=9, tracks=11
+[INFO] [1791806980.800513645] [lidar_clustering]: ID=141, X=3.25 m, Y=2.91 m, Width=0.31 m, Depth=1.45 m, Distance=4.36 m
+[INFO] [1791806980.800795221] [lidar_clustering]: ID=143, X=1.29 m, Y=3.37 m, Width=0.50 m, Depth=1.97 m, Distance=3.60 m
+[INFO] [1791806980.801087799] [lidar_clustering]: ID=147, X=0.48 m, Y=-5.44 m, Width=0.11 m, Depth=0.18 m, Distance=5.46 m
+[INFO] [1791806980.801301398] [lidar_clustering]: ID=155, X=2.76 m, Y=1.77 m, Width=0.13 m, Depth=0.14 m, Distance=3.28 m
+[INFO] [1791806980.801487145] [lidar_clustering]: ID=157, X=0.45 m, Y=-6.84 m, Width=0.40 m, Depth=0.19 m, Distance=6.85 m
+[INFO] [1791806980.801667914] [lidar_clustering]: ID=162, X=1.91 m, Y=2.42 m, Width=0.12 m, Depth=0.12 m, Distance=3.08 m
+[INFO] [1791806980.801846407] [lidar_clustering]: ID=172, X=4.70 m, Y=2.74 m, Width=0.10 m, Depth=0.16 m, Distance=5.44 m
+[INFO] [1791806980.802032976] [lidar_clustering]: FollowGap: mode=CLEAR, direction=STRAIGHT, front=8.00 m, best_angle=0.0 deg
+[INFO] [1791806981.758113667] [lidar_clustering]: ID=141, X=3.20 m, Y=2.08 m, Width=0.15 m, Depth=0.13 m, Distance=3.81 m
+[INFO] [1791806981.758350671] [lidar_clustering]: ID=143, X=1.28 m, Y=3.31 m, Width=0.42 m, Depth=2.13 m, Distance=3.55 m
+[INFO] [1791806981.758555043] [lidar_clustering]: ID=155, X=2.02 m, Y=1.12 m, Width=0.14 m, Depth=0.12 m, Distance=2.31 m
+[INFO] [1791806981.758748665] [lidar_clustering]: ID=161, X=5.62 m, Y=5.24 m, Width=0.30 m, Depth=0.42 m, Distance=7.68 m
+[INFO] [1791806981.758941706] [lidar_clustering]: ID=162, X=1.42 m, Y=1.81 m, Width=0.14 m, Depth=0.12 m, Distance=2.30 m
+[INFO] [1791806981.759131331] [lidar_clustering]: ID=172, X=4.45 m, Y=2.57 m, Width=0.05 m, Depth=0.18 m, Distance=5.14 m
+[INFO] [1791806981.759329501] [lidar_clustering]: ID=173, X=3.33 m, Y=3.41 m, Width=0.05 m, Depth=0.21 m, Distance=4.77 m
+[INFO] [1791806981.759517894] [lidar_clustering]: ID=174, X=2.52 m, Y=2.84 m, Width=0.12 m, Depth=0.10 m, Distance=3.80 m
+[INFO] [1791806981.759710123] [lidar_clustering]: FollowGap: mode=AVOID, direction=LEFT, front=2.25 m, best_angle=8.6 deg
+[INFO] [1791806981.759902142] [lidar_clustering]: points=241, clusters=6, tracks=8
+[INFO] [1791806982.722514145] [lidar_clustering]: ID=141, X=2.79 m, Y=1.75 m, Width=0.04 m, Depth=0.05 m, Distance=3.29 m
+[INFO] [1791806982.722744366] [lidar_clustering]: ID=143, X=1.24 m, Y=3.55 m, Width=0.55 m, Depth=2.16 m, Distance=3.76 m
+[INFO] [1791806982.722933710] [lidar_clustering]: ID=154, X=1.09 m, Y=3.99 m, Width=0.29 m, Depth=1.68 m, Distance=4.13 m
+[INFO] [1791806982.723121972] [lidar_clustering]: ID=155, X=1.30 m, Y=0.59 m, Width=0.37 m, Depth=0.18 m, Distance=1.43 m
+[INFO] [1791806982.723308571] [lidar_clustering]: ID=161, X=3.45 m, Y=6.79 m, Width=0.05 m, Depth=0.16 m, Distance=7.62 m
+[INFO] [1791806982.723493216] [lidar_clustering]: ID=162, X=0.80 m, Y=1.42 m, Width=0.13 m, Depth=0.13 m, Distance=1.63 m
+[INFO] [1791806982.723676228] [lidar_clustering]: ID=174, X=2.09 m, Y=2.35 m, Width=0.05 m, Depth=0.07 m, Distance=3.14 m
+[INFO] [1791806982.723859401] [lidar_clustering]: ID=175, X=4.79 m, Y=5.62 m, Width=0.12 m, Depth=0.10 m, Distance=7.38 m
+[INFO] [1791806982.724038245] [lidar_clustering]: ID=176, X=0.98 m, Y=1.00 m, Width=0.08 m, Depth=0.18 m, Distance=1.39 m
+[INFO] [1791806982.724232799] [lidar_clustering]: FollowGap: mode=AVOID, direction=RIGHT, front=1.32 m, best_angle=-12.8 deg
+[INFO] [1791806983.681658652] [lidar_clustering]: ID=141, X=2.21 m, Y=1.47 m, Width=0.08 m, Depth=0.06 m, Distance=2.65 m
+[INFO] [1791806983.681906125] [lidar_clustering]: ID=143, X=1.19 m, Y=4.24 m, Width=0.03 m, Depth=0.33 m, Distance=4.40 m
+[INFO] [1791806983.682090350] [lidar_clustering]: ID=154, X=0.41 m, Y=4.14 m, Width=0.03 m, Depth=0.17 m, Distance=4.16 m
+[INFO] [1791806983.682268573] [lidar_clustering]: ID=155, X=0.70 m, Y=0.49 m, Width=0.36 m, Depth=0.17 m, Distance=0.85 m
+[INFO] [1791806983.682465701] [lidar_clustering]: ID=161, X=2.32 m, Y=6.85 m, Width=0.03 m, Depth=0.10 m, Distance=7.23 m
+[INFO] [1791806983.682658722] [lidar_clustering]: ID=162, X=0.32 m, Y=1.29 m, Width=0.01 m, Depth=0.02 m, Distance=1.32 m
+[INFO] [1791806983.682862293] [lidar_clustering]: ID=174, X=1.54 m, Y=2.12 m, Width=0.15 m, Depth=0.12 m, Distance=2.62 m
+[INFO] [1791806983.683047149] [lidar_clustering]: ID=175, X=4.23 m, Y=5.29 m, Width=0.08 m, Depth=0.12 m, Distance=6.77 m
+[INFO] [1791806983.683239148] [lidar_clustering]: ID=176, X=0.45 m, Y=0.93 m, Width=0.12 m, Depth=0.29 m, Distance=1.04 m
+[INFO] [1791806983.683437098] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.81 m, best_angle=0.0 deg
+[INFO] [1791806983.683626011] [lidar_clustering]: points=243, clusters=6, tracks=9
+[INFO] [1791806984.633318367] [lidar_clustering]: ID=141, X=1.94 m, Y=1.30 m, Width=0.16 m, Depth=0.10 m, Distance=2.34 m
+[INFO] [1791806984.633534842] [lidar_clustering]: ID=143, X=0.97 m, Y=4.05 m, Width=0.11 m, Depth=0.34 m, Distance=4.16 m
+[INFO] [1791806984.633717404] [lidar_clustering]: ID=154, X=0.34 m, Y=4.09 m, Width=0.00 m, Depth=0.06 m, Distance=4.11 m
+[INFO] [1791806984.633890056] [lidar_clustering]: ID=155, X=0.64 m, Y=0.50 m, Width=0.36 m, Depth=0.17 m, Distance=0.81 m
+[INFO] [1791806984.634060405] [lidar_clustering]: ID=161, X=3.43 m, Y=6.64 m, Width=0.04 m, Depth=0.36 m, Distance=7.47 m
+[INFO] [1791806984.634232386] [lidar_clustering]: ID=174, X=1.46 m, Y=2.13 m, Width=0.15 m, Depth=0.12 m, Distance=2.58 m
+[INFO] [1791806984.634408195] [lidar_clustering]: ID=175, X=4.09 m, Y=6.71 m, Width=0.05 m, Depth=0.26 m, Distance=7.86 m
+[INFO] [1791806984.634578032] [lidar_clustering]: ID=176, X=0.38 m, Y=0.90 m, Width=0.07 m, Depth=0.10 m, Distance=0.98 m
+[INFO] [1791806984.634747129] [lidar_clustering]: ID=177, X=2.99 m, Y=5.28 m, Width=0.12 m, Depth=0.15 m, Distance=6.06 m
+[INFO] [1791806984.634916856] [lidar_clustering]: ID=178, X=2.46 m, Y=5.12 m, Width=0.04 m, Depth=0.12 m, Distance=5.68 m
+[INFO] [1791806984.635093646] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.78 m, best_angle=0.0 deg
+[INFO] [1791806985.572286693] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.15 m, Depth=0.11 m, Distance=2.35 m
+[INFO] [1791806985.572518236] [lidar_clustering]: ID=143, X=1.01 m, Y=4.08 m, Width=0.12 m, Depth=0.37 m, Distance=4.20 m
+[INFO] [1791806985.572712038] [lidar_clustering]: ID=154, X=0.35 m, Y=4.08 m, Width=0.01 m, Depth=0.07 m, Distance=4.10 m
+[INFO] [1791806985.572895020] [lidar_clustering]: ID=155, X=0.65 m, Y=0.51 m, Width=0.36 m, Depth=0.17 m, Distance=0.82 m
+[INFO] [1791806985.573077471] [lidar_clustering]: ID=161, X=3.96 m, Y=5.74 m, Width=0.06 m, Depth=0.07 m, Distance=6.97 m
+[INFO] [1791806985.573262407] [lidar_clustering]: ID=174, X=1.48 m, Y=2.13 m, Width=0.17 m, Depth=0.13 m, Distance=2.59 m
+[INFO] [1791806985.573443836] [lidar_clustering]: ID=175, X=3.70 m, Y=6.69 m, Width=0.09 m, Depth=0.81 m, Distance=7.65 m
+[INFO] [1791806985.573645924] [lidar_clustering]: ID=176, X=0.38 m, Y=0.91 m, Width=0.08 m, Depth=0.16 m, Distance=0.98 m
+[INFO] [1791806985.573847711] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[INFO] [1791806985.574068454] [lidar_clustering]: points=227, clusters=7, tracks=8
+[INFO] [1791806986.519927931] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.15 m, Depth=0.08 m, Distance=2.35 m
+[INFO] [1791806986.520252928] [lidar_clustering]: ID=143, X=1.02 m, Y=4.01 m, Width=0.13 m, Depth=0.39 m, Distance=4.14 m
+[INFO] [1791806986.520499700] [lidar_clustering]: ID=154, X=0.33 m, Y=4.03 m, Width=0.00 m, Depth=0.06 m, Distance=4.04 m
+[INFO] [1791806986.520718639] [lidar_clustering]: ID=155, X=0.64 m, Y=0.52 m, Width=0.35 m, Depth=0.17 m, Distance=0.83 m
+[INFO] [1791806986.520937478] [lidar_clustering]: ID=174, X=1.47 m, Y=2.13 m, Width=0.14 m, Depth=0.11 m, Distance=2.59 m
+[INFO] [1791806986.521147951] [lidar_clustering]: ID=175, X=3.99 m, Y=6.67 m, Width=0.08 m, Depth=0.46 m, Distance=7.78 m
+[INFO] [1791806986.521351041] [lidar_clustering]: ID=176, X=0.37 m, Y=0.90 m, Width=0.04 m, Depth=0.13 m, Distance=0.98 m
+[INFO] [1791806986.521553700] [lidar_clustering]: ID=177, X=2.84 m, Y=5.58 m, Width=0.03 m, Depth=0.06 m, Distance=6.26 m
+[INFO] [1791806986.521746230] [lidar_clustering]: ID=179, X=3.41 m, Y=6.56 m, Width=0.11 m, Depth=0.33 m, Distance=7.40 m
+[INFO] [1791806986.521947466] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[INFO] [1791806987.457218894] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.14 m, Depth=0.11 m, Distance=2.35 m
+[INFO] [1791806987.457444366] [lidar_clustering]: ID=143, X=1.06 m, Y=3.97 m, Width=0.12 m, Depth=0.47 m, Distance=4.11 m
+[INFO] [1791806987.457631055] [lidar_clustering]: ID=154, X=0.34 m, Y=4.01 m, Width=0.01 m, Depth=0.07 m, Distance=4.03 m
+[INFO] [1791806987.457831569] [lidar_clustering]: ID=155, X=0.63 m, Y=0.55 m, Width=0.35 m, Depth=0.16 m, Distance=0.84 m
+[INFO] [1791806987.458020172] [lidar_clustering]: ID=174, X=1.47 m, Y=2.13 m, Width=0.16 m, Depth=0.11 m, Distance=2.59 m
+[INFO] [1791806987.458213413] [lidar_clustering]: ID=176, X=0.36 m, Y=0.88 m, Width=0.01 m, Depth=0.01 m, Distance=0.95 m
+[INFO] [1791806987.458405792] [lidar_clustering]: ID=179, X=3.48 m, Y=6.55 m, Width=0.15 m, Depth=1.36 m, Distance=7.41 m
+[INFO] [1791806987.458600907] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[INFO] [1791806987.458793748] [lidar_clustering]: points=200, clusters=7, tracks=7
+[INFO] [1791806988.396617732] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.14 m, Depth=0.11 m, Distance=2.35 m
+[INFO] [1791806988.396835078] [lidar_clustering]: ID=143, X=1.05 m, Y=3.97 m, Width=0.12 m, Depth=0.47 m, Distance=4.11 m
+[INFO] [1791806988.397019723] [lidar_clustering]: ID=154, X=0.34 m, Y=4.01 m, Width=0.01 m, Depth=0.07 m, Distance=4.02 m
+[INFO] [1791806988.397196283] [lidar_clustering]: ID=155, X=0.63 m, Y=0.55 m, Width=0.35 m, Depth=0.16 m, Distance=0.84 m
+[INFO] [1791806988.397376410] [lidar_clustering]: ID=174, X=1.47 m, Y=2.14 m, Width=0.16 m, Depth=0.11 m, Distance=2.59 m
+[INFO] [1791806988.397550786] [lidar_clustering]: ID=176, X=0.34 m, Y=0.88 m, Width=0.01 m, Depth=0.05 m, Distance=0.94 m
+[INFO] [1791806988.397724049] [lidar_clustering]: ID=179, X=3.45 m, Y=6.54 m, Width=0.13 m, Depth=1.32 m, Distance=7.40 m
+[INFO] [1791806988.397904496] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[INFO] [1791806989.336782245] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.13 m, Depth=0.09 m, Distance=2.35 m
+[INFO] [1791806989.337021042] [lidar_clustering]: ID=143, X=1.06 m, Y=3.98 m, Width=0.11 m, Depth=0.49 m, Distance=4.11 m
+[INFO] [1791806989.337211808] [lidar_clustering]: ID=154, X=0.34 m, Y=4.01 m, Width=0.00 m, Depth=0.06 m, Distance=4.02 m
+[INFO] [1791806989.337448089] [lidar_clustering]: ID=155, X=0.63 m, Y=0.56 m, Width=0.35 m, Depth=0.16 m, Distance=0.84 m
+[INFO] [1791806989.337656319] [lidar_clustering]: ID=174, X=1.47 m, Y=2.13 m, Width=0.14 m, Depth=0.11 m, Distance=2.59 m
+[INFO] [1791806989.337840803] [lidar_clustering]: ID=176, X=0.35 m, Y=0.89 m, Width=0.01 m, Depth=0.02 m, Distance=0.95 m
+[INFO] [1791806989.338023264] [lidar_clustering]: ID=179, X=3.49 m, Y=6.55 m, Width=0.13 m, Depth=1.33 m, Distance=7.42 m
+[INFO] [1791806989.338209673] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[INFO] [1791806989.338397113] [lidar_clustering]: points=197, clusters=7, tracks=7
+[INFO] [1791806990.276716655] [lidar_clustering]: ID=141, X=1.95 m, Y=1.31 m, Width=0.13 m, Depth=0.11 m, Distance=2.35 m
+[INFO] [1791806990.276957264] [lidar_clustering]: ID=143, X=1.07 m, Y=3.98 m, Width=0.11 m, Depth=0.50 m, Distance=4.12 m
+[INFO] [1791806990.277138253] [lidar_clustering]: ID=154, X=0.33 m, Y=4.01 m, Width=0.00 m, Depth=0.06 m, Distance=4.02 m
+[INFO] [1791806990.277325252] [lidar_clustering]: ID=155, X=0.63 m, Y=0.55 m, Width=0.34 m, Depth=0.16 m, Distance=0.84 m
+[INFO] [1791806990.277511330] [lidar_clustering]: ID=174, X=1.47 m, Y=2.14 m, Width=0.16 m, Depth=0.11 m, Distance=2.59 m
+[INFO] [1791806990.277693650] [lidar_clustering]: ID=176, X=0.32 m, Y=0.87 m, Width=0.00 m, Depth=0.01 m, Distance=0.93 m
+[INFO] [1791806990.277872474] [lidar_clustering]: ID=179, X=3.44 m, Y=6.54 m, Width=0.19 m, Depth=1.43 m, Distance=7.39 m
+[INFO] [1791806990.278059043] [lidar_clustering]: FollowGap: mode=BLOCKED, direction=STOP, front=0.79 m, best_angle=0.0 deg
+[ERROR] [1791806991.115497482] [lidar_clustering]: ⚠ BLOCKED 가 8.0s 지속 — 회피를 포기하고 감속을 푼다(GPS 경로로 빠져나간다).
+   장애물 접촉은 감점이지만 1분 이상 정지는 탈락이다.

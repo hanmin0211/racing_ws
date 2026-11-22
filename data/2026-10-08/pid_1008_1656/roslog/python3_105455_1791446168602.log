@@ -1,0 +1,63 @@
+[INFO] [1791446168.666596187] [lidar_clustering]: LiDAR DBSCAN + Hungarian + Follow the Gap started. (scan=/scan_front, yaw_offset=180°, aim=path)
+[INFO] [1791446168.666857975] [lidar_clustering]: Vehicle coordinate: +X forward, +Y left, -Y right.
+[INFO] [1791446168.667035242] [lidar_clustering]: 회피 조향 슬루레이트 제한 꺼짐 (avoid_steer_rate_deg:=90.0 으로 켠다)
+[ERROR] [1791446170.636482591] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446176.636573351] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446182.636495972] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446188.636585399] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446194.636641318] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446200.636455539] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446206.636475975] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446212.636412927] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446218.636464989] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446224.636520282] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446230.636474046] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446236.636589011] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446242.636604288] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446248.636560520] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan
+[ERROR] [1791446254.636753846] [lidar_clustering]: ❌ 스캔이 한 번도 안 왔다 — 구독 토픽: /scan_front
+   드라이버가 도는지, **토픽 이름이 맞는지** 확인할 것.
+   앞뒤 두 대면 /scan_front 다(lidar_dual.launch.py).
+   한 대만 띄웠으면 /scan 이다 → -p scan_topic:=/scan

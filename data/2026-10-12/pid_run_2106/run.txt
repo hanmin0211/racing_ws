@@ -1,0 +1,37 @@
+# 주행 기록 — pid_run
+일시   : 2026-10-12 21:09:50 KST
+브랜치 : yongin-2026-09-05
+커밋   : 3bedc2e
+⚠ 커밋 안 된 변경 12 건 — 이 주행은 커밋 상태와 다르다
+
+## 런치 명령줄
+/usr/bin/python3 /opt/ros/humble/bin/ros2 launch gps_localization bringup.launch.py control:=true sequencer:=false lidar:=true rviz:=true auto_calib:=true waypoints:=/home/han/racing_ws/config/chungju_school/wp_heading_1007b_v2.yaml max_speed:=1.6 curvature_gain:=0.7 calib_distance:=10.0 auto_calib_speed:=1.3 calib_jump_speed:=3.0 ff_mode:=ros ff_static:=17.2 ff_gain:=38.8 spd_kp:=80.0 spd_ki:=60.0 
+
+## 원점 (config/site_origin.yaml)
+  site: "충주 캠퍼스 (학교 시험)"
+  utm_epsg: 32652
+  origin_x: 399848.522
+  origin_y: 4092209.171
+
+## IMU 영점 (config/imu_pitch_offset.yaml)
+  pitch_offset_rad: 0.066447
+  sign: -1.0
+
+## 노드
+  /direct_localization
+  /global_path_publisher
+  /gps_heading_init
+  /imu
+  /lidar_clustering
+  /local_pure_pursuit
+  /local_sliding_window_node
+  /longitudinal_controller
+  /ngii_vrs_ntrip_client
+  /rosbag2_recorder
+  /rviz2
+  /serial_bridge_node
+  /sllidar_front
+  /transform_listener_impl_5d547b6f0670
+  /ublox_dgnss
+  /ublox_nav_sat_fix_hp
+  /vehicle_cmd_mux

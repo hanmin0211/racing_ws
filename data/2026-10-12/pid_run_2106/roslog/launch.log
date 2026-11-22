@@ -1,0 +1,16 @@
+1791806783.0023353 [INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-10-12-21-06-23-001662-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-6110
+1791806783.0024202 [INFO] [launch]: Default logging verbosity is set to INFO
+1791806783.0634236 [INFO] [ublox_dgnss_node-1]: process started with pid [6112]
+1791806783.0635686 [INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [6114]
+1791806783.0636222 [INFO] [vrs_ntrip_client-3]: process started with pid [6116]
+1791806783.0636687 [INFO] [hfi_a9_ros2-4]: process started with pid [6118]
+1791806783.0637095 [INFO] [heading_init_node-5]: process started with pid [6120]
+1791806783.0637491 [INFO] [direct_localization_node-6]: process started with pid [6122]
+1791806783.0637903 [INFO] [global_path_publisher-7]: process started with pid [6124]
+1791806783.0638294 [INFO] [local_sliding_window_node-8]: process started with pid [6126]
+1791806783.0638673 [INFO] [local_pure_pursuit_node-9]: process started with pid [6128]
+1791806783.0639060 [INFO] [longitudinal_controller-10]: process started with pid [6130]
+1791806783.0639467 [INFO] [vehicle_cmd_mux-11]: process started with pid [6132]
+1791806783.0639832 [INFO] [serial_bridge-12]: process started with pid [6134]
+1791806783.0640180 [INFO] [cluster_plot_node-13]: process started with pid [6136]
+1791806783.0640547 [INFO] [rviz2-14]: process started with pid [6138]

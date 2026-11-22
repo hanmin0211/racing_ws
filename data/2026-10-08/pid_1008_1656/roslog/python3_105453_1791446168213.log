@@ -1,0 +1,38 @@
+[INFO] [1791446170.281330961] [serial_bridge_node]: 시리얼 포트 연결 성공: /dev/arduino @ 57600bps
+[INFO] [1791446170.291239797] [serial_bridge_node]: Serial read thread started
+[WARN] [1791446170.294800978] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3776mV — 배터리/전원 확인
+[WARN] [1791446173.301596891] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446176.312026095] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3990mV — 배터리/전원 확인
+[WARN] [1791446179.318503680] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446182.329131532] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446185.343762081] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446188.350508164] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446191.356963340] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446194.367714035] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446197.378280637] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446200.388902935] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446203.399388997] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446206.406234191] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446209.416667187] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446212.423357669] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446215.434163080] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446218.444605408] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446221.451313586] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446224.461984098] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446227.468938122] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=3990mV — 배터리/전원 확인
+[WARN] [1791446230.479232870] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446233.490554335] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4018mV — 배터리/전원 확인
+[WARN] [1791446236.500896619] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4004mV — 배터리/전원 확인
+[WARN] [1791446239.507461623] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4121mV — 배터리/전원 확인
+[WARN] [1791446242.518360446] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4167mV — 배터리/전원 확인
+[WARN] [1791446242.767677983] [serial_bridge_node]: 펌웨어 스톨 감지: STALL: drive=0 steer=1
+[WARN] [1791446244.778786020] [serial_bridge_node]: 펌웨어 스톨 감지: STALL: drive=0 steer=1
+[WARN] [1791446245.524841901] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4167mV — 배터리/전원 확인
+[INFO] [1791446246.289985081] [serial_bridge_node]: 스톨 해제 (0.5s 간 STALL 없음)
+[WARN] [1791446248.539455463] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4230mV — 배터리/전원 확인
+[WARN] [1791446250.546453324] [serial_bridge_node]: 펌웨어 스톨 감지: STALL: drive=0 steer=1
+[WARN] [1791446251.546340432] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4246mV — 배터리/전원 확인
+[WARN] [1791446252.549707418] [serial_bridge_node]: 펌웨어 스톨 감지: STALL: drive=0 steer=1
+[INFO] [1791446253.890025107] [serial_bridge_node]: 스톨 해제 (0.5s 간 STALL 없음)
+[WARN] [1791446254.556801364] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4262mV — 배터리/전원 확인
+[WARN] [1791446257.563525122] [serial_bridge_node]: ⚠ 공급전압 강하: VMIN=4262mV — 배터리/전원 확인

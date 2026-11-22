@@ -1,0 +1,2 @@
+[INFO] [1791446168.248482711] [local_sliding_window_node]: local_sliding_window_node 시작 (odom=/odometry/filtered, window=5+20, lookahead=10.0m, 곡률 preview=4.0m)
+[INFO] [1791446168.303728461] [local_sliding_window_node]: 전역 경로 수신: 220점, 시작-끝 26.02m → 열린 경로

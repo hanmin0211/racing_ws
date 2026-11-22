@@ -1,0 +1,7 @@
+/**:
+  ros__parameters:
+    avoid_hold_s: 0.0
+    avoid_max_heading_deg: 0.0
+    avoid_max_lateral_m: 0.0
+    max_speed: 1.6
+    max_steer_deg: 18.0

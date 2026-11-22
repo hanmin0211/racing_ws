@@ -1,0 +1,21 @@
+# 주행 기록 — pid_1008
+일시   : 2026-10-08 17:12:36 KST
+브랜치 : yongin-2026-09-05
+커밋   : 3bedc2e
+⚠ 커밋 안 된 변경 1 건 — 이 주행은 커밋 상태와 다르다
+
+## 런치 명령줄
+
+## 원점 (config/site_origin.yaml)
+  site: "충주 캠퍼스 (학교 시험)"
+  utm_epsg: 32652
+  origin_x: 399848.522
+  origin_y: 4092209.171
+
+## IMU 영점 (config/imu_pitch_offset.yaml)
+  pitch_offset_rad: 0.066447
+  sign: -1.0
+
+## 노드
+  /diag_monitor
+  /ublox_dgnss

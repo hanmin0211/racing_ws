@@ -1,0 +1,31 @@
+1791448015.8306873 [INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-10-08-17-26-55-830230-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-114503
+1791448015.8307545 [INFO] [launch]: Default logging verbosity is set to INFO
+1791448015.8821933 [INFO] [ublox_dgnss_node-1]: process started with pid [114505]
+1791448015.8822930 [INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [114507]
+1791448015.8823361 [INFO] [vrs_ntrip_client-3]: process started with pid [114509]
+1791448015.8823781 [INFO] [hfi_a9_ros2-4]: process started with pid [114511]
+1791448015.8824110 [INFO] [heading_init_node-5]: process started with pid [114513]
+1791448015.8824406 [INFO] [direct_localization_node-6]: process started with pid [114515]
+1791448015.8824675 [INFO] [global_path_publisher-7]: process started with pid [114517]
+1791448015.8824940 [INFO] [local_sliding_window_node-8]: process started with pid [114519]
+1791448015.8825195 [INFO] [local_pure_pursuit_node-9]: process started with pid [114521]
+1791448015.8825443 [INFO] [longitudinal_controller-10]: process started with pid [114523]
+1791448015.8825698 [INFO] [vehicle_cmd_mux-11]: process started with pid [114525]
+1791448015.8825946 [INFO] [serial_bridge-12]: process started with pid [114527]
+1791448015.8826199 [INFO] [cluster_plot_node-13]: process started with pid [114529]
+1791448015.8826451 [INFO] [rviz2-14]: process started with pid [114531]
+1791448128.4243712 [WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+1791448128.4332619 [ERROR] [ublox_dgnss_node-1]: process has died [pid 114505, exit code -11, cmd '/opt/ros/humble/lib/ublox_dgnss_node/ublox_dgnss_node --ros-args -r __node:=ublox_dgnss --params-file /tmp/launch_params_f2qz571b'].
+1791448128.5359700 [INFO] [ublox_nav_sat_fix_hp-2]: process has finished cleanly [pid 114507]
+1791448128.5793314 [INFO] [longitudinal_controller-10]: process has finished cleanly [pid 114523]
+1791448128.5800951 [INFO] [heading_init_node-5]: process has finished cleanly [pid 114513]
+1791448128.6032248 [INFO] [local_sliding_window_node-8]: process has finished cleanly [pid 114519]
+1791448128.6037993 [INFO] [serial_bridge-12]: process has finished cleanly [pid 114527]
+1791448128.6084301 [INFO] [vehicle_cmd_mux-11]: process has finished cleanly [pid 114525]
+1791448128.6084960 [INFO] [local_pure_pursuit_node-9]: process has finished cleanly [pid 114521]
+1791448128.6086292 [INFO] [global_path_publisher-7]: process has finished cleanly [pid 114517]
+1791448128.6090775 [INFO] [direct_localization_node-6]: process has finished cleanly [pid 114515]
+1791448128.6092291 [ERROR] [vrs_ntrip_client-3]: process has died [pid 114509, exit code 1, cmd '/home/han/racing_ws/install/ngii_ntrip/lib/ngii_ntrip/vrs_ntrip_client --ros-args -r __node:=ngii_vrs_ntrip_client --params-file /tmp/launch_params_bdz5rr73'].
+1791448128.6112566 [ERROR] [hfi_a9_ros2-4]: process has died [pid 114511, exit code 1, cmd '/home/han/racing_ws/install/handsfree_ros2_imu/lib/handsfree_ros2_imu/hfi_a9_ros2 --ros-args -r __node:=imu --params-file /tmp/launch_params_8tp7dj32'].
+1791448128.6474550 [INFO] [rviz2-14]: process has finished cleanly [pid 114531]
+1791448128.6571953 [INFO] [cluster_plot_node-13]: process has finished cleanly [pid 114529]

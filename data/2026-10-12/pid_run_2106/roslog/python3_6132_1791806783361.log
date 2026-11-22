@@ -1,0 +1,22 @@
+[INFO] [1791806783.717210903] [vehicle_cmd_mux]: 명령 먹스 시작: 조향±18.0° 속도 -0.6~1.6m/s (E-stop > teleop > 자율)
+[WARN] [1791806783.717556566] [vehicle_cmd_mux]: 헤딩 캘리브 대기 — /heading/yaw_offset 을 받기 전에는 자율(AUTO)을 거부한다. teleop 으로 10m 직진해 캘리브를 끝낼 것.
+[INFO] [1791806783.753980998] [vehicle_cmd_mux]: 모드: STOP(헤딩 캘리브 전)
+[INFO] [1791806893.654219761] [vehicle_cmd_mux]: 모드: TELEOP
+[INFO] [1791806907.341389744] [vehicle_cmd_mux]: 헤딩 캘리브 완료 (88.3°) — 자율 허용
+[INFO] [1791806908.854983469] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806932.454056730] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806933.503907741] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806951.953937233] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806952.903820704] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806953.003953071] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806953.203986411] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806953.304075892] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806954.403824253] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806971.703840154] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806972.753935648] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806972.854052298] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806973.753889584] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806978.804049360] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806979.953832512] [vehicle_cmd_mux]: 모드: AUTO
+[INFO] [1791806981.403951736] [vehicle_cmd_mux]: 모드: AVOID(라이다)
+[INFO] [1791806983.103804380] [vehicle_cmd_mux]: 모드: AUTO

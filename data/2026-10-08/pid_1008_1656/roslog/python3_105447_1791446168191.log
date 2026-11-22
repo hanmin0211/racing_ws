@@ -1,0 +1,20 @@
+[INFO] [1791446168.251903399] [local_pure_pursuit]: local_pure_pursuit 시작: L=0.785m, max=18°, target_speed=0.5m/s, /local_path→/cmd_vel
+[WARN] [1791446168.289736112] [local_pure_pursuit]: 정지: 경로 대기중
+[WARN] [1791446168.674636683] [local_pure_pursuit]: odom 속도 7.1m/s — 비현실적이라 버린다 (직전 0.00 유지, 누적 1회). EKF twist 스파이크로 보이며 위치는 보통 멀쩡하다.
+[WARN] [1791446173.339644077] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446178.391051230] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446183.439569160] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446188.489509278] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446193.489621674] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446198.539683997] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446203.589591324] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446208.589734705] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446213.639756834] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446218.689514655] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446223.689546439] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446228.689604271] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446233.689899245] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446238.739902886] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446243.789735038] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446248.789945015] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)
+[WARN] [1791446253.839653007] [local_pure_pursuit]: 정지: lookahead가 차량 뒤/너무 가까움 (헤딩 이상 가능)

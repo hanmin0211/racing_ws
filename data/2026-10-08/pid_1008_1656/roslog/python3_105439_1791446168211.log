@@ -1,0 +1,42 @@
+[INFO] [1791446168.270308853] [gps_heading_init]: 헤딩 초기화(1회성) 시작: 10m 직진하면 yaw_offset 계산 후 자동 종료 (fix=/fix, imu=handsfree/imu)
+[WARN] [1791446168.270736327] [gps_heading_init]: ⚠ 자동 직진 켜짐: GPS 수신 후 5초 뒤 0.50m/s로 스스로 10m 전진한다. 앞을 비우고 E-stop을 손에 쥘 것.
+[WARN] [1791446168.613475198] [gps_heading_init]: RTK 수렴 대기 중 — 공분산 없음 → status=0 로 판정 (RTK Fixed 는 2 이상). NTRIP 이 붙어도 수신기가 RTCM 을 안 먹으면 여기서 안 올라간다 — ublox 로그에 "degraded mode" 가 있는지 볼 것. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446170.722941765] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=202.5cm (상한 5cm), status=0. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446172.722857445] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=202.5cm (상한 5cm), status=0. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446174.722902086] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446176.722987734] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446178.723123114] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446180.723213507] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446182.733135169] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446184.833186077] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446186.923493349] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446188.933499784] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446191.023399856] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446193.023468610] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446195.033743219] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446197.033640380] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=21.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446199.033791497] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=12.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446201.033829047] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=12.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446203.034014483] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=11.2cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446205.034036920] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=11.2cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446207.034133227] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=10.3cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446209.034302144] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=9.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446211.034407646] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=9.6cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446213.044509369] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446215.144566422] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446217.144725064] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446219.244732578] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446221.335103798] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446223.435212082] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446225.535287138] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446227.535978504] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[WARN] [1791446229.635334765] [gps_heading_init]: RTK 수렴 대기 중 — 수평 σ=8.7cm (상한 5cm), status=1. 출발하지 않는다. ⚠ 여기서 출발하면 RTK 확정 순간의 좌표 점프를 직진으로 오인한다(2026-08-24 충돌 원인). 정말 무시하려면 require_rtk:=false.
+[INFO] [1791446230.555445556] [gps_heading_init]: RTK 수렴 (수평 σ=1.3cm (상한 5cm), status=1) — 헤딩 캘리브를 시작한다.
+[INFO] [1791446230.555724948] [gps_heading_init]: 시작점 기록: (36.9709633, 127.8718579). 직진 시작하세요.
+[INFO] [1791446230.646124942] [gps_heading_init]: 직진 중... 0.0/10m
+[WARN] [1791446230.654670032] [gps_heading_init]: 자동 직진 5초 전... (E-stop 준비)
+[WARN] [1791446231.654725122] [gps_heading_init]: 자동 직진 4초 전... (E-stop 준비)
+[WARN] [1791446232.654679067] [gps_heading_init]: 자동 직진 3초 전... (E-stop 준비)
+[WARN] [1791446233.654810803] [gps_heading_init]: 자동 직진 2초 전... (E-stop 준비)
+[WARN] [1791446234.654673890] [gps_heading_init]: 자동 직진 1초 전... (E-stop 준비)
+[INFO] [1791446235.654798595] [gps_heading_init]: 직진 기준 헤딩 고정: -6.6° (절대값은 무의미, 변화량만 사용)

@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    fix_topic: /fix
+    imu_topic: handsfree/imu
+    invert_imu_yaw: false
+    output_topic: /odometry/filtered
+    publish_tf: true
+    rate: 30.0

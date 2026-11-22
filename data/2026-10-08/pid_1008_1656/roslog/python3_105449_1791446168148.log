@@ -1,0 +1,1 @@
+[INFO] [1791446168.211366010] [longitudinal_controller]: 종방향 제어 시작: v_max=1.6 v_min=0.25 (목표속도만 발행 — PWM은 펌웨어 PID가 담당)

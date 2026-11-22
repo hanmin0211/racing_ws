@@ -1,0 +1,8 @@
+[INFO] [1784983642.154129004] [rosbag2_storage]: Opened database '/home/han/racing_ws/rosbag2_2026_07_15-00_21_36/rosbag2_2026_07_15-00_21_36_0.db3' for READ_ONLY.
+[INFO] [1784983642.154156859] [rosbag2_player]: Set rate to 1
+[INFO] [1784983642.161276038] [rosbag2_player]: Adding keyboard callbacks.
+[INFO] [1784983642.161289124] [rosbag2_player]: Press SPACE for Pause/Resume
+[INFO] [1784983642.161294655] [rosbag2_player]: Press CURSOR_RIGHT for Play Next Message
+[INFO] [1784983642.161300667] [rosbag2_player]: Press CURSOR_UP for Increase Rate 10%
+[INFO] [1784983642.161304725] [rosbag2_player]: Press CURSOR_DOWN for Decrease Rate 10%
+[INFO] [1784983642.161498496] [rosbag2_storage]: Opened database '/home/han/racing_ws/rosbag2_2026_07_15-00_21_36/rosbag2_2026_07_15-00_21_36_0.db3' for READ_ONLY.

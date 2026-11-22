@@ -1,0 +1,3 @@
+[INFO] [1791806783.793487341] [imu]: Serial port /dev/imu opened successfully
+[WARN] [1791806880.546609355] [imu]: ⚠ IMU 시리얼 끊김 (1.5초간 데이터 없음) — 재연결 시도 1회: /dev/imu
+[INFO] [1791806880.874560225] [imu]: ✅ IMU 시리얼 재연결 성공: /dev/imu (총 1회)

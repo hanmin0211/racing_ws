@@ -1,0 +1,3 @@
+[INFO] [1791446168.305308147] [vehicle_cmd_mux]: 명령 먹스 시작: 조향±18.0° 속도 -0.6~1.6m/s (E-stop > teleop > 자율)
+[WARN] [1791446168.305674403] [vehicle_cmd_mux]: 헤딩 캘리브 대기 — /heading/yaw_offset 을 받기 전에는 자율(AUTO)을 거부한다. teleop 으로 10m 직진해 캘리브를 끝낼 것.
+[INFO] [1791446168.336859430] [vehicle_cmd_mux]: 모드: STOP(헤딩 캘리브 전)

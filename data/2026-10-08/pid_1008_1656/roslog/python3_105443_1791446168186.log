@@ -1,0 +1,2 @@
+[INFO] [1791446168.288281144] [global_path_publisher]: 전역 경로 로드 완료: /home/han/racing_ws/config/chungju_school/wp_heading_1007b_resampled_0.5.yaml (총 220개 점, 109.3m)
+[INFO] [1791446168.288586074] [global_path_publisher]:   로컬 범위 x[-283.1, -243.8] y[39.3, 67.9] (정상이면 0~수백 m)

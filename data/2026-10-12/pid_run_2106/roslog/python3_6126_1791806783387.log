@@ -1,0 +1,9 @@
+[INFO] [1791806783.726858954] [local_sliding_window_node]: local_sliding_window_node 시작 (odom=/odometry/filtered, window=5+20, lookahead=10.0m, 곡률 preview=4.0m)
+[INFO] [1791806783.770485021] [local_sliding_window_node]: 전역 경로 수신: 220점, 시작-끝 26.02m → 열린 경로
+[WARN] [1791806982.455307931] [local_sliding_window_node]: 로컬 경로 생성 실패 — 발행 보류
+[INFO] [1791806983.288548826] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.97m) → 정지 신호 발행
+[INFO] [1791806983.787433665] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.89m) → 정지 신호 발행
+[INFO] [1791806984.787348584] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.89m) → 정지 신호 발행
+[INFO] [1791806985.787472368] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.89m) → 정지 신호 발행
+[INFO] [1791806986.787324582] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.88m) → 정지 신호 발행
+[INFO] [1791806987.787494508] [local_sliding_window_node]: ★ 경로 완주 (남은 거리 0.88m) → 정지 신호 발행

@@ -1,0 +1,16 @@
+1791446167.8318670 [INFO] [launch]: All log files can be found below /home/han/.ros/log/2026-10-08-16-56-07-831316-han-ASUS-TUF-Gaming-A16-FA607PI-FA607PI-105429
+1791446167.8319390 [INFO] [launch]: Default logging verbosity is set to INFO
+1791446167.8991194 [INFO] [ublox_dgnss_node-1]: process started with pid [105431]
+1791446167.8992314 [INFO] [ublox_nav_sat_fix_hp-2]: process started with pid [105433]
+1791446167.8992698 [INFO] [vrs_ntrip_client-3]: process started with pid [105435]
+1791446167.8992987 [INFO] [hfi_a9_ros2-4]: process started with pid [105437]
+1791446167.8993249 [INFO] [heading_init_node-5]: process started with pid [105439]
+1791446167.8993580 [INFO] [direct_localization_node-6]: process started with pid [105441]
+1791446167.8993859 [INFO] [global_path_publisher-7]: process started with pid [105443]
+1791446167.8994105 [INFO] [local_sliding_window_node-8]: process started with pid [105445]
+1791446167.8994346 [INFO] [local_pure_pursuit_node-9]: process started with pid [105447]
+1791446167.8994575 [INFO] [longitudinal_controller-10]: process started with pid [105449]
+1791446167.8994813 [INFO] [vehicle_cmd_mux-11]: process started with pid [105451]
+1791446167.8995070 [INFO] [serial_bridge-12]: process started with pid [105453]
+1791446167.8995311 [INFO] [cluster_plot_node-13]: process started with pid [105455]
+1791446167.8995540 [INFO] [rviz2-14]: process started with pid [105457]
