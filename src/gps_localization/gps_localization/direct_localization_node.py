@@ -38,6 +38,8 @@ from std_msgs.msg import Float64
 from tf2_ros import TransformBroadcaster
 from waypoint_follower.site_origin import declare_and_get
 
+from gps_localization.heading_tracker import HeadingTracker
+
 
 def yaw_from_quat(q):
   siny = 2.0 * (q.w * q.z + q.x * q.y)
@@ -77,6 +79,15 @@ class DirectLocalizationNode(Node):
     # 회전했는데 헤딩은 그대로라 course와의 오차가 180°까지 벌어졌다.
     # 이 상태로 자율주행하면 경로를 완전히 이탈한다 → 끊기면 발행을 멈춘다.
     self.declare_parameter('imu_timeout', 0.5)
+    # ★ 헤딩 연속 보정 (2026-10-12) — 기본 false = 예전 동작(캘리브 1회 오프셋 고정).
+    #   저가 IMU yaw 가 떠내려간다(10/12 −21°/분 → 랩 끝 −28°, 차가 경로 오른쪽
+    #   0.5~1.5 m 로 달림). 직진·주행·RTK FIXED 표본에서 GPS 진행방향으로 오프셋을
+    #   tau 초 시정수로 계속 당긴다. 원리·거르는 조건은 heading_tracker.py.
+    #   bag 재생(tools/heading_track_replay.py): 직선 헤딩 오차 RMS 15.0° → 2.2°.
+    #   ⚠ false 여도 추정은 계속 돌려 /heading/yaw_offset_live 로 낸다(기록·비교용).
+    #     적용만 안 한다.
+    self.declare_parameter('heading_track', False)
+    self.declare_parameter('heading_track_tau', 3.0)
 
     fix_topic = self.get_parameter('fix_topic').value
     imu_topic = self.get_parameter('imu_topic').value
@@ -90,6 +101,10 @@ class DirectLocalizationNode(Node):
     self.last_fix_time = None
     self.fix_lost = False
     self.imu_timeout = float(self.get_parameter('imu_timeout').value)
+    self.heading_track = bool(self.get_parameter('heading_track').value)
+    self.tracker = HeadingTracker(
+        tau=float(self.get_parameter('heading_track_tau').value))
+    self._trk_off0 = None          # 캘리브 오프셋 (보정량을 보고하려고)
     self.last_imu_time = None
     self.imu_lost = False
 
@@ -119,12 +134,17 @@ class DirectLocalizationNode(Node):
     latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
     self.create_subscription(Float64, '/heading/yaw_offset', self.offset_cb,
                              latched)
+    self.live_pub = self.create_publisher(Float64, '/heading/yaw_offset_live', 10)
     self.create_timer(1.0 / rate, self.publish_odom)
     self.create_timer(3.0, self.status)
 
     self.get_logger().info(
         f'직접 로컬라이제이션 시작: {fix_topic}+{imu_topic} → {output_topic} '
         f'(map 프레임, 원점 {self.origin_x:.0f},{self.origin_y:.0f}, {rate:.0f}Hz)')
+    if self.heading_track:
+      self.get_logger().warn(
+          f'★ 헤딩 연속 보정 켜짐 — 직진·주행 중 GPS 진행방향으로 IMU 오프셋을 '
+          f'계속 고친다 (tau {self.tracker.tau:.1f}s)')
 
   def fix_cb(self, msg: NavSatFix):
     if math.isnan(msg.latitude) or abs(msg.latitude) < 1e-9:
@@ -145,6 +165,15 @@ class DirectLocalizationNode(Node):
     self.x, self.y = x, y
     self.have_fix = True
     self.last_fix_time = t
+    # 헤딩 연속 보정 — 캘리브 전에는 tracker.offset 이 None 이라 아무것도 안 한다
+    sigma = None
+    if msg.position_covariance_type != 0:
+      sigma = math.sqrt(max(0.0, msg.position_covariance[0]
+                            + msg.position_covariance[4]))
+    if self.tracker.add_fix(t, x, y, sigma) is not None:
+      self.live_pub.publish(Float64(data=float(self.tracker.offset)))
+      if self.heading_track:
+        self.yaw_offset = self.tracker.offset
     if self.fix_lost:
       self.get_logger().info('GPS 복구 — 위치 발행 재개')
       self.fix_lost = False
@@ -157,6 +186,7 @@ class DirectLocalizationNode(Node):
     raw = yaw_from_quat(msg.orientation)
     if self.invert_imu_yaw:
       raw = -raw
+    self.tracker.add_imu(self.last_imu_time, raw)
     y = raw + self.yaw_offset
     self.yaw = math.atan2(math.sin(y), math.cos(y))   # 정규화
     self.have_imu = True
@@ -164,6 +194,8 @@ class DirectLocalizationNode(Node):
   def offset_cb(self, msg: Float64):
     self.yaw_offset = float(msg.data)
     self.have_offset = True
+    self.tracker.set_offset(self.yaw_offset)       # 재캘리브면 추정도 다시 시작
+    self._trk_off0 = self.yaw_offset
     self.get_logger().info(
         f'헤딩 오프셋 수신: {math.degrees(self.yaw_offset):.1f}° — 헤딩 정렬 적용됨.')
 
@@ -218,6 +250,13 @@ class DirectLocalizationNode(Node):
   def status(self):
     if self.have_fix and self.have_imu:
       cal = '정렬됨' if self.have_offset else '미정렬(10m직진 필요)'
+      if self.have_offset and self.tracker.offset is not None:
+        d = math.degrees(math.atan2(math.sin(self.tracker.offset - self._trk_off0),
+                                    math.cos(self.tracker.offset - self._trk_off0)))
+        c = self.tracker.counts
+        cal += (f' · 연속보정 {"적용" if self.heading_track else "추정만"} {d:+.1f}° '
+                f'(갱신 {c["ok"]} · 커브 {c["turn"]} · 느림 {c["slow"]} · RTK {c["rtk"]} '
+                f'· 이상 {c["outlier"]})')
       self.get_logger().info(
           f'pose: x={self.x:.2f} y={self.y:.2f} yaw={math.degrees(self.yaw):.1f}° '
           f'v={self.vx_body:.2f}m/s [헤딩 {cal}]')

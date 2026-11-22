@@ -173,6 +173,18 @@ def generate_launch_description():
       DeclareLaunchArgument('gov_min_grade', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
+      # 속도 PI (2026-10-09) — RTK 위치미분 속도 피드백. ff_mode:=ros 에서만.
+      # 기본 0 = 꺼짐(이전과 같은 동작). 근거: tools/speed_pi_sim.py
+      #   권장 시작값: spd_kp:=80.0 spd_ki:=60.0
+      DeclareLaunchArgument('spd_kp', default_value='0.0'),
+      DeclareLaunchArgument('spd_ki', default_value='0.0'),
+      DeclareLaunchArgument('spd_imax', default_value='2.5'),
+      DeclareLaunchArgument('spd_brake_max', default_value='30.0'),
+      DeclareLaunchArgument('spd_up_max', default_value='90.0'),
+      DeclareLaunchArgument('spd_stuck_s', default_value='3.0'),
+      DeclareLaunchArgument('spd_win_s', default_value='0.5'),
+      DeclareLaunchArgument('spd_fresh_s', default_value='0.4'),
+      DeclareLaunchArgument('spd_max_sigma', default_value='0.05'),
       DeclareLaunchArgument('imu_topic', default_value='handsfree/imu'),
 
       # ★ 2026-09-16 — 회피 override 유지시간 / 이탈 상한 (먹스).
@@ -299,6 +311,25 @@ def generate_launch_description():
                   LaunchConfiguration('grade_ff_gain'), value_type=float),
               'grade_ff_max': ParameterValue(
                   LaunchConfiguration('grade_ff_max'), value_type=float),
+              # 속도 PI — 전부 float 강제(정수 인자 함정)
+              'spd_kp': ParameterValue(
+                  LaunchConfiguration('spd_kp'), value_type=float),
+              'spd_ki': ParameterValue(
+                  LaunchConfiguration('spd_ki'), value_type=float),
+              'spd_imax': ParameterValue(
+                  LaunchConfiguration('spd_imax'), value_type=float),
+              'spd_brake_max': ParameterValue(
+                  LaunchConfiguration('spd_brake_max'), value_type=float),
+              'spd_up_max': ParameterValue(
+                  LaunchConfiguration('spd_up_max'), value_type=float),
+              'spd_stuck_s': ParameterValue(
+                  LaunchConfiguration('spd_stuck_s'), value_type=float),
+              'spd_win_s': ParameterValue(
+                  LaunchConfiguration('spd_win_s'), value_type=float),
+              'spd_fresh_s': ParameterValue(
+                  LaunchConfiguration('spd_fresh_s'), value_type=float),
+              'spd_max_sigma': ParameterValue(
+                  LaunchConfiguration('spd_max_sigma'), value_type=float),
               'imu_topic': ParameterValue(
                   LaunchConfiguration('imu_topic'), value_type=str),
           }],

@@ -32,7 +32,7 @@ from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import (DurabilityPolicy, QoSProfile,
                        qos_profile_sensor_data)
-from sensor_msgs.msg import Imu, LaserScan
+from sensor_msgs.msg import Imu, LaserScan, NavSatFix
 from std_msgs.msg import Float64, Int32, String
 
 
@@ -76,6 +76,17 @@ class Recorder(Node):
     #   ⚠ 원시값이다(저역통과 안 함). 가감속이 섞인다: 1 m/s² ≈ 5.8° ≈ 10%.
     #     분석할 때 enc_v 미분으로 atan(a/g) 를 빼거나 저역통과할 것.
     self.pitch = float('nan')
+    # ★ 2026-10-12 추가 — 속도 PI·헤딩 논문용.
+    #   gps_v      : serial_bridge 속도 PI 가 **실제로 본** 실측(/current_speed_gps).
+    #                엔코더가 간헐 불량이라 이게 '실측 속도' 다.
+    #   rtk_sigma  : /fix 수평 σ. FLOAT 구간을 헤딩·속도 분석에서 걸러낸다.
+    #   imu_yaw_raw: IMU 원시 yaw(오프셋 적용 전). yaw_deg − yaw_offset 와 같아야 한다.
+    self.gps_v = float('nan')
+    self.rtk_sigma = float('nan')
+    self.imu_yaw = float('nan')
+    #   yaw_offset_live: 헤딩 연속 보정 추정값(/heading/yaw_offset_live). 적용 여부와
+    #                    무관하게 나온다 — 고정 오프셋과 나란히 놓으면 드리프트가 보인다.
+    self.yaw_off_live = float('nan')
     self._p_off, self._p_sign = 0.0, 1.0
     try:
       import yaml
@@ -94,7 +105,9 @@ class Recorder(Node):
                      # ↓ 2026-10-07 추가. 기존 컬럼 순서는 건드리지 않는다
                      # (옛 기록을 읽는 분석 코드가 깨지지 않게 **뒤에만** 붙인다)
                      'target_v', 'enc_v', 'curvature', 'drive_pwm', 'yaw_offset_deg',
-                     'pitch_deg', 'grade_pct'])
+                     'pitch_deg', 'grade_pct',
+                     # ↓ 2026-10-12 추가 (뒤에만 붙인다)
+                     'gps_v', 'rtk_sigma_cm', 'imu_yaw_raw_deg', 'yaw_offset_live_deg'])
     # 라이다 점은 별도 파일 — 행이 훨씬 많다
     self.sf = open(os.path.splitext(a.out)[0] + '_scan.csv', 'w', newline='')
     self.sw = csv.writer(self.sf)
@@ -130,6 +143,11 @@ class Recorder(Node):
                                                math.degrees(m.data)), _lat)
     self.create_subscription(LaserScan, a.scan_topic, self.scan_cb,
                              qos_profile_sensor_data)
+    self.create_subscription(Float64, '/current_speed_gps',
+                             lambda m: setattr(self, 'gps_v', m.data), 10)
+    self.create_subscription(NavSatFix, '/fix', self.fix_cb, qos_profile_sensor_data)
+    self.create_subscription(Float64, '/heading/yaw_offset_live',
+                             lambda m: setattr(self, 'yaw_off_live', math.degrees(m.data)), 10)
     self.create_timer(1.0 / a.rate, self.tick)
     self.rows = 0
     print(f'기록 시작 → {a.out}  (Ctrl-C 로 종료)')
@@ -144,6 +162,14 @@ class Recorder(Node):
     q = m.orientation
     sinp = max(-1.0, min(1.0, 2.0 * (q.w * q.y - q.z * q.x)))
     self.pitch = self._p_sign * (math.asin(sinp) - self._p_off)
+    self.imu_yaw = yaw_from_quat(q)
+
+  def fix_cb(self, m):
+    if m.position_covariance_type == 0:
+      self.rtk_sigma = float('nan')         # 공분산 모름 — 판정 불가
+    else:
+      self.rtk_sigma = math.sqrt(max(0.0, m.position_covariance[0]
+                                     + m.position_covariance[4]))
 
   def cmd_cb(self, m):
     self.cmd_v = m.linear.x
@@ -194,7 +220,11 @@ class Recorder(Node):
                      self.pwm,
                      '' if math.isnan(self.yaw_off) else f'{self.yaw_off:.2f}',
                      '' if math.isnan(self.pitch) else f'{math.degrees(self.pitch):.2f}',
-                     '' if math.isnan(self.pitch) else f'{100*math.sin(self.pitch):.2f}'])
+                     '' if math.isnan(self.pitch) else f'{100*math.sin(self.pitch):.2f}',
+                     '' if math.isnan(self.gps_v) else f'{self.gps_v:.3f}',
+                     '' if math.isnan(self.rtk_sigma) else f'{100*self.rtk_sigma:.1f}',
+                     '' if math.isnan(self.imu_yaw) else f'{math.degrees(self.imu_yaw):.2f}',
+                     '' if math.isnan(self.yaw_off_live) else f'{self.yaw_off_live:.2f}'])
     self.rows += 1
     if self.rows % 100 == 0:
       self.f.flush()

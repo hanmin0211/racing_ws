@@ -268,6 +268,56 @@ class SerialBridgeNode(Node):
         self.declare_parameter('grade_ff_gain', 0.0)   # 0=꺼짐, 1.0=완전보상
         self.declare_parameter('grade_ff_max', 70.0)   # 보상 PWM 상한
         self.declare_parameter('imu_topic', 'handsfree/imu')
+
+        # ── 속도 PI — RTK 위치 미분 속도 피드백 (2026-10-09) ─────────────
+        # ★ 왜
+        #   10/8 실측: 보드 펌웨어에 PID 가 없고(PWM = 17.2+38.8·v 정확히),
+        #   엔코더는 간헐적이다(움직이는데 카운트 정지). 그래서 실측이 목표를
+        #   **모양으로 전혀 안 따라갔다**(상관 r=0.02, 경사 따라 ±0.5 m/s).
+        #   펌웨어 PID 는 엔코더 수리 + 굽기가 먼저라 당장 못 쓴다.
+        #   → 엔코더 대신 **/odometry/filtered 위치를 창 미분**한 속도로
+        #     FF 위에 PI 보정을 얹는다. 위치는 EKF twist 처럼 튀지 않는다.
+        #
+        # ★ 측정 (10/8 기록 실측)
+        #   포즈 10 Hz · 0.5s 창 → 지연 ~0.25s · 잡음 표준편차 0.077 m/s.
+        #   ⚠ 엔코더(encpos)는 **일부러 안 쓴다.** 간헐 불량이면 달리는 중
+        #     0 을 읽고, PI 가 그걸 '느리다' 로 보고 PWM 을 끝까지 올린다.
+        #
+        # ★ 이득 근거 — tools/speed_pi_sim.py (10/8 주행 외란 재현)
+        #     FF 만          RMS 0.316 · 모양 r 0.15
+        #     kp 80 ki 40    RMS 0.089 · 모양 r 0.72 · PWM 떨림 6.4
+        #     kp 80 ki 60    RMS 0.082 · 모터 −40% 0.135 · 경사×2 0.140 (권장)
+        #   측정 지연을 0.6s 로 늘려도 발산하지 않았다(RMS 0.094).
+        #   kp 120 이상은 RMS 가 조금 낫지만 잡음 2배에서 떨림이 19 로 커진다.
+        #
+        # ⚠ 기본 0 = 꺼짐. 꺼져 있으면 이 블록 이전과 완전히 같은 동작이다.
+        #   ff_mode:=ros 에서만 동작한다(firmware 모드는 VEL 을 보낼 뿐이다).
+        self.declare_parameter('spd_kp', 0.0)          # [PWM/(m/s)] 0 = 꺼짐
+        self.declare_parameter('spd_ki', 0.0)          # [PWM/(m/s·s)]
+        # 적분 클램프 [m/s·s]. 2.5 × ki → 적분 권한. 모터가 모델보다 40% 약해도
+        #   (방전·노면) 버티려면 1.5 로는 모자랐다(SIL RMS 0.195 → 2.5 에서 0.135).
+        self.declare_parameter('spd_imax', 2.5)
+        # 감속 권한 — PI 가 낼 수 있는 역 PWM 상한. 플러깅 전류 때문에 작게 둔다
+        # (거버너의 gov_pwm 과 같은 이유). 시뮬에서는 거의 쓰지 않았다.
+        self.declare_parameter('spd_brake_max', 30.0)
+        # 가속 권한 — FF 위로 PI 가 더할 수 있는 PWM 상한.
+        #   벽에 박혀 서 있으면 측정 0 · 오차 그대로라 PI 가 끝까지 민다(모터 잠김
+        #   전류 = 전원 붕괴, 10/8 VMIN 2.16V). 그래서 위로도 막는다.
+        #   +5% 오르막 1.5 m/s 유지에 필요한 추가분이 약 28, 모터 −40% 면 약 52.
+        #   90 으로 둔다 — 벽에 박힌 경우는 아래 spd_stuck_s 가 따로 막는다.
+        self.declare_parameter('spd_up_max', 90.0)
+        # 박힘 보호 — 명령은 가라는데 측정이 0.1 m/s 미만으로 이 시간 넘게 서 있으면
+        #   PI 가산을 빼고 FF 만 낸다(다시 0.3 m/s 넘게 움직이면 복귀).
+        #   출발은 이 시간 안에 끝난다(SIL 방전 가정에서도 0.8s).
+        self.declare_parameter('spd_stuck_s', 3.0)
+        self.declare_parameter('spd_win_s', 0.5)       # 위치미분 창 [s]
+        # 측정이 이만큼 낡으면 PI 를 끄고 FF 만 낸다(적분도 비운다).
+        self.declare_parameter('spd_fresh_s', 0.4)
+        # RTK 품질 게이트 — /fix 수평 σ 가 이보다 크면(FLOAT) 측정을 버린다.
+        #   FLOAT 는 위치가 수십 cm 흔들려 0.5s 창 속도가 ±0.5 m/s 로 튄다.
+        #   버리면 측정이 낡아 FF 로 돌아간다 = 지금까지와 같은 개루프.
+        #   heading_init 의 max_h_std 와 같은 값. 공분산 UNKNOWN 이면 판정 안 함.
+        self.declare_parameter('spd_max_sigma', 0.05)
         self.ff_mode = str(self.get_parameter('ff_mode').value).lower()
         self.ff_static = float(self.get_parameter('ff_static').value)
         self.ff_gain = float(self.get_parameter('ff_gain').value)
@@ -293,6 +343,23 @@ class SerialBridgeNode(Node):
         self.gov_min_grade = float(self.get_parameter('gov_min_grade').value)
         self.grade_ff_gain = float(self.get_parameter('grade_ff_gain').value)
         self.grade_ff_max = float(self.get_parameter('grade_ff_max').value)
+        self.spd_kp = float(self.get_parameter('spd_kp').value)
+        self.spd_ki = float(self.get_parameter('spd_ki').value)
+        self.spd_imax = float(self.get_parameter('spd_imax').value)
+        self.spd_brake_max = float(self.get_parameter('spd_brake_max').value)
+        self.spd_up_max = float(self.get_parameter('spd_up_max').value)
+        self.spd_stuck_s = float(self.get_parameter('spd_stuck_s').value)
+        self._spd_still_since = None   # 명령>0 인데 측정≈0 이 시작된 시각
+        self._spd_stuck = False
+        self.spd_win_s = float(self.get_parameter('spd_win_s').value)
+        self.spd_fresh_s = float(self.get_parameter('spd_fresh_s').value)
+        self.spd_max_sigma = float(self.get_parameter('spd_max_sigma').value)
+        self._spd_sigma = None         # 마지막 /fix 수평 σ [m] (None = 모름)
+        self._spd_hist = []            # [(t, x, y)] 위치미분 창
+        self._spd_v = None             # 위치미분 속도 [m/s] (크기, 부호 없음)
+        self._spd_v_t = 0.0
+        self._spd_valid_t = 0.0        # 마지막으로 창에서 속도를 '계산' 한 시각
+        self._spd_isum = 0.0
         self._brake_until = None       # 제동 종료 예정 시각 (None = 제동 안 함)
         self._brake_sign = 0           # 직전 진행 방향 (+1 전진 / -1 후진)
         self._last_cmd_v = 0.0         # 직전 주기의 명령 속도
@@ -327,6 +394,29 @@ class SerialBridgeNode(Node):
             self._enc_v_buf = []
             self.create_subscription(Float64, '/current_speed',
                                      self._enc_speed_cb, 10)
+
+        # 속도 PI — 켜졌을 때만 위치를 구독한다(위 _odom_cb 와 별개 콜백).
+        self.spd_pub = None
+        if self.spd_kp > 0.0 or self.spd_ki > 0.0:
+            from nav_msgs.msg import Odometry  # noqa: PLC0415
+            self.create_subscription(Odometry, '/odometry/filtered',
+                                     self._spd_pos_cb, 10)
+            from sensor_msgs.msg import NavSatFix  # noqa: PLC0415
+            self.create_subscription(NavSatFix, '/fix', self._spd_fix_cb, 10)
+            # PI 가 실제로 본 속도 — 기록·검증용
+            self.spd_pub = self.create_publisher(
+                Float64, '/current_speed_gps', 10)
+            if self.ff_mode != 'ros':
+                self.get_logger().error(
+                    '⚠ spd_kp/spd_ki 를 줬지만 ff_mode 가 ros 가 아니다 — '
+                    '속도 PI 는 동작하지 않는다(firmware 모드는 VEL 만 보낸다).')
+            else:
+                self.get_logger().warn(
+                    f'★ 속도 PI 켜짐 (RTK 위치미분 피드백): kp {self.spd_kp:.0f} '
+                    f'ki {self.spd_ki:.0f} · 적분상한 {self.spd_imax:.1f} · '
+                    f'역PWM상한 {self.spd_brake_max:.0f} · 가속상한 FF+{self.spd_up_max:.0f} · '
+                    f'창 {self.spd_win_s:.2f}s. '
+                    f'측정이 {self.spd_fresh_s:.1f}s 넘게 끊기면 FF 만 낸다.')
 
         # 경사 보상 — grade_ff_gain>0 일 때만 구독한다. 꺼져 있으면 IMU 가
         # 없어도 아무 영향이 없어야 한다.
@@ -752,6 +842,153 @@ class SerialBridgeNode(Node):
         self._meas_v_t = now
         self._meas_src = 'odom'
 
+    # 위치미분 1표본이 이보다 빠르면 RTK 점프로 본다(평지 PWM 255 정상속도 5.55).
+    SPD_V_PLAUSIBLE = 6.0
+    # ★ GPS 한 걸음 점프 (2026-10-12 실측) — 0.1초에 0.37·0.46 m (3.7·4.6 m/s).
+    #   RTK σ 1.5cm(FIXED) 인데도 났다. 0.5s 창에 섞이면 +0.8 m/s 가짜 과속이 되고,
+    #   PI 가 PWM 을 161 → 91 로 깎았다. 창 전체 상한(6.0)으로는 안 걸린다.
+    #   이 차는 2.5 m/s 를 못 넘으니 한 걸음 3.0 m/s 초과는 점프다.
+    SPD_STEP_JUMP = 3.0
+    # 점프 뒤 창을 새로 채우는 동안(≈0.4s) 직전 속도를 유지한다. 단 이보다 오래
+    # 유효한 계산이 없으면(점프가 계속되면) 유지를 끊어 FF 로 돌아간다.
+    SPD_HOLD_MAX_S = 1.0
+
+    def _spd_fix_cb(self, msg):
+        """RTK 품질 — 수평 σ 만 기억한다(위치는 /odometry/filtered 에서)."""
+        if msg.position_covariance_type == 0:
+            self._spd_sigma = None
+        else:
+            self._spd_sigma = math.sqrt(max(0.0, msg.position_covariance[0]
+                                            + msg.position_covariance[4]))
+
+    def _spd_pos_cb(self, msg):
+        """속도 PI 의 측정 — /odometry/filtered **위치**를 창 미분한다.
+
+        twist 를 안 쓰는 이유: EKF 프레임지연으로 튄다(실측 61.9 m/s, 10/8 에도
+        5.5 m/s 스파이크 12회). 위치는 RTK 라 cm 단위로 매끄럽다.
+
+        ★ 같은 위치는 버린다. direct_localization 은 30 Hz 로 내지만 GPS 는
+          10 Hz 라 **세 번에 두 번은 같은 위치**다(10/8 기록 50% 중복). 그대로
+          창에 넣으면 창 끝이 묵은 위치에 걸려 속도가 0.1/0.5 = 20% 씩 출렁인다.
+        """
+        now = self.get_clock().now().nanoseconds * 1e-9
+        p = msg.pose.pose.position
+        x, y = float(p.x), float(p.y)
+        if self._spd_hist and x == self._spd_hist[-1][1] and y == self._spd_hist[-1][2]:
+            return
+        if self._spd_sigma is not None and self._spd_sigma > self.spd_max_sigma:
+            # FLOAT — 창을 비우고 측정을 갱신하지 않는다(낡으면 FF 로 돌아간다)
+            self._spd_hist = []
+            self.get_logger().warn(
+                f'속도 PI — RTK σ {self._spd_sigma * 100:.0f}cm > '
+                f'{self.spd_max_sigma * 100:.0f}cm (FLOAT) → 측정 버림, FF 만',
+                throttle_duration_sec=3.0)
+            return
+        if self._spd_hist and self._spd_is_jump(self._spd_hist[-1], (now, x, y)):
+            # 창을 새 위치에서 다시 시작한다(옛 위치와 섞으면 가짜 속도가 된다).
+            # 다시 찰 때까지 직전 속도를 유지한다 — 적분을 비우지 않으려고.
+            self._spd_hist = [(now, x, y)]
+            if self._spd_v is not None and \
+                    now - self._spd_valid_t < self.SPD_HOLD_MAX_S:
+                self._spd_v_t = now
+            self.get_logger().warn(
+                '속도 PI — GPS 위치 점프를 버렸다 (직전 속도 유지)',
+                throttle_duration_sec=2.0)
+            return
+        self._spd_hist.append((now, x, y))
+        while len(self._spd_hist) > 2 and \
+                (now - self._spd_hist[0][0]) > self.spd_win_s:
+            self._spd_hist.pop(0)
+        v = self._spd_window_speed(self._spd_hist, self.spd_win_s)
+        if v is None:
+            return
+        if v > self.SPD_V_PLAUSIBLE:
+            # 점프가 창에 들어왔다 — 창을 비우고 다시 쌓는다
+            self._spd_hist = self._spd_hist[-1:]
+            return
+        self._spd_v = v
+        self._spd_v_t = now
+        self._spd_valid_t = now
+        if self.spd_pub is not None:
+            self.spd_pub.publish(Float64(data=float(v)))
+
+    @classmethod
+    def _spd_is_jump(cls, a, b):
+        """연속한 두 위치 표본 (t, x, y) 사이가 차가 낼 수 없는 속도인가. 순수 계산."""
+        dt = b[0] - a[0]
+        if dt <= 1e-3:
+            return False
+        return math.hypot(b[1] - a[1], b[2] - a[2]) / dt > cls.SPD_STEP_JUMP
+
+    @staticmethod
+    def _spd_window_speed(hist, win_s):
+        """[(t, x, y)] 창의 양 끝 거리 / 시간. 창이 80% 안 찼으면 None. 순수 계산."""
+        if len(hist) < 2:
+            return None
+        t0, x0, y0 = hist[0]
+        t1, x1, y1 = hist[-1]
+        span = t1 - t0
+        if span < win_s * 0.8:
+            return None
+        return math.hypot(x1 - x0, y1 - y0) / span
+
+    def _spd_pi(self, cmd_v, ff_pwm, now):
+        """FF 위에 얹는 속도 PI. 보정된 PWM(부호 포함), 개입 안 하면 None.
+
+        전진 전용이다 — 위치미분은 크기만 알고 방향을 모른다. 후진(주차)은
+        느리고 짧아서 FF 로 충분하다.
+        """
+        if self.spd_kp <= 0.0 and self.spd_ki <= 0.0:
+            return None
+        if cmd_v < self.ff_deadband:
+            self._spd_isum = 0.0
+            return None
+        if self._spd_v is None or (now - self._spd_v_t) >= self.spd_fresh_s:
+            # 측정이 끊겼다 — 낡은 적분을 들고 있으면 복귀 순간 튄다
+            if self._spd_isum != 0.0:
+                self.get_logger().warn(
+                    '속도 PI — 위치 측정이 끊겨 FF 만 낸다 (적분 비움)',
+                    throttle_duration_sec=2.0)
+            self._spd_isum = 0.0
+            return None
+        # 박힘 보호 (spd_stuck_s 선언부 주석)
+        if cmd_v > 0.3 and self._spd_v < 0.1:
+            if self._spd_still_since is None:
+                self._spd_still_since = now
+            elif not self._spd_stuck and now - self._spd_still_since > self.spd_stuck_s:
+                self._spd_stuck = True
+                self.get_logger().error(
+                    f'속도 PI — 명령 {cmd_v:.2f} 인데 {self.spd_stuck_s:.0f}초째 서 있다 '
+                    '(벽·턱에 걸림?) → PI 가산을 빼고 FF 만 낸다')
+        else:
+            self._spd_still_since = None
+            if self._spd_stuck and self._spd_v > 0.3:
+                self._spd_stuck = False
+                self.get_logger().info('속도 PI — 다시 움직인다, PI 복귀')
+        if self._spd_stuck:
+            self._spd_isum = 0.0
+            return None
+        out, self._spd_isum = self._spd_pi_step(
+            cmd_v, self._spd_v, abs(ff_pwm), self._spd_isum, 0.05,
+            self.spd_kp, self.spd_ki, self.spd_imax, self.spd_brake_max,
+            pwm_max=min(255.0, abs(ff_pwm) + self.spd_up_max))
+        return out
+
+    @staticmethod
+    def _spd_pi_step(cmd_v, meas_v, ff_mag, isum, dt, kp, ki, imax, brake_max,
+                     pwm_max=255.0):
+        """PI 한 스텝. (출력 PWM, 새 적분) — 순수 계산이라 하드웨어 없이 시험한다.
+
+        조건부 적분: 출력이 이미 포화한 방향으로는 적분을 더 쌓지 않는다.
+        """
+        e = cmd_v - meas_v
+        cand = max(-imax, min(imax, isum + e * dt))
+        raw = ff_mag + kp * e + ki * cand
+        if not ((raw > pwm_max and e > 0) or (raw < -brake_max and e < 0)):
+            isum = cand
+        out = ff_mag + kp * e + ki * isum
+        return max(-brake_max, min(pwm_max, out)), isum
+
     # 제동시간 기준속도에 쓰는 측정속도의 조건.
     #   신선도 0.5s — 해제조건 ② 와 같은 값. IMU 가 끊기면 낡은 값이 남는다.
     #   타당성 3.0m/s — local_pure_pursuit 의 max_plausible_speed 와 같은 값.
@@ -1051,29 +1288,46 @@ class SerialBridgeNode(Node):
                 #   후진·오르막  → 뒤로 내려가는 것이니 크기가 줄어든다
                 grade = self._grade_pwm(now_s)
                 ff_mag = self.ff_static + self.ff_gain * abs(v) + grade * sgn
-                gov = self._governor_pwm(v, ff_mag, now_s)
-                if gov is not None:
-                    # ★ 거버너가 개입하면 **하한(ff_min_pwm)을 건너뛴다.**
-                    #   안 그러면 '과속이니 멈춰' 와 '최소한 이만큼은 밀어' 가
-                    #   싸워서 내리막에서 계속 가속한다.
-                    self._last_cmd_v = v
-                    cmd = f'PWM:{int(round(gov))},STEER:{self.target_steer:.1f}\n'
-                    try:
-                        self.ser.write(cmd.encode('utf-8'))
-                    except Exception as e:  # noqa: BLE001
-                        self.get_logger().error(f'시리얼 전송 실패: {e}',
-                                                throttle_duration_sec=2.0)
-                    return
-                # 정지마찰 구간: 정지에서 막 출발했으면 잠깐 더 세게 민다.
-                now = self.get_clock().now().nanoseconds * 1e-9
-                if self._moving_since is None:
-                    self._moving_since = now
-                    self.get_logger().info(
-                        f'출발 — 정지마찰 하한 {self.ff_breakaway_pwm:.0f} 을 '
-                        f'{self.ff_breakaway_s * 1000:.0f}ms 인가한다',
-                        throttle_duration_sec=2.0)
-                brk = (now - self._moving_since) < self.ff_breakaway_s
-                pwm = int(round(self._ff_output(v, grade, brk)))
+                if (self.spd_kp > 0.0 or self.spd_ki > 0.0) and v > 0:
+                    # ★ 속도 PI — 거버너 대신 이것이 과속·저속을 둘 다 잡는다.
+                    #   기준은 평소 FF 출력(하한·정지마찰·경사 포함) 그대로이고,
+                    #   PI 는 그 위에 측정속도 오차만큼 더하거나 뺀다.
+                    if self._moving_since is None:
+                        self._moving_since = now_s
+                    brk = (now_s - self._moving_since) < self.ff_breakaway_s
+                    base = self._ff_output(v, grade, brk)
+                    pi = self._spd_pi(v, base, now_s)
+                    if pi is not None and brk:
+                        # 출발 직후엔 측정이 늦게 따라온다 — 정지마찰 하한 밑으로 깎지 않는다
+                        pi = max(pi, base)
+                        # 그 지연 동안 쌓인 적분은 출발 뒤 과속(SIL: 1.58 목표에 1.80)
+                        # 으로 나온다. 출발 구간에는 양의 적분을 들고 가지 않는다.
+                        self._spd_isum = min(self._spd_isum, 0.0)
+                    pwm = int(round(base if pi is None else pi))
+                else:
+                    gov = self._governor_pwm(v, ff_mag, now_s)
+                    if gov is not None:
+                        # ★ 거버너가 개입하면 **하한(ff_min_pwm)을 건너뛴다.**
+                        #   안 그러면 '과속이니 멈춰' 와 '최소한 이만큼은 밀어' 가
+                        #   싸워서 내리막에서 계속 가속한다.
+                        self._last_cmd_v = v
+                        cmd = f'PWM:{int(round(gov))},STEER:{self.target_steer:.1f}\n'
+                        try:
+                            self.ser.write(cmd.encode('utf-8'))
+                        except Exception as e:  # noqa: BLE001
+                            self.get_logger().error(f'시리얼 전송 실패: {e}',
+                                                    throttle_duration_sec=2.0)
+                        return
+                    # 정지마찰 구간: 정지에서 막 출발했으면 잠깐 더 세게 민다.
+                    now = self.get_clock().now().nanoseconds * 1e-9
+                    if self._moving_since is None:
+                        self._moving_since = now
+                        self.get_logger().info(
+                            f'출발 — 정지마찰 하한 {self.ff_breakaway_pwm:.0f} 을 '
+                            f'{self.ff_breakaway_s * 1000:.0f}ms 인가한다',
+                            throttle_duration_sec=2.0)
+                    brk = (now - self._moving_since) < self.ff_breakaway_s
+                    pwm = int(round(self._ff_output(v, grade, brk)))
             # ⚠ **양쪽 분기 뒤에서** 갱신해야 한다. 정지 분기에서 안 갱신하면
             #   _last_cmd_v 가 옛 주행속도를 계속 들고 있어, 제동이 끝난 뒤에도
             #   was_fast 가 참이라 **매 주기 재진입**한다(서 있는 차가 계속

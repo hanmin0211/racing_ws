@@ -122,6 +122,14 @@ class HeadingInitNode(Node):
     #
     #   bringup 이 ff_mode 를 보고 자동으로 넣는다 — 운전자가 기억할 필요 없다.
     self.declare_parameter('auto_speed_cap', 0.0)
+    # ★ 굴러가는 인계 (2026-10-12) — 기본 false = 예전 동작(1초 0 명령 후 놓음).
+    #   예전엔 캘리브 성공 뒤 1초간 0 을 쏘고 놓아서, 먹스 teleop_timeout(0.5s)까지
+    #   더해 **1.5초 동안 명령 0** 이었다. 10/12 실측: 1.33 → 0.51 m/s 로 꺼졌다가
+    #   다시 가속 — 속도 추종 RMS 를 0.22 → 0.25 로 깎았다.
+    #   true 면 성공 시에만 0 을 쏘지 않고 바로 놓는다. 먹스는 teleop_timeout 동안
+    #   마지막 직진 명령을 유지하다 AUTO 로 넘어간다 = 차가 굴러가는 채로 인계.
+    #   ⚠ 실패·재시도는 그대로 세운다(다시 출발점에서 직진해야 하므로).
+    self.declare_parameter('rolling_handoff', False)
     # 자동 직진 중 헤딩 유지 (절대 헤딩을 몰라도 '출발 시점 대비 변화'로 곧게 간다)
     self.declare_parameter('auto_heading_gain', 1.5)   # 도/도
     self.declare_parameter('auto_max_correction', 5.0)  # 보정 조향각 상한[도]
@@ -224,6 +232,7 @@ class HeadingInitNode(Node):
     self.auto_speed = float(self.get_parameter('auto_speed').value)
     self.auto_speed_cap = float(
         self.get_parameter('auto_speed_cap').value)
+    self.rolling_handoff = bool(self.get_parameter('rolling_handoff').value)
     self.auto_countdown = float(self.get_parameter('auto_countdown').value)
     self.auto_timeout = float(self.get_parameter('auto_timeout').value)
     self.auto_heading_gain = float(self.get_parameter('auto_heading_gain').value)
@@ -736,7 +745,13 @@ class HeadingInitNode(Node):
               f'⚠ 부호는 첫 회에 눈으로 확인할 것 (휜 방향과 맞는지).')
 
       if self.auto_drive:
-        self._stop_driving('캘리브 완료')
+        if self.rolling_handoff:
+          # 0 을 쏘지 않고 바로 놓는다 — done_time 이 서서 drive_tick 이 더는
+          # 발행하지 않는다. 먹스가 마지막 직진 명령으로 teleop_timeout 을 채운 뒤
+          # AUTO 로 넘어간다.
+          self.get_logger().info('자동 직진 종료: 캘리브 완료 — 굴러가는 채로 AUTO 인계')
+        else:
+          self._stop_driving('캘리브 완료')
     else:
       if int(dist) != getattr(self, '_last_log_m', -1):
         self._last_log_m = int(dist)

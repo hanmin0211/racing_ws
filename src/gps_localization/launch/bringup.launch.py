@@ -201,6 +201,13 @@ def generate_launch_description():
       #   방향이 반대였다. 그 아래로는 차가 안 가거나(새 FF) 폭주한다(옛 FF).
       #   캘리브에 필요한 직진은 10m 이고 0.5 m/s 면 20s — 최소 16.7s 를 넘는다.
       DeclareLaunchArgument('auto_calib_speed', default_value='0.5'),
+      # 캘리브 성공 뒤 멈추지 않고 굴러가는 채로 AUTO 인계 (heading_init 주석 참고).
+      # 기본 false = 예전 동작.
+      DeclareLaunchArgument('calib_rolling_handoff', default_value='false'),
+      # ★ 헤딩 연속 보정 — 주행 중 GPS 진행방향으로 IMU 오프셋을 계속 고친다.
+      #   기본 false = 예전(캘리브 1회 고정). 10/12 bag 재생: 헤딩 오차 RMS 15.0° → 2.2°.
+      DeclareLaunchArgument('heading_track', default_value='false'),
+      DeclareLaunchArgument('heading_track_tau', default_value='3.0'),
       # ★ 2026-09-12 현장 — 캘리브가 '측위 점프' 로 거부되는 일이 있어 노출한다.
       #   calib_jump_speed: 연속 fix 사이의 함축 속도가 이 값을 넘으면 GPS 점프로
       #     보고 캘리브를 무효화한다(기본 2.0 m/s). 갓 수렴한 RTK 는 몇 초간
@@ -333,6 +340,16 @@ def generate_launch_description():
       DeclareLaunchArgument('gov_min_grade', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_gain', default_value='0.0'),
       DeclareLaunchArgument('grade_ff_max', default_value='70.0'),
+      # 속도 PI (2026-10-09) — 기본 0 = 꺼짐. 상세는 control.launch.py.
+      DeclareLaunchArgument('spd_kp', default_value='0.0'),
+      DeclareLaunchArgument('spd_ki', default_value='0.0'),
+      DeclareLaunchArgument('spd_imax', default_value='2.5'),
+      DeclareLaunchArgument('spd_brake_max', default_value='30.0'),
+      DeclareLaunchArgument('spd_up_max', default_value='90.0'),
+      DeclareLaunchArgument('spd_stuck_s', default_value='3.0'),
+      DeclareLaunchArgument('spd_win_s', default_value='0.5'),
+      DeclareLaunchArgument('spd_fresh_s', default_value='0.4'),
+      DeclareLaunchArgument('spd_max_sigma', default_value='0.05'),
       # ★ 정지마찰 하한 — '구르는 중' 하한(ff_min_pwm)과 다른 값이어야 한다.
       #   9/13 실측: PWM 50 은 출발을 못 하고(모터 잠김, VMIN 2938mV),
       #   56 이면 구르고, 60 이면 1.07 m/s. 문턱이 55~56 사이다.
@@ -421,6 +438,8 @@ def generate_launch_description():
                   LaunchConfiguration('calib_speed_cap'), value_type=float),
               'retry_start_radius': ParameterValue(
                   LaunchConfiguration('calib_retry_radius'), value_type=float),
+              'rolling_handoff': ParameterValue(
+                  LaunchConfiguration('calib_rolling_handoff'), value_type=bool),
           }],
       ),
 
@@ -439,6 +458,11 @@ def generate_launch_description():
               # 어긋날 수 있다(어긋나면 전역경로가 통째로 평행이동한다).
               'rate': 30.0,
               'publish_tf': True,
+              # 헤딩 연속 보정 (heading_tracker.py) — 기본 false
+              'heading_track': ParameterValue(
+                  LaunchConfiguration('heading_track'), value_type=bool),
+              'heading_track_tau': ParameterValue(
+                  LaunchConfiguration('heading_track_tau'), value_type=float),
               'invert_imu_yaw': invert_imu_yaw,
           }],
       ),
@@ -510,6 +534,15 @@ def generate_launch_description():
               'gov_min_grade': LaunchConfiguration('gov_min_grade'),
               'grade_ff_gain': LaunchConfiguration('grade_ff_gain'),
               'grade_ff_max': LaunchConfiguration('grade_ff_max'),
+              'spd_kp': LaunchConfiguration('spd_kp'),
+              'spd_ki': LaunchConfiguration('spd_ki'),
+              'spd_imax': LaunchConfiguration('spd_imax'),
+              'spd_brake_max': LaunchConfiguration('spd_brake_max'),
+              'spd_up_max': LaunchConfiguration('spd_up_max'),
+              'spd_stuck_s': LaunchConfiguration('spd_stuck_s'),
+              'spd_win_s': LaunchConfiguration('spd_win_s'),
+              'spd_fresh_s': LaunchConfiguration('spd_fresh_s'),
+              'spd_max_sigma': LaunchConfiguration('spd_max_sigma'),
           }.items(),
       ),
 
